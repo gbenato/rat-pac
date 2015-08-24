@@ -11,9 +11,11 @@
 /rat/proc count
 /rat/procset update 10
 
-# Use IO.default_output_filename
 /rat/proclast outroot
+/rat/procset file "cylinder_betas.root"
 #END EVENT LOOP
+
+#/tracking/storeTrajectory 1
 
 /generator/add combo gun2:fill
 /generator/vtx/set e-  0 0 0 0 10.0 10.0
