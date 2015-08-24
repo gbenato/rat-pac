@@ -17,7 +17,7 @@
 #define __RAT_Digitizer__
 
 #include <map>
-#include <RAT/DS/PMTWaveform.hh>
+#include <RAT/PMTWaveform.hh>
 
 namespace RAT {
   
@@ -39,10 +39,10 @@ namespace RAT {
     virtual void SetThreshold(double);
     virtual void Clear();
     
-    virtual void AddChannel(int,DS::PMTWaveform);
+    virtual void AddChannel(int,PMTWaveform);
     virtual int GetNSamples(int ich){return fDigitWaveForm[ich].size();};
-    virtual void GenerateElectronicNoise(int,DS::PMTWaveform);
-    //    virtual void DigitizeWaveForm(DS::PMTWaveform);
+    virtual void GenerateElectronicNoise(int,PMTWaveform);
+    //    virtual void DigitizeWaveForm(PMTWaveform);
     virtual std::vector<int> GetDigitizedWaveform(int ich){return fDigitWaveForm[ich];};
     virtual std::vector<int> SampleWaveform(std::vector<int>, int);
     virtual int GoToEndOfSample(int);

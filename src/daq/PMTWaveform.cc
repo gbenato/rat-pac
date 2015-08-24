@@ -2,26 +2,22 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
-#include <RAT/DS/PMTWaveform.hh>
+#include <RAT/PMTWaveform.hh>
 #include <RAT/PMTPulse.hh>
 #include <RAT/Log.hh>
 #include <RAT/ListHelp.hh>
 #include <CLHEP/Random/RandGauss.h>
 
-ClassImp(RAT::DS::PMTWaveform)
-
 namespace RAT {
-namespace DS {
 
+PMTWaveform::PMTWaveform()
+{
+}
 
-// PMTWaveform::PMTWaveform()
-// {
-// }
-
-// PMTWaveform::~PMTWaveform()
-// {
+PMTWaveform::~PMTWaveform()
+{
 //   deepdelete_vector(fPulse);
-// }
+}
 
 inline bool Cmp_PMTPulse_TimeAscending(const PMTPulse *a,
 				       const PMTPulse *b)
@@ -97,6 +93,4 @@ void PMTWaveform::SetGraph()
   }
 }
 
-  
-}
 } // namespace RAT

@@ -8,7 +8,7 @@ namespace RAT {
   Digitizer::~Digitizer(){}
   
   
-  void Digitizer::GenerateElectronicNoise(int ichannel, DS::PMTWaveform pmtwf) {
+  void Digitizer::GenerateElectronicNoise(int ichannel, PMTWaveform pmtwf) {
     
     //*** deprecated
     //Sort pulses in time order
@@ -87,7 +87,7 @@ namespace RAT {
 
 
   //Add channel to digitizer and inmdediatly digitize analogue waveform
-  void Digitizer::AddChannel(int ichannel, DS::PMTWaveform pmtwf){
+  void Digitizer::AddChannel(int ichannel, PMTWaveform pmtwf){
     
     GenerateElectronicNoise(ichannel,pmtwf); //Fill fNoise vector
 

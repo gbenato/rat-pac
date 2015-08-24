@@ -4,7 +4,7 @@
 #include <G4ThreeVector.hh>
 #include <RAT/DetectorConstruction.hh>
 #include <RAT/PMTPulse.hh>
-#include <RAT/DS/PMTWaveform.hh>
+#include <RAT/PMTWaveform.hh>
 #include <CLHEP/Random/RandGauss.h>
 
 using namespace std;
@@ -116,7 +116,7 @@ namespace RAT {
       DS::MCPMT *mcpmt = mc->GetMCPMT(imcpmt);
       
       //For each PMT loop over hit photons and create a waveform for each of them
-      DS::PMTWaveform pmtwf;
+      PMTWaveform pmtwf;
       pmtwf.SetStepTime(fStepTimeDB);
       pmtwf.SetSamplingWindow(fSamplingTimeDB);
       //      double PulseDuty=0.0;
