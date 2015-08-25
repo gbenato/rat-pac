@@ -67,14 +67,16 @@
 ##### BEGIN EVENT LOOP ##################
 /rat/proc daq
 /rat/procset trigger "allpmts" #simpledaq, triggerpmt, allpmts
+/rat/proc analysis
 /rat/proc count
 /rat/procset update 100
 
 #Output file
 /rat/proclast outroot
+/rat/procset file "TheiaRnDQuickTest.root"
 #/rat/procset file "../results/TheiaRnD_cosmic3GeV_tankholed_acry_cher_wbls5pc.root"
 #/rat/procset file "../results/TheiaRnD_cosmic3GeV_tank_quartz_wbls5pct_noscint_cylinder_pmts.root"
-/rat/procset file "../results/TheiaRnD_wbls_cher_5cm_thintarget_target35mm_pmtholder.root"
+#/rat/procset file "../results/TheiaRnD_wbls_cher_5cm_thintarget_target35mm_pmtholder.root"
 #/rat/procset file "../results/TheiaRnD_geant4.10_onepmt_acry.root"
 #########################################
 
@@ -130,4 +132,4 @@
 #######################################
 
 ##### RUN ###########
-/run/beamOn 200
+/run/beamOn 10
