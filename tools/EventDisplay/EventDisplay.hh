@@ -80,7 +80,7 @@ protected:
   std::vector<TGraph> PMTDigitizedWaveforms;
   std::map< int, std::vector<double> > vMCPMTWaveforms;
   std::map< int, std::vector<int> > vMCPMTDigitizedWaveforms;
-  std::map< int, std::vector<int> > vPMTDigitizedWaveforms;
+  std::map< int, std::vector<unsigned short int> > vPMTDigitizedWaveforms;
   std::map<std::string,TH2F*> hxyplane;
   TCanvas *canvas_event;
 

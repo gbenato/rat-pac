@@ -1,7 +1,7 @@
 /**
  * @class PMT
  * Data Structure: PMT in triggered event
- * 
+ *
  * This represents a PMT in a detector event.
  */
 
@@ -35,17 +35,17 @@ public:
   virtual bool IsAboveThreshold() { return AboveThreshold; }
 
   /** Digitzed and sampled waveform */
-  virtual void SetWaveform(std::vector<int> _waveform) {fWaveform = _waveform; }
-  virtual std::vector<int> GetWaveform() { return fWaveform; }
+  virtual void SetWaveform(std::vector<unsigned short int> _waveform) {fWaveform = _waveform; }
+  virtual std::vector<unsigned short int> GetWaveform() { return fWaveform; }
 
-  
+
   ClassDef(PMT, 1);
 
 protected:
   Int_t id;
   Float_t charge;
   Float_t time;
-  std::vector<int> fWaveform;
+  std::vector<unsigned short int> fWaveform;
   bool AboveThreshold;
 };
 
@@ -53,4 +53,3 @@ protected:
 } // namespace RAT
 
 #endif
-
