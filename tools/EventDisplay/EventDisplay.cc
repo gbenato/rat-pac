@@ -11,6 +11,7 @@
 #include<TLine.h>
 #include<TPaveText.h>
 #include<TStyle.h>
+#include<TApplication.h>
 
 #include<RAT/DS/MC.hh>
 #include<RAT/DS/MCTrack.hh>
@@ -22,20 +23,11 @@
 
 #include "EventDisplay.hh"
 
-bool fexists(const char *filename)
-{
-  std::ifstream ifile(filename);
-  return ifile.good();
-}
-
 EventDisplay::EventDisplay(){
 
   //Init
   SetParameters();
   OpenFile(inputFileName);
-  int appargc = 0;
-  char **appargv = NULL;
-  dummyApp = new TApplication("EventDisplay", &appargc, appargv);
   
   //Set canvas
   gStyle->SetGridWidth(1);
@@ -68,7 +60,7 @@ EventDisplay::EventDisplay(){
 
 void EventDisplay::OpenFile(std::string inputfile){
 
-  std::cout<<" EventDisplay >>> Opening file "<<inputfile<<" ..... "<<std::endl;  
+  std::cout<<" Opening file "<<inputfile<<" ..... "<<std::endl;  
   dsreader = new RAT::DSReader(inputfile.c_str());
   nevents = dsreader->GetT()->GetEntries();
 
@@ -182,18 +174,19 @@ void EventDisplay::LoadEvent(int ievt){
 
   //Load photoelectrons
   for (int ipmt = 0; ipmt < 16; ipmt++){
+    //    hitpmts[ipmt] = false; //clear
     npe[ipmt]=0;
   }
   for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++){
     int pmtID = mc->GetMCPMT(ipmt)->GetID();
     npe[pmtID] = mc->GetMCPMT(ipmt)->GetMCPhotonCount();
+    //hitpmts[pmtID] = false;
+    //    if(npe[pmtID] != 0) hitpmts[pmtID] = true;
   }
 
-  if(drawPMTs){
-    //Highlight PMT if was hit
-    for(int ipmt=0; ipmt<npe.size(); ipmt++){
-      if(npe[ipmt]>0) EDGeo->HitPMT(ipmt,npe[ipmt]);
-    }
+  //Highlight PMT if was hit
+  for(int ipmt=0; ipmt<npe.size(); ipmt++){
+    if(npe[ipmt]>0) EDGeo->HitPMT(ipmt,npe[ipmt]);
   }
   
   ////////////
@@ -260,7 +253,6 @@ void EventDisplay::SetParameters(){
   //Flags
   debugLevel = dbED->GetI("debug_level");
   drawGeometry = dbED->GetI("draw_geo");
-  drawPMTs = dbED->GetI("draw_pmts");
   initialTrack = dbED->GetI("initial_track");
   finalTrack = dbED->GetI("final_track");
   event_option = dbED->GetS("event_option");
@@ -273,17 +265,6 @@ void EventDisplay::SetParameters(){
   //Geometry files
   geoFileName = dbED->GetS("geo_file");
   pmtInfoFileName = dbED->GetS("pmtinfo_file");
-
-  //Validate parameters
-  if(event_number<-1) std::cout<<" EventDisplay >>> Event by event mode (Event navigation disabled) "<<std::endl;
-  if(!fexists(geoFileName.c_str())) {std::cout<<" EventDisplay >>> "<<geoFileName<<" doesn't exist. Exit now!"<<std::endl; exit(0);}
-  if(!fexists(pmtInfoFileName.c_str())) {std::cout<<" EventDisplay >>> "<<pmtInfoFileName<<" doesn't exist. Exit now!"<<std::endl; exit(0);}
-  if(drawGeometry) std::cout<<" EventDisplay >>> Draw geometry in "<<geoFileName<<std::endl;
-  else std::cout<<" EventDisplay >>> Draw geometry disabled "<<std::endl;
-  if(drawPMTs) std::cout<<" EventDisplay >>> Draw PMTs in "<<pmtInfoFileName<<std::endl;
-  else std::cout<<" EventDisplay >>> Draw PMTs disabled "<<std::endl;
-
-
   
 }
 
@@ -293,8 +274,7 @@ void EventDisplay::SetGeometry(){
 
   if(debugLevel > 0) std::cout<<" EventDisplay::SetGeometry "<<std::endl;
   
-  if(drawPMTs) EDGeo = new EventGeometry(geoFileName, pmtInfoFileName);
-  else EDGeo = new EventGeometry(geoFileName);
+  EDGeo = new EventGeometry(geoFileName, pmtInfoFileName);
 
   if(debugLevel > 0) std::cout<<" EventDisplay::SetGeometry - DONE "<<std::endl;
   
@@ -370,7 +350,7 @@ void EventDisplay::DisplayEvent(int ievt){
   for (std::map<std::string,TH2F*>::iterator it=hxyplane.begin();it!=hxyplane.end();it++){
     it->second->Draw("box same");
   }
-  if(drawPMTs) EDGeo->DrawPMTMap();
+  EDGeo->DrawPMTMap();
   
 #ifdef __WAVEFORMS_IN_DS__
   //Waveforms  
@@ -431,8 +411,7 @@ void EventDisplay::DisplayEvent(int ievt){
   canvas_event->Update();
   canvas_event->WaitPrimitive();
 
-  //  if(event_number>=0) exit(0);
-  if(event_number>=0) dummyApp->Run();
+  if(event_number>=0) exit(0);
 
   if(debugLevel > 0) std::cout<<" EventDisplay::DisplayEvent - DONE "<<std::endl;
 

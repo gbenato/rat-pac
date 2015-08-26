@@ -9,22 +9,18 @@
 
 EventGeometry::EventGeometry(std::string dbGeoFile, std::string dbPMTInfoFile){
 
-  //  std::cout<<" EventGeometry::EventGeometry "<<std::endl;
-
-  bool drawPMTs = false;
-  if(dbPMTInfoFile!="")
-    drawPMTs = true;
+  std::cout<<" EventGeometry::EventGeometry "<<std::endl;
 
   world = new EDGeoBox("world");
   RAT::DB* db = RAT::DB::Get();
   db->Load(dbGeoFile);
-  if(drawPMTs) db->Load(dbPMTInfoFile);
+  db->Load(dbPMTInfoFile);
   RAT::DBLinkGroup mydblink = db->GetLinkGroup("GEO");
 
   for(RAT::DBLinkGroup::iterator it=mydblink.begin(); it!=mydblink.end();it++){
 
     std::string volName = it->first;
-    //   std::cout<<" EventGeometry::EventGeometry "<<volName<<std::endl;
+    std::cout<<" EventGeometry::EventGeometry "<<volName<<std::endl;
     RAT::DBLinkPtr dbGeo = db->GetLink("GEO",volName.c_str());
     std::string mother = dbGeo->GetS("mother");
     std::vector<double> pos = std::vector<double>(3,0);
@@ -56,26 +52,22 @@ EventGeometry::EventGeometry(std::string dbGeoFile, std::string dbPMTInfoFile){
       AddNewTube(volName.c_str(), mother, pos, r_min, r_max, height);
       if(volName!="") geoHierarchy[volName] = mother;
     }
-    else if( dbGeo->GetS("type") == "sphere" ){
-      double r_max = dbGeo->GetD("r_max");
-      double r_min = 0;
-      try{
-	r_min = dbGeo->GetD("r_min");
-      }
-      catch(RAT::DBNotFoundError){}
-      AddNewSphere(volName.c_str(), mother, pos, r_min, r_max);
-      if(volName!="") geoHierarchy[volName] = mother;
-    }
-    else if( dbGeo->GetS("type") == "pmtarray" && drawPMTs){
+    else if( dbGeo->GetS("type") == "pmtarray" ){
+
+      std::cout<<" PMT "<<std::endl;
 
       std::string pos_table = dbGeo->GetS("pos_table");
       RAT::DBLinkPtr dbPMTPos = db->GetLink(pos_table.c_str());
+
+      std::cout<<" PMT "<<pos_table<<std::endl;
+
       std::vector<double> x_pos = dbPMTPos->GetDArray("x");
       std::vector<double> y_pos = dbPMTPos->GetDArray("y");
       std::vector<double> z_pos = dbPMTPos->GetDArray("z");
       for(int ipmt=0;ipmt<x_pos.size();ipmt++){
 	std::ostringstream volNameUsed;
 	volNameUsed << volName <<"_"<<ipmt;
+	std::cout<<" Adding PMT "<<volNameUsed.str()<<" "<<ipmt<<" "<<x_pos[ipmt]<<" "<<y_pos[ipmt]<<" "<<z_pos[ipmt]<<std::endl;
 	AddNewPMT(volNameUsed.str().c_str(), mother, x_pos[ipmt], y_pos[ipmt], z_pos[ipmt]);
 	if(volNameUsed.str()!="") geoHierarchy[volNameUsed.str()] = mother;
       }
@@ -83,16 +75,16 @@ EventGeometry::EventGeometry(std::string dbGeoFile, std::string dbPMTInfoFile){
   }
 
   BuildGeometry();
-  if(drawPMTs) BuildPMTMap();
+  BuildPMTMap();
 
-  //  std::cout<<" EventGeometry::EventGeometry - DONE "<<std::endl;
+  std::cout<<" EventGeometry::EventGeometry - DONE "<<std::endl;
   
 }
 
 
 void EventGeometry::BuildGeometry(){
 
-  //  std::cout<<" EventGeometry::BuildGeometry "<<std::endl;
+  std::cout<<" EventGeometry::BuildGeometry "<<std::endl;
 
   //Order hierarchy
   geoOrder.push_back("world");
@@ -105,8 +97,9 @@ void EventGeometry::BuildGeometry(){
   }
   
   //Print geo order
-  // for(int ivol=0; ivol<geoOrder.size();ivol++)
-  //   std::cout<<" Volume "<<ivol<<": "<<geoOrder[ivol]<<std::endl;
+  for(int ivol=0; ivol<geoOrder.size();ivol++)
+    std::cout<<" Volume "<<ivol<<": "<<geoOrder[ivol]<<std::endl;
+
   
   //Geometry
   tgeoman = new TGeoManager("box", "poza1");
@@ -136,15 +129,6 @@ void EventGeometry::BuildGeometry(){
       }
     }
 
-    for(int isphere=0; isphere<spheres.size(); isphere++){
-      if(spheres[isphere]->GetName() == geoOrder[ivol]){
-	std::vector<double> trans = this->GetAbsolutePositionFor(spheres[isphere]->GetName());
-    	spheres[isphere]->AddVolume(geoVolumes["world"],trans);
-    	geoVolumes[spheres[isphere]->GetName()] = spheres[isphere]->GetVolume();
-    	break;
-      }
-    }
-
     for(int ipmt=0; ipmt<pmts.size(); ipmt++){
       if(pmts[ipmt]->GetName() == geoOrder[ivol]){
 	std::vector<double> trans(3,0);
@@ -158,7 +142,7 @@ void EventGeometry::BuildGeometry(){
   
   tgeoman->CloseGeometry();
 
-  //  std::cout<<" EventGeometry::BuildGeometry - DONE "<<std::endl;
+  std::cout<<" EventGeometry::BuildGeometry - DONE "<<std::endl;
 
 }
 
@@ -213,13 +197,11 @@ void EventGeometry::DrawPMTMap(){
 
 void EventGeometry::DrawGeometry(){
 
-  //  std::cout<<" EventGeometry::DrawGeometry "<<pmts.size()<<std::endl;
-  
   //Reset PMT colors
   for(int ipmt = 0; ipmt<pmts.size(); ipmt++){
     pmts[ipmt]->GetVolume()->SetLineColor(1);
   }
-    
+  
   tgeoman->GetMasterVolume()->Draw();
   //tgeoman->GetMasterVolume()->Draw("ogle");
   
@@ -261,17 +243,6 @@ void EventGeometry::AddNewTube(std::string name, std::string mother, std::vector
   
 }
 
-void EventGeometry::AddNewSphere(std::string name, std::string mother, std::vector<double> pos, double r_min, double r_max){
-
-  spheres.push_back(new EDGeoSphere(name));
-  EDGeoSphere* newsphere = spheres.back();
-  newsphere->SetName(name);
-  newsphere->SetMother(mother);
-  newsphere->SetPos(pos);
-  newsphere->SetRadius(r_min,r_max);
-  
-}
-
 
 void EventGeometry::AddNewBox(std::string name, std::string mother, std::vector<double> pos, std::vector<double> size){
 
@@ -306,16 +277,6 @@ std::vector<double> EventGeometry::GetAbsolutePositionFor(std::string volumeName
     for(int itube=0; itube<tubes.size(); itube++){
       if(tubes[itube]->GetName() == geoHierarchy[currentVolume]){
 	std::vector<double> pos = tubes[itube]->GetPos();
-	pos_total[0] += pos[0];
-	pos_total[1] += pos[1];
-	pos_total[2] += pos[2];
-	break;
-      }
-    }
-
-    for(int isphere=0; isphere<spheres.size(); isphere++){
-      if(spheres[isphere]->GetName() == geoHierarchy[currentVolume]){
-	std::vector<double> pos = spheres[isphere]->GetPos();
 	pos_total[0] += pos[0];
 	pos_total[1] += pos[1];
 	pos_total[2] += pos[2];
