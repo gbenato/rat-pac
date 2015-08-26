@@ -44,7 +44,7 @@ public:
   void SetParameters();
 
 protected:
-  
+
   //Parameters
   RAT::DBLinkPtr dbED;
   int debugLevel;
@@ -60,7 +60,7 @@ protected:
   std::vector<double> intersection_zplane;
 
   TApplication *dummyApp;
-  
+
   //Maps
   std::map<std::string,int> FirstProcessCounter; //Process name - Counter
   std::map<std::string,int> LastProcessCounter; //Process name - Counter

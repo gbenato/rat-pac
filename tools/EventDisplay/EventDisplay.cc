@@ -36,7 +36,7 @@ EventDisplay::EventDisplay(){
   int appargc = 0;
   char **appargv = NULL;
   dummyApp = new TApplication("EventDisplay", &appargc, appargv);
-  
+
   //Set canvas
   gStyle->SetGridWidth(1);
   canvas_event = new TCanvas("canvas_event", "Event", 1200, 800);
@@ -53,27 +53,27 @@ EventDisplay::EventDisplay(){
   ParticleColor[211]=kOrange; ParticleWidth[211]=2;  ParticleName[211]= "Pi+";
   ParticleColor[0]=kCyan+1;     ParticleWidth[0]=1;    ParticleName[0] = "Cherenkov photon"; //Indeed this is an optical photon, but I changed the definition
   ParticleColor[9999]=kRed-7;     ParticleWidth[9999]=1;    ParticleName[9999] = "Scintillation photon"; //Created by me, PDG number doesn't actually exist
-  
+
   //Representation plane
   hxyplane["start"] = new TH2F("hxyplane_cher","Track intersections with XY plane: Cherenkov",1000,(-1)*intersection_zplane[0],intersection_zplane[0],1000,(-1)*intersection_zplane[1],intersection_zplane[1]);
   hxyplane["Cerenkov"] = new TH2F("hxyplane_cher","Track intersections with XY plane: Cherenkov",1000,(-1)*intersection_zplane[0],intersection_zplane[0],1000,(-1)*intersection_zplane[1],intersection_zplane[1]);
   hxyplane["Scintillation"] = new TH2F("hxyplane_scint","Track intersections with XY plane: Scintillation",1000,(-1)*intersection_zplane[0],intersection_zplane[0],1000,(-1)*intersection_zplane[1],intersection_zplane[1]);
 
   SetGeometry();
-    
-  if(debugLevel > 0) std::cout<<" EventDisplay::EventDisplay - DONE "<<std::endl;  
-  
+
+  if(debugLevel > 0) std::cout<<" EventDisplay::EventDisplay - DONE "<<std::endl;
+
 };
 
 
 void EventDisplay::OpenFile(std::string inputfile){
 
-  std::cout<<" EventDisplay >>> Opening file "<<inputfile<<" ..... "<<std::endl;  
+  std::cout<<" EventDisplay >>> Opening file "<<inputfile<<" ..... "<<std::endl;
   dsreader = new RAT::DSReader(inputfile.c_str());
   nevents = dsreader->GetT()->GetEntries();
 
   if(debugLevel > 0) std::cout<<" DONE! "<<nevents<<" in file."<<std::endl;
-  
+
 };
 
 
@@ -116,9 +116,9 @@ void EventDisplay::LoadEvent(int ievt){
   if (finalTrack<=0 || finalTrack > mc->GetMCTrackCount()) finalTrack = mc->GetMCTrackCount();
   //Load tracks
   for (int itr = initialTrack; itr < finalTrack; itr++) {
-    
+
     if(debugLevel > 0) std::cout<<"  Track "<<itr<<std::endl;
-    
+
     RAT::DS::MCTrack *mctrack = mc->GetMCTrack(itr);
     //Create new track
     pl_tracks.resize(pl_tracks.size()+1);
@@ -142,7 +142,7 @@ void EventDisplay::LoadEvent(int ievt){
     TVector3 bottom_pos(9999.,9999.,9999.); //second interpolation point
     TVector3 int_pos(9999.,9999.,9999.);//intersection point
     for (int istep = 0; istep < nsteps; istep++) {
-      
+
       if(debugLevel > 0) std::cout<<"  |->Step "<<istep<<std::endl;
 
       RAT::DS::MCTrackStep *step = mctrack->GetMCTrackStep(istep);
@@ -176,7 +176,7 @@ void EventDisplay::LoadEvent(int ievt){
       }
 
       if(debugLevel > 0) std::cout<<"   EventDisplay::LoadEvent (Passed intersection) "<<std::endl;
-      
+
     } //end step loop
   } //end track loop
 
@@ -195,7 +195,7 @@ void EventDisplay::LoadEvent(int ievt){
       if(npe[ipmt]>0) EDGeo->HitPMT(ipmt,npe[ipmt]);
     }
   }
-  
+
   ////////////
   // PMT waveforms
   ////////////
@@ -211,7 +211,7 @@ void EventDisplay::LoadEvent(int ievt){
 
 
   for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++) {
-    
+
     RAT::DS::MCPMT *mcpmt = mc->GetMCPMT(ipmt);
 
     //Set analogue graphs
@@ -235,7 +235,7 @@ void EventDisplay::LoadEvent(int ievt){
     }
 
   }
- 
+
   //Set correct limits for drawing purposes
   for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++) {
     PMTWaveforms[ipmt].GetYaxis()->SetRangeUser(1.2*ymin,.5);
@@ -244,7 +244,7 @@ void EventDisplay::LoadEvent(int ievt){
 
 
 
-  
+
   if(debugLevel > 0) std::cout<<" EventDisplay::LoadEvent - DONE "<<std::endl;
 
 }
@@ -284,7 +284,7 @@ void EventDisplay::SetParameters(){
   else std::cout<<" EventDisplay >>> Draw PMTs disabled "<<std::endl;
 
 
-  
+
 }
 
 
@@ -292,12 +292,12 @@ void EventDisplay::SetParameters(){
 void EventDisplay::SetGeometry(){
 
   if(debugLevel > 0) std::cout<<" EventDisplay::SetGeometry "<<std::endl;
-  
+
   if(drawPMTs) EDGeo = new EventGeometry(geoFileName, pmtInfoFileName);
   else EDGeo = new EventGeometry(geoFileName);
 
   if(debugLevel > 0) std::cout<<" EventDisplay::SetGeometry - DONE "<<std::endl;
-  
+
 }
 
 void EventDisplay::DumpEventInfo(int ievt){
@@ -343,7 +343,7 @@ void EventDisplay::DisplayEvent(int ievt){
   this->DumpEventInfo(ievt);
   if(event_number>=0) this->DumpDisplayInfo();
 
-  
+
   if(debugLevel > 0) std::cout<<"Display canvas 1 "<<std::endl;
 
   canvas_event->SetTitle(Form("Event %d/%d",ievt,nevents));
@@ -351,7 +351,7 @@ void EventDisplay::DisplayEvent(int ievt){
   //3D display
   canvas_event->cd(1);
   if(drawGeometry) EDGeo->DrawGeometry();
-     pl_tracks[0].Draw("LINE");
+  if(pl_tracks.size()>0) pl_tracks[0].Draw("LINE");
   for (int itr = 0; itr < finalTrack - initialTrack; itr++) {
     pl_tracks[itr].Draw("LINE same");
   }
@@ -371,13 +371,13 @@ void EventDisplay::DisplayEvent(int ievt){
     it->second->Draw("box same");
   }
   if(drawPMTs) EDGeo->DrawPMTMap();
-  
+
 #ifdef __WAVEFORMS_IN_DS__
-  //Waveforms  
+  //Waveforms
   if(mc->GetMCPMTCount()>0){
-    
+
     if(debugLevel > 0) std::cout<<"Display canvas 5 "<<std::endl;
-    
+
     canvas_event->cd(3);
     PMTWaveforms[0].Draw("AP");
     PMTWaveforms[0].GetXaxis()->SetTitle("t(ns)");
@@ -388,9 +388,9 @@ void EventDisplay::DisplayEvent(int ievt){
       //      PMTDigitizedWaveforms[ipmt].SetLineColor(kRed);
       //      PMTDigitizedWaveforms[ipmt].Draw("LINE same");
     }
-    
+
     if(debugLevel > 0) std::cout<<"Display canvas 6 "<<std::endl;
-    
+
     canvas_event->cd(4);
     PMTDigitizedWaveforms[0].Draw("AP");
     PMTDigitizedWaveforms[0].GetXaxis()->SetTitle("sample");
@@ -402,7 +402,7 @@ void EventDisplay::DisplayEvent(int ievt){
     }
   }
 #endif
-  
+
   /*
   //Draw grid
   int nlines = 2*XP_XSIDE/pmtwidth;
@@ -425,7 +425,7 @@ void EventDisplay::DisplayEvent(int ievt){
   for(int ipmt=0; ipmt<vpmtbox.size();ipmt++)
     vpmtbox[ipmt].Draw("LINE same");
   */
-  
+
   //Wait for user action
   canvas_event->Modified();
   canvas_event->Update();
@@ -441,7 +441,7 @@ void EventDisplay::DisplayEvent(int ievt){
 bool EventDisplay::IsCerenkov(){
 
   return FirstProcessCounter["Cerenkov"]>0;
-  
+
 }
 
 bool EventDisplay::IsPE(){
@@ -451,7 +451,7 @@ bool EventDisplay::IsPE(){
     npe_total += npe[mc->GetMCPMT(ipmt)->GetID()];
 
   return npe_total>0;
-  
+
 }
 
 void EventDisplay::DumpDisplayInfo(){
@@ -463,7 +463,7 @@ void EventDisplay::DumpDisplayInfo(){
   std::cout<<"Down: I"<<std::endl;
   std::cout<<"Zoom in: J"<<std::endl;
   std::cout<<"Zoom out: K"<<std::endl;
-  
+
 }
 
 void EventDisplay::Open(){
