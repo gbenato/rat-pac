@@ -1,7 +1,7 @@
 /**
  * @class PMT
  * Data Structure: PMT in triggered event
- * 
+ *
  * This represents a PMT in a detector event.
  */
 
@@ -30,16 +30,20 @@ public:
   virtual void SetTime(Float_t _time) { this->time = _time; }
   virtual Float_t GetTime() { return time; }
 
+  /** Digitzed and sampled waveform */
+   virtual void SetWaveform(std::vector<unsigned short int> _waveform) {waveform = _waveform; }
+   virtual std::vector<unsigned short int> GetWaveform() { return waveform; }
+
  ClassDef(PMT, 1);
 
 protected:
   Int_t id;
   Float_t charge;
   Float_t time;
+  std::vector<unsigned short int> waveform;
 };
 
   } // namespace DS
 } // namespace RAT
 
 #endif
-

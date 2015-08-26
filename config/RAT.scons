@@ -227,6 +227,8 @@ env.Append(BUILDERS={'RATApp' : ratapp,
                      'RATAppNoMain' : ratapp_nomain,
                      'RATHeader' : ratheader})
 
+env.Append(LIBS=['-lhdf5_cpp','-lhdf5'])
+
 # Allows user-compiled apps to find rat.cc main function.
 env.Repository('$RATROOT')
     
