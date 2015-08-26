@@ -16,8 +16,8 @@ public:
   AnaProc();
   virtual ~AnaProc() { };
   virtual Processor::Result DSEvent(DS::Root *ds);
-  virtual double GetTimeAtPeak(std::vector<int>);
-  virtual double IntegrateCharge(std::vector<int>);
+  virtual double GetTimeAtPeak(std::vector<unsigned short int>);
+  virtual double IntegrateCharge(std::vector<unsigned short int>);
 
 protected:
   DBLinkPtr fLdaq;

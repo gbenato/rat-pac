@@ -204,8 +204,8 @@ void EventDisplay::LoadEvent(int ievt){
   MCPMTDigitizedWaveforms.resize(mc->GetMCPMTCount());
   PMTDigitizedWaveforms.resize(ev->GetPMTCount());
   double ymin=9999999.; //yaxis min limit analogue
-  int ymax_d=0.; //yaxis max limit digital
-  int ymin_d=9999999.; //yaxis min limit digital
+  unsigned short int ymax_d=0.; //yaxis max limit digital
+  unsigned short int ymin_d=9999999.; //yaxis min limit digital
   double ymax_temp=0.;
   double ymin_temp=0.;
   double xmax_temp=0.;//dummy

@@ -43,8 +43,8 @@ namespace RAT {
     virtual int GetNSamples(int ich){return fDigitWaveForm[ich].size();};
     virtual void GenerateElectronicNoise(int,PMTWaveform);
     //    virtual void DigitizeWaveForm(PMTWaveform);
-    virtual std::vector<int> GetDigitizedWaveform(int ich){return fDigitWaveForm[ich];};
-    virtual std::vector<int> SampleWaveform(std::vector<int>, int);
+    virtual std::vector<unsigned short int> GetDigitizedWaveform(int ich){return fDigitWaveForm[ich];};
+    virtual std::vector<unsigned short int> SampleWaveform(std::vector<unsigned short int>, int);
     virtual int GoToEndOfSample(int);
     // virtual double IntegrateCharge(std::vector<int>);
     virtual double GetDigitizedThreshold(){return fDigitizedThreshold;};
@@ -64,7 +64,7 @@ namespace RAT {
     int fSamplingWindow; //Width of the sampling windows in ns
     int fSampleDelay; //Samples before crossing threshold that we will store
     std::map< int, std::vector<double> > fNoise; //Electronic noise non-digitized for each channel
-    std::map< int, std::vector<int> > fDigitWaveForm; //Digitized waveform for each channel
+    std::map< int, std::vector<unsigned short int> > fDigitWaveForm; //Digitized waveform for each channel
 
   };
 

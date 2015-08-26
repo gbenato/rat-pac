@@ -57,8 +57,8 @@ public:
   std::vector<double> GetWaveform() { return waveform;};
   //  void SetWaveform(PMTWaveform _waveform) {_waveform.SetGraph(); waveform = _waveform; };
   void SetWaveform(std::vector<double> _waveform) {waveform = _waveform;};
-  void SetDigitizedWaveform(std::vector<int> _digitwaveform) {digitWaveForm = _digitwaveform;};
-  std::vector<int> GetDigitizedWaveform() {return digitWaveForm;};
+  void SetDigitizedWaveform(std::vector<unsigned short int> _digitwaveform) {digitWaveForm = _digitwaveform;};
+  std::vector<unsigned short int> GetDigitizedWaveform() {return digitWaveForm;};
 
   /** Total charge as the sum of the charge of all the PE. */
   Float_t GetTotalCharge() const { return qTotal; }
@@ -75,7 +75,7 @@ protected:
   Float_t feTime;
   std::vector<MCPhoton> photon;
   //  PMTWaveform waveform;
-  std::vector<int> digitWaveForm;
+  std::vector<unsigned short int> digitWaveForm;
   std::vector<double> waveform;
 
 };

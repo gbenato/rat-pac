@@ -240,7 +240,7 @@ namespace RAT {
 	int pmtID = mc->GetMCPMT(imcpmt)->GetID();
 	//Sample digitized waveform and look for triggers
 	int nsamples = fDigitizer.GetNSamples(pmtID);
-	std::vector<int> DigitizedWaveform = fDigitizer.GetDigitizedWaveform(pmtID);
+	std::vector<unsigned short int> DigitizedWaveform = fDigitizer.GetDigitizedWaveform(pmtID);
 	for(int isample=0; isample<nsamples; isample++){
 	  if (DigitizedWaveform[isample]<=fDigitizer.GetDigitizedThreshold()){ //hit above threshold! (remember the pulses are negative)
 
@@ -270,7 +270,7 @@ namespace RAT {
       //threshold
       if(triggerID>-1){ //means the trigger PMT exists in the event and hence we have a hit
 	int nsamples = fDigitizer.GetNSamples(triggerID);
-	std::vector<int> DigitizedTriggerWaveform = fDigitizer.GetDigitizedWaveform(triggerID);
+	std::vector<unsigned short int> DigitizedTriggerWaveform = fDigitizer.GetDigitizedWaveform(triggerID);
 	//Sample the digitized waveform to look for triggers
 	for(int isample=0; isample<nsamples; isample++){
 

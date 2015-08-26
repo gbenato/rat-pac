@@ -26,7 +26,7 @@ namespace RAT {
 
       for (int ipmt=0; ipmt < ev->GetPMTCount(); ipmt++){
         DS::PMT* pmt = ev->GetPMT(ipmt);
-        std::vector<int> dWaveform = pmt->GetWaveform();
+        std::vector<unsigned short int> dWaveform = pmt->GetWaveform();
         pmt->SetTime(GetTimeAtPeak(dWaveform));
         pmt->SetCharge(IntegrateCharge(dWaveform));
       }//end PMT loop
@@ -38,7 +38,7 @@ namespace RAT {
 
 
   //Calculates the time at which the peak of the digitized waveform occurs
-  double AnaProc::GetTimeAtPeak(std::vector<int> dWaveform){
+  double AnaProc::GetTimeAtPeak(std::vector<unsigned short int> dWaveform){
 
     float fStepTime = fLdaq->GetD("step_time");
 
@@ -57,7 +57,7 @@ namespace RAT {
   }
 
 
-  double AnaProc::IntegrateCharge(std::vector<int> dWaveform){
+  double AnaProc::IntegrateCharge(std::vector<unsigned short int> dWaveform){
 
     float fStepTime = fLdaq->GetD("step_time");
     double fVHigh = fLdaq->GetD("volt_high");

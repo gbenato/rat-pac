@@ -134,12 +134,12 @@ namespace RAT {
   //Retrieves a chunk of the digitized waveform in a sampling
   //window defined by the user by fSampleDelay and fSamplingWindow
   //[init_sample-fSampleDelay, thres_sample+fSamplingWindow]
-  std::vector<int> Digitizer::SampleWaveform(std::vector<int> completewaveform, int init_sample){
+  std::vector<unsigned short int> Digitizer::SampleWaveform(std::vector<unsigned short int> completewaveform, int init_sample){
 
     int start_sample = init_sample-fSampleDelay;
     int end_sample = init_sample+(int)fSamplingWindow/fStepTime;
     if(end_sample>completewaveform.size()-1) end_sample = completewaveform.size() - 1;
-    std::vector<int> sampledwaveform;
+    std::vector<unsigned short int> sampledwaveform;
 
     while(start_sample<=end_sample){
       sampledwaveform.push_back(completewaveform[start_sample]);
@@ -226,7 +226,7 @@ namespace RAT {
 
   void Digitizer::Clear(){
 
-    for(std::map<int, std::vector<int> >::iterator it = fDigitWaveForm.begin(); it!=fDigitWaveForm.end(); it++){
+    for(std::map<int, std::vector<unsigned short int> >::iterator it = fDigitWaveForm.begin(); it!=fDigitWaveForm.end(); it++){
       it->second.clear();
     }
     for(std::map<int, std::vector<double> >::iterator it = fNoise.begin(); it!=fNoise.end(); it++){
