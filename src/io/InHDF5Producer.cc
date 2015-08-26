@@ -159,6 +159,10 @@ namespace RAT {
         RAT::DS::PMT *pmt = ev->AddNewPMT();
         pmt->SetID(iwaveform->first);
         pmt->SetWaveform(iwaveform->second.at(iev));
+        // info<<"Waveforms "<<pmt->GetWaveform().size()<<"\n";
+        // for(int isample=0; isample<iwaveform->second.at(iev).size();isample++){
+        //   info<<"   "<<isample<<" "<<pmt->GetWaveform()[isample]<<" "<<iwaveform->second.at(iev)[isample]<<"\n";
+        // }
       }
       mainBlock->DSEvent(ds);
     }
