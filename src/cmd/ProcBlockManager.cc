@@ -18,6 +18,7 @@
 #include <RAT/FitPathProc.hh>
 #include <RAT/SimpleDAQProc.hh>
 #include <RAT/DAQProc.hh>
+#include <RAT/AnaProc.hh>
 
 namespace RAT {
 
@@ -71,6 +72,7 @@ ProcBlockManager::ProcBlockManager(ProcBlock *theMainBlock)
   // Misc
   procAllocators["count"] = new ProcAllocatorTmpl<CountProc>;
   procAllocators["prune"] = new ProcAllocatorTmpl<PruneProc>;
+  procAllocators["analysis"]= new ProcAllocatorTmpl<AnaProc>;
 
   // Escape Hatch
   procAllocators["python"] = new ProcAllocatorTmpl<PythonProc>;

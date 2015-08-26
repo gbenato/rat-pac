@@ -1,4 +1,4 @@
-/** 
+/**
  * @class DS::MCPMT
  *  Data Structure: Hit PMT in Monte Carlo
  *
@@ -32,11 +32,11 @@ public:
   virtual Float_t GetCharge() const;
 
   /** Time */
-  virtual Float_t SetTime() {time = this->GetTime();};
+  virtual void SetTime() {time = this->GetTime();};
   virtual Float_t GetTime() const;
 
   /** FETime */
-  virtual Float_t SetFrontEndTime() {feTime = this->GetFrontEndTime();};
+  virtual void SetFrontEndTime() {feTime = this->GetFrontEndTime();};
   virtual Float_t GetFrontEndTime() const;
 
   /** PMT type */
@@ -51,7 +51,7 @@ public:
     return &photon.back();
   }
   void PruneMCPhoton() { photon.resize(0); }
- 
+
   /** PMT waveform */
   //  PMTWaveform* GetWaveform() { return &waveform; };
   std::vector<double> GetWaveform() { return waveform;};
@@ -64,9 +64,9 @@ public:
   Float_t GetTotalCharge() const { return qTotal; }
   void SetTotalCharge() { qTotal = this->GetCharge(); }
 
-  
+
   ClassDef(MCPMT, 1)
-    
+
 protected:
   Int_t id;
   Int_t type;
@@ -77,11 +77,10 @@ protected:
   //  PMTWaveform waveform;
   std::vector<int> digitWaveForm;
   std::vector<double> waveform;
-  
+
 };
 
   } // namespace DS
 } // namespace RAT
 
 #endif
-

@@ -4,13 +4,13 @@
 #include <G4ThreeVector.hh>
 #include <RAT/DetectorConstruction.hh>
 #include <RAT/PMTPulse.hh>
-#include <RAT/DS/PMTWaveform.hh>
+#include <RAT/PMTWaveform.hh>
 #include <CLHEP/Random/RandGauss.h>
 
 using namespace std;
 
 namespace RAT {
-  
+
   inline bool Cmp_PMTPulse_TimeAscending(const PMTPulse *a,
 					 const PMTPulse *b)
   {
@@ -18,7 +18,7 @@ namespace RAT {
     double btime = b->GetPulseStartTime();
     return atime < btime;
   }
-  
+
   DAQProc::DAQProc() : Processor("daq") {
     fLdaq = DB::Get()->GetLink("DAQ");
 
@@ -49,15 +49,15 @@ namespace RAT {
     //Offset
     fOffSetDB = fLdaq->GetD("offset");
     //High voltage
-    fVHigh = fLdaq->GetD("volt_high");    
+    fVHigh = fLdaq->GetD("volt_high");
     //Low voltage
     fVLow = fLdaq->GetD("volt_low");
     //Circuit resistance
     fResistance = fLdaq->GetD("resistance");
     //N bits
     fNBits = fLdaq->GetI("nbits");
-    
-    
+
+
     detail << "DAQProc: DAQ constants loaded" << newline;
     detail << "  PMT Pulse type: " << (fPulseTypeDB==0 ? "square" : "realistic") << newline;
     detail << dformat("  PMT Pulse Width: ....................... %5.1f ns\n", fPulseWidthDB);
@@ -74,7 +74,7 @@ namespace RAT {
     fEventCounter = 0;
   }
 
-  
+
   void DAQProc::SetS(std::string param, std::string value)
   {
     if(param=="trigger")
@@ -86,13 +86,13 @@ namespace RAT {
     }
   }
 
-  
+
   Processor::Result DAQProc::DSEvent(DS::Root *ds) {
     //This processor build waveforms for each PMT in the MC generated event, sample them and
     //store each sampled piece as a new event
 
     DS::MC *mc = ds->GetMC();
-    // if(ds->ExistEV()) {  // there is already a EV branch present 
+    // if(ds->ExistEV()) {  // there is already a EV branch present
     //   ds->PruneEV();     // remove it, otherwise we'll have multiple detector events
     //                      // in this physics event
     //                      // we really should warn the user what is taking place
@@ -114,18 +114,18 @@ namespace RAT {
     for (int imcpmt=0; imcpmt < mc->GetMCPMTCount(); imcpmt++){
 
       DS::MCPMT *mcpmt = mc->GetMCPMT(imcpmt);
-      
+
       //For each PMT loop over hit photons and create a waveform for each of them
-      DS::PMTWaveform pmtwf;
+      PMTWaveform pmtwf;
       pmtwf.SetStepTime(fStepTimeDB);
       pmtwf.SetSamplingWindow(fSamplingTimeDB);
       //      double PulseDuty=0.0;
 
       for (size_t iph=0; iph < mcpmt->GetMCPhotonCount(); iph++) {
-	
+
 	DS::MCPhoton *mcphotoelectron = mcpmt->GetMCPhoton(iph);
 	double TimePhoton = mcphotoelectron->GetFrontEndTime();
-	
+
 	PMTPulse *pmtpulse;
 	if (fPulseTypeDB==0){
             pmtpulse = new SquarePMTPulse; //square PMT pulses
@@ -133,7 +133,7 @@ namespace RAT {
 	else{
 	  pmtpulse = new RealPMTPulse; //real PMT pulses shape
 	}
-	
+
 	pmtpulse->SetPulseMean(fPulseMeanDB);
 	pmtpulse->SetStepTime(fStepTimeDB);
 	pmtpulse->SetPulseMin(fPulseMinDB);
@@ -145,7 +145,7 @@ namespace RAT {
 	//	PulseDuty += pmtpulse->GetPulseEndTime() - pmtpulse->GetPulseStartTime();
 
       } // end mcphotoelectron loop: all pulses produced for this PMT
-      
+
       //Sort pulses in time order
       std::sort(pmtwf.fPulse.begin(),pmtwf.fPulse.end(),Cmp_PMTPulse_TimeAscending);
 
@@ -169,17 +169,17 @@ namespace RAT {
       fDigitizer.AddChannel(mcpmt->GetID(),pmtwf);
       mcpmt->SetDigitizedWaveform(fDigitizer.GetDigitizedWaveform(mcpmt->GetID()));
       //      DigitizedWaveform[mcpmt->GetID()] = fDigitizer.GetDigitizedWaveform();
-      
+
     } //end pmt loop
 
 
-    
-    //////////////////////////////////////////////////////////    
+
+    //////////////////////////////////////////////////////////
     //FROM HERE THE TRIGGER PROCESSOR SHOULD TAKE OVER!
     //1) Check trigger condition and divide waveforms in chunks
     //2) Build events containing digitized waveform samples and integrated charges
     //////////////////////////////////////////////////////////
-    
+
     //Switch among triggers
     //simpledaq for debugging
     if(fTriggerType=="simpledaq"){
@@ -187,7 +187,7 @@ namespace RAT {
       DS::EV *ev = ds->AddNewEV(); //Remove it if no PMT cross threshold
       ev->SetID(fEventCounter);
       fEventCounter++; //simpledaq
-      
+
       std::cout<<" Using simpleDAQ!"<<std::endl;
 
       //simpleDAQ
@@ -196,7 +196,7 @@ namespace RAT {
       for (int imcpmt=0; imcpmt < mc->GetMCPMTCount(); imcpmt++) {
 	DS::MCPMT *mcpmt = mc->GetMCPMT(imcpmt);
 	int pmtID = mcpmt->GetID();
-	
+
 	if (mcpmt->GetMCPhotonCount() > 0) {
 	  // Need at least one photon to trigger
 	  DS::PMT* pmt = ev->AddNewPMT();
@@ -206,26 +206,26 @@ namespace RAT {
 	  // "infinite" charge integration time
 	  // WARNING: gets multiphoton effect right, but not walk correction
 	  // Write directly to calibrated waveform branch
-	  
+
 	  double time = mcpmt->GetMCPhoton(0)->GetFrontEndTime();
 	  double charge = 0;
-	  
+
 	  for (int i=0; i < mcpmt->GetMCPhotonCount(); i++)  {
 	    if (time > mcpmt->GetMCPhoton(i)->GetHitTime())
 	      time = mcpmt->GetMCPhoton(i)->GetHitTime();
 	    charge += mcpmt->GetMCPhoton(i)->GetCharge();
 	  }
-	  
+
 	  //pmt->SetCalibratedCharge(charge);
 	  totalQ += charge;
-	  
+
 	  //charge *= fSPECharge[pmtID] * 1e12; /* convert to pC */
 	  pmt->SetTime(time);
 	  pmt->SetCharge(charge);
 	  calibQ += charge;
 	}
       }
-      
+
       ev->SetTotalCharge(totalQ);
 
     }
@@ -234,7 +234,7 @@ namespace RAT {
 
       DS::EV *ev = ds->AddNewEV(); //Remove it if no PMT cross threshold
       ev->SetID(fEventCounter);
-      fEventCounter++;      
+      fEventCounter++;
 
       for (int imcpmt=0; imcpmt < mc->GetMCPMTCount(); imcpmt++){
 	int pmtID = mc->GetMCPMT(imcpmt)->GetID();
@@ -246,16 +246,16 @@ namespace RAT {
 
 	    DS::PMT* pmt = ev->AddNewPMT();
 	    pmt->SetID(pmtID);
-	    pmt->SetTime(isample*fStepTimeDB); //fixme: think about this time...
+	    //pmt->SetTime(isample*fStepTimeDB); //fixme: think about this time...
 	    pmt->SetWaveform(fDigitizer.SampleWaveform(DigitizedWaveform,isample)); //it is defined by the sample that crosses threshold
-	    pmt->SetCharge(fDigitizer.IntegrateCharge(DigitizedWaveform));
+	    //pmt->SetCharge(fDigitizer.IntegrateCharge(DigitizedWaveform));
 	    isample = fDigitizer.GoToEndOfSample(isample); //go forward towards the end of the sampling window
 	  }//end if above trigger
 	}//end sampling
 	DigitizedWaveform.clear(); //prune for next round of PMTs
       }//end PMT loop
     fDigitizer.Clear();
-      
+
     }
     //Second trigger type: when trigger PMT detects a hit above threshold store
     //hits in ALL the PMTs
@@ -275,7 +275,7 @@ namespace RAT {
 	for(int isample=0; isample<nsamples; isample++){
 
 	  //	  std::cout<<" SAMPLE "<<isample<<" "<<DigitizedTriggerWaveform[isample]<<" "<<fDigitizer.GetDigitizedThreshold()<<std::endl;
-	  
+
 	  if (DigitizedTriggerWaveform[isample]<=fDigitizer.GetDigitizedThreshold()){ //hit above threshold! (remember the pulses are negative)
 
 	    //Create a new event
@@ -289,8 +289,8 @@ namespace RAT {
 	      DS::PMT* pmt = ev->AddNewPMT();
 	      pmt->SetID(pmtID);
 	      pmt->SetWaveform(fDigitizer.SampleWaveform(fDigitizer.GetDigitizedWaveform(pmtID), isample));
-	      pmt->SetCharge(fDigitizer.IntegrateCharge(fDigitizer.GetDigitizedWaveform(pmtID)));
-	      pmt->SetTime(fDigitizer.GetTimeAtPeak(pmtID,isample));
+	      //pmt->SetCharge(fDigitizer.IntegrateCharge(fDigitizer.GetDigitizedWaveform(pmtID)));
+	      //pmt->SetTime(fDigitizer.GetTimeAtPeak(pmtID,isample));
 	      //pmt->SetTime(fDigitizer.GetTimeAtThreshold(pmtID,isample));
 	    } //end reading PMTs
 
@@ -304,7 +304,7 @@ namespace RAT {
 
       fDigitizer.Clear();
     } //end if second type of trigger
-	
+
     // //If got at least one PMT above threshold move forward one event so it is not
     // //overwritten by the next one
     // if(ev->GetPMTCount()>0){
@@ -334,14 +334,14 @@ namespace RAT {
 
 
 
-    
+
     //FIXME
     // else{
     //   std::cout<<"Prune event"<<fEventCounter<<" "<<ds->GetEVCount()<<std::endl;
     //   ds->PruneEV(fEventCounter);
     // }
-    
-    /*      
+
+    /*
     //Sample the PMT waveform to look for photoelectron hits and create a new MCPMTSample
       //for every one of them, regarless they cross threshold. A flag is raised if the threshold
       //is crossed
@@ -353,9 +353,9 @@ namespace RAT {
 
 	  bool IsAboveThreshold = true;
 	  double HitStartTime = TimeNow;
-	  
+
 	  int lsample = isample + (int)fSamplingTimeDB/fSampleStep; //Last sample in the sampling window
-	  
+
 	  //Set PMT observables and save it as a new PMT object in the event
 	  DS::PMT* mcpmtsample = mc->AddNewMCPMTSampled();
 	  mcpmtsample->SetID(mcpmt->GetID());
@@ -366,15 +366,15 @@ namespace RAT {
 
 	  //Continue until de last sample in the sampling window to start over
 	  isample = lsample;
-	  
+
 	} //end if above threshold
 
-	  
+
       }
 
-    
 
-      
+
+
 
 
 
@@ -391,7 +391,7 @@ namespace RAT {
 
 
       while (pmtwf.fPulse.size()>0){
-	
+
 	double TimeNow = pmtwf.fPulse[0]->GetPulseStartTime();
 	double LastPulseTime = pmtwf.fPulse[pmtwf.fPulse.size()-1]->GetPulseEndTime();
 	int NextPulse=0;
@@ -404,7 +404,7 @@ namespace RAT {
 	  wfheight =  pmtwf.GetHeight(TimeNow); //height of the waveform at this step
 	  TimeNow += fStepTimeDB;
 
-	  //	  qfuzz = wfheight+NoiseAmpl*CLHEP::RandGauss::shoot();	  
+	  //	  qfuzz = wfheight+NoiseAmpl*CLHEP::RandGauss::shoot();
 	  // move forward in time by step or if we're at baseline move ahead to next pulse
 	  // if (wfheight==0.0){
 	  //   NextPulse = pmtwf.GetNext(TimeNow);
@@ -417,7 +417,7 @@ namespace RAT {
 	  //   TimeNow += fStepTimeDB;
 	  // }
 	}
-	
+
 	//If this PMT crosses the threshold set the hit time as the time when it crosses the
 	//threshold and set the flag to true. If doesn't, set the hit time to the starting time
 	//of the pulse.
@@ -427,13 +427,13 @@ namespace RAT {
 	  IsAboveThreshold = true;
 	  HitStartTime = TimeNow;
 	}
-	
+
 	//Integrate charge and create a new PMT in the event
 	double IntegratedCharge = 0.;
 	double TimeStartSample = HitStartTime - fGDelayDB; //start before several steps before thresholds
 	double TimeEndSample = TimeStartSample+fSamplingTimeDB;
 	double TimeEndIntegration = TimeStartSample+fIntTimeDB;
-	
+
 	unsigned int ipulse=0;
 	while (ipulse < pmtwf.fPulse.size() && pmtwf.fPulse[ipulse]->GetPulseStartTime()<TimeEndSample){
 	  IntegratedCharge+=pmtwf.fPulse[ipulse]->Integrate(TimeStartSample,TimeEndIntegration); //Fixme: create a function in PMTWaveForm that performs the integration
@@ -444,7 +444,7 @@ namespace RAT {
 	while (ipulse < pmtwf.fPulse.size() && pmtwf.fPulse[ipulse]->GetPulseStartTime()<TimeEndSample ) {
 	  ipulse++;
 	}
-	
+
 	//Set PMT observables and save it as a new PMT object in the event
 	DS::PMT* mcpmtsample = mc->AddNewMCPMTSampled();
 	mcpmtsample->SetID(mcpmt->GetID());
@@ -454,14 +454,14 @@ namespace RAT {
 
 	//Remove all the pulses whithin the sampling window
 	pmtwf.fPulse.erase(pmtwf.fPulse.begin(),pmtwf.fPulse.begin()+ipulse);
-	
+
       } //end pulse sampling
-      
+
       //clean up just in case
       for (unsigned int i = 0; i<pmtwf.fPulse.size();i++){
         delete pmtwf.fPulse[i];
       }
-      
+
     } //end PMT loop
 
 
@@ -471,5 +471,5 @@ namespace RAT {
     return Processor::OK;
 
   } //DAQProc::DSEvent
-  
+
 } // namespace RAT

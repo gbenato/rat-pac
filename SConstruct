@@ -35,7 +35,7 @@ copy_headers = env.Alias('headers', env['RATHEADERS'])
 env.Default(copy_headers)
 
 #### Target: CINT dictionary for data structure classes
-cint_cls= Split('DS/Root DS/MC DS/EV DS/MCParticle DS/MCPhoton DS/PMTWaveform '
+cint_cls= Split('DS/Root DS/MC DS/EV DS/MCParticle DS/MCPhoton '
                 'DS/MCPMT DS/MCSummary DS/PMT '
                 'DS/RunStore DS/Run '
                 'DS/PosFit DS/PMTInfo '
@@ -65,7 +65,6 @@ env.Default(ratbin)
 #### Target: Shared library for ROOT
 cint_source = Split('ds/Root io/DSReader io/TrackNav io/TrackCursor '
                     'ds/MCPMT '
-                    'ds/PMTWaveform '
                     'io/DSWriter '
                     'db/DB db/DBLink db/DBTextLoader db/DBTable '
                     'db/DBJsonLoader util/ReadFile db/HTTPDownloader '

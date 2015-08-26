@@ -17,13 +17,13 @@
 #define __RAT_Digitizer__
 
 #include <map>
-#include <RAT/DS/PMTWaveform.hh>
+#include <RAT/PMTWaveform.hh>
 
 namespace RAT {
-  
+
   class Digitizer {
   public:
-    
+
     Digitizer();
     virtual ~Digitizer();
 
@@ -38,21 +38,21 @@ namespace RAT {
     virtual void SetSampleDelay(double _fdelay){fSampleDelay=_fdelay;};
     virtual void SetThreshold(double);
     virtual void Clear();
-    
-    virtual void AddChannel(int,DS::PMTWaveform);
+
+    virtual void AddChannel(int,PMTWaveform);
     virtual int GetNSamples(int ich){return fDigitWaveForm[ich].size();};
-    virtual void GenerateElectronicNoise(int,DS::PMTWaveform);
-    //    virtual void DigitizeWaveForm(DS::PMTWaveform);
+    virtual void GenerateElectronicNoise(int,PMTWaveform);
+    //    virtual void DigitizeWaveForm(PMTWaveform);
     virtual std::vector<int> GetDigitizedWaveform(int ich){return fDigitWaveForm[ich];};
     virtual std::vector<int> SampleWaveform(std::vector<int>, int);
     virtual int GoToEndOfSample(int);
-    virtual double IntegrateCharge(std::vector<int>);
+    // virtual double IntegrateCharge(std::vector<int>);
     virtual double GetDigitizedThreshold(){return fDigitizedThreshold;};
-    virtual double GetTimeAtPeak(int,int);
-    virtual double GetTimeAtThreshold(int,int);
+    // virtual double GetTimeAtPeak(int,int);
+    // virtual double GetTimeAtThreshold(int,int);
 
   protected:
-    
+
     double fStepTime; //Time resolution in ns
     int fNBits; //N bits of the digitizer
     double fVhigh; //Higher voltage
@@ -65,9 +65,9 @@ namespace RAT {
     int fSampleDelay; //Samples before crossing threshold that we will store
     std::map< int, std::vector<double> > fNoise; //Electronic noise non-digitized for each channel
     std::map< int, std::vector<int> > fDigitWaveForm; //Digitized waveform for each channel
-    
+
   };
-    
+
 }
 
 #endif
