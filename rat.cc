@@ -23,6 +23,7 @@
 #include <RAT/Log.hh>
 #include <RAT/RunManager.hh>
 #include <RAT/InROOTProducer.hh>
+#include <RAT/InHDF5Producer.hh>
 #include <RAT/InNetProducer.hh>
 #include <RAT/ProcBlock.hh>
 #include <RAT/ProcBlockManager.hh>
@@ -122,6 +123,7 @@ int main(int argc, char** argv) {
     // Build event producers
     RunManager* runManager = new RunManager(mainBlock);
     InROOTProducer *inroot = new InROOTProducer(mainBlock);
+    InHDF5Producer *inhdf5 = new InHDF5Producer(mainBlock);
     InNetProducer *innet = new InNetProducer(mainBlock);
     // RATFsim *fsim = new RATFsim(analysisStack); // SOMEDAY!
 
@@ -203,6 +205,7 @@ int main(int argc, char** argv) {
 
     delete runManager;
     delete inroot;
+    delete inhdf5;
     delete innet;
 
     delete rdb_messenger;

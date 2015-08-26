@@ -35,18 +35,17 @@ public:
   virtual bool IsAboveThreshold() { return AboveThreshold; }
 
   /** Digitzed and sampled waveform */
-  virtual void SetWaveform(std::vector<unsigned short int> _waveform) {fWaveform = _waveform; }
-  virtual std::vector<unsigned short int> GetWaveform() { return fWaveform; }
+   virtual void SetWaveform(std::vector<unsigned short int> _waveform) {waveform = _waveform; }
+   virtual std::vector<unsigned short int> GetWaveform() { return waveform; }
 
-
-  ClassDef(PMT, 1);
+ ClassDef(PMT, 1);
 
 protected:
   Int_t id;
   Float_t charge;
   Float_t time;
-  std::vector<unsigned short int> fWaveform;
   bool AboveThreshold;
+  std::vector<unsigned short int> waveform;
 };
 
   } // namespace DS
