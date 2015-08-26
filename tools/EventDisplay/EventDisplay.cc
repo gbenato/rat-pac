@@ -101,6 +101,7 @@ void EventDisplay::LoadEvent(int ievt){
   //Objects
   rds = dsreader->GetEvent(ievt);
   mc = rds->GetMC();
+  if(rds->ExistEV()) ev = rds->GetEV(0); //FIXME: so far get only first event
   //Event features
   elength=0.; //e- lenght
   //Particles
@@ -108,8 +109,8 @@ void EventDisplay::LoadEvent(int ievt){
   LastProcessCounter.clear();
   ParticleCounter.clear();
   pl_tracks.clear();
-  PMTWaveforms.clear();
-  PMTDigitizedWaveforms.clear();
+  MCPMTWaveforms.clear();
+  MCPMTDigitizedWaveforms.clear();
   for (std::map<std::string,TH2F*>::iterator it=hxyplane.begin();it!=hxyplane.end();it++)
     it->second->Reset();
   npe.clear();
@@ -199,8 +200,9 @@ void EventDisplay::LoadEvent(int ievt){
   ////////////
   // PMT waveforms
   ////////////
-  PMTWaveforms.resize(mc->GetMCPMTCount());
-  PMTDigitizedWaveforms.resize(mc->GetMCPMTCount());
+  MCPMTWaveforms.resize(mc->GetMCPMTCount());
+  MCPMTDigitizedWaveforms.resize(mc->GetMCPMTCount());
+  PMTDigitizedWaveforms.resize(ev->GetPMTCount());
   double ymin=9999999.; //yaxis min limit analogue
   int ymax_d=0.; //yaxis max limit digital
   int ymin_d=9999999.; //yaxis min limit digital
@@ -216,34 +218,53 @@ void EventDisplay::LoadEvent(int ievt){
 
     //Set analogue graphs
 #ifdef __WAVEFORMS_IN_DS__
-    vPMTWaveforms[ipmt] = mcpmt->GetWaveform();
+    vMCPMTWaveforms[ipmt] = mcpmt->GetWaveform();
 #endif
-    for(int isample=0; isample<vPMTWaveforms[ipmt].size(); isample++){
+    for(int isample=0; isample<vMCPMTWaveforms[ipmt].size(); isample++){
       //      std::cout<<"waveform "<<isample<<" "<<vPMTWaveforms[ipmt][isample]<<std::endl;
-      PMTWaveforms[ipmt].SetPoint(isample,isample,vPMTWaveforms[ipmt][isample]);
-      ymin = TMath::Min(ymin,vPMTWaveforms[ipmt][isample]);
+      MCPMTWaveforms[ipmt].SetPoint(isample,isample,vMCPMTWaveforms[ipmt][isample]);
+      ymin = TMath::Min(ymin,vMCPMTWaveforms[ipmt][isample]);
     }
 
     //Set digitized graphs
 #ifdef __WAVEFORMS_IN_DS__
-    vPMTDigitizedWaveforms[ipmt] = mcpmt->GetDigitizedWaveform();
+    vMCPMTDigitizedWaveforms[ipmt] = mcpmt->GetDigitizedWaveform();
 #endif
-    for(int isample=0; isample<vPMTDigitizedWaveforms[ipmt].size(); isample++){
-      PMTDigitizedWaveforms[ipmt].SetPoint(isample,isample,vPMTDigitizedWaveforms[ipmt][isample]);
-      ymax_d = TMath::Max(ymax_d,vPMTDigitizedWaveforms[ipmt][isample]);
-      ymin_d = TMath::Min(ymin_d,vPMTDigitizedWaveforms[ipmt][isample]);
+    for(int isample=0; isample<vMCPMTDigitizedWaveforms[ipmt].size(); isample++){
+      MCPMTDigitizedWaveforms[ipmt].SetPoint(isample,isample,vMCPMTDigitizedWaveforms[ipmt][isample]);
+      ymax_d = TMath::Max(ymax_d,vMCPMTDigitizedWaveforms[ipmt][isample]);
+      ymin_d = TMath::Min(ymin_d,vMCPMTDigitizedWaveforms[ipmt][isample]);
     }
 
   }
 
-  //Set correct limits for drawing purposes
-  for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++) {
-    PMTWaveforms[ipmt].GetYaxis()->SetRangeUser(1.2*ymin,.5);
-    PMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.99*ymin_d,1.01*ymax_d);
+  if(debugLevel > 1) std::cout<<" EventDisplay::LoadEvent - GetPMTCount "<<ev->GetPMTCount()<<std::endl;
+
+  for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
+
+    RAT::DS::PMT *pmt = ev->GetPMT(ipmt);
+    vPMTDigitizedWaveforms[ipmt] = pmt->GetWaveform();
+    if(debugLevel > 1) std::cout<<" EventDisplay::LoadEvent - DigitWF: nsamples "<<vPMTDigitizedWaveforms[ipmt].size()<<std::endl;
+
+    for(int isample=0; isample<vPMTDigitizedWaveforms[ipmt].size(); isample++){
+      MCPMTDigitizedWaveforms[ipmt].SetPoint(isample,isample,vPMTDigitizedWaveforms[ipmt][isample]);
+
+      if(debugLevel > 1) std::cout<<" EventDisplay::LoadEvent - Digit WF: "
+      <<"sample "<<isample<<" "<<vPMTDigitizedWaveforms[ipmt][isample]<<std::endl;
+
+      ymax_d = TMath::Max(ymax_d,vPMTDigitizedWaveforms[ipmt][isample]);
+      ymin_d = TMath::Min(ymin_d,vPMTDigitizedWaveforms[ipmt][isample]);
+    }
   }
 
-
-
+  //Set correct limits for drawing purposes
+  for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++) {
+    MCPMTWaveforms[ipmt].GetYaxis()->SetRangeUser(1.2*ymin,.5);
+    MCPMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.99*ymin_d,1.01*ymax_d);
+  }
+  for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
+    PMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.99*ymin_d,1.01*ymax_d);
+  }
 
   if(debugLevel > 0) std::cout<<" EventDisplay::LoadEvent - DONE "<<std::endl;
 
@@ -351,10 +372,12 @@ void EventDisplay::DisplayEvent(int ievt){
   //3D display
   canvas_event->cd(1);
   if(drawGeometry) EDGeo->DrawGeometry();
-  if(pl_tracks.size()>0) pl_tracks[0].Draw("LINE");
   for (int itr = 0; itr < finalTrack - initialTrack; itr++) {
+    if(itr==0) pl_tracks[itr].Draw("LINE");
     pl_tracks[itr].Draw("LINE same");
   }
+
+  if(debugLevel > 0) std::cout<<"Display canvas 2 "<<std::endl;
 
   //2D display
   canvas_event->cd(2);
@@ -374,32 +397,44 @@ void EventDisplay::DisplayEvent(int ievt){
 
 #ifdef __WAVEFORMS_IN_DS__
   //Waveforms
-  if(mc->GetMCPMTCount()>0){
+  if(debugLevel > 0) std::cout<<"Display canvas 3 "<<std::endl;
 
-    if(debugLevel > 0) std::cout<<"Display canvas 5 "<<std::endl;
-
-    canvas_event->cd(3);
-    PMTWaveforms[0].Draw("AP");
-    PMTWaveforms[0].GetXaxis()->SetTitle("t(ns)");
-    PMTWaveforms[0].GetYaxis()->SetTitle("V");
-    for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++) {
-      PMTWaveforms[ipmt].SetLineColor(ipmt+1);
-      PMTWaveforms[ipmt].Draw("LINE same");
-      //      PMTDigitizedWaveforms[ipmt].SetLineColor(kRed);
-      //      PMTDigitizedWaveforms[ipmt].Draw("LINE same");
+  canvas_event->cd(3);
+  //Analogue waveforms
+  for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++) {
+    if(ipmt==0){
+      MCPMTWaveforms[ipmt].Draw("AP");
+      MCPMTWaveforms[ipmt].GetXaxis()->SetTitle("t(ns)");
+      MCPMTWaveforms[ipmt].GetYaxis()->SetTitle("V");
     }
+    MCPMTWaveforms[ipmt].SetLineColor(ipmt+1);
+    MCPMTWaveforms[ipmt].Draw("LINE same");
+    //      PMTDigitizedWaveforms[ipmt].SetLineColor(kRed);
+    //      PMTDigitizedWaveforms[ipmt].Draw("LINE same");
+  }
 
-    if(debugLevel > 0) std::cout<<"Display canvas 6 "<<std::endl;
-
-    canvas_event->cd(4);
-    PMTDigitizedWaveforms[0].Draw("AP");
-    PMTDigitizedWaveforms[0].GetXaxis()->SetTitle("sample");
-    PMTDigitizedWaveforms[0].GetYaxis()->SetTitle("ADC counts");
-    for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++) {
-      PMTDigitizedWaveforms[ipmt].SetLineColor(ipmt+1);
-      PMTDigitizedWaveforms[ipmt].Draw("LINE same");
-      //      PMTDigitizedWaveforms[ipmt].ComputeRange(xmin_temp,xmax_temp,ymin_temp,ymax_temp);
+  if(debugLevel > 0) std::cout<<"Display canvas 4 "<<std::endl;
+  //Digitized waveforms
+  canvas_event->cd(4);
+  for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++) {
+    if(ipmt==0){
+      MCPMTDigitizedWaveforms[ipmt].Draw("AP");
+      MCPMTDigitizedWaveforms[ipmt].GetXaxis()->SetTitle("sample");
+      MCPMTDigitizedWaveforms[ipmt].GetYaxis()->SetTitle("ADC counts");
     }
+    MCPMTDigitizedWaveforms[ipmt].SetLineColor(ipmt+1);
+    MCPMTDigitizedWaveforms[ipmt].Draw("LINE same");
+    //      MCPMTDigitizedWaveforms[ipmt].ComputeRange(xmin_temp,xmax_temp,ymin_temp,ymax_temp);
+  }
+  for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
+    if(ipmt==0){
+      PMTDigitizedWaveforms[ipmt].Draw("AP");
+      PMTDigitizedWaveforms[ipmt].GetXaxis()->SetTitle("sample");
+      PMTDigitizedWaveforms[ipmt].GetYaxis()->SetTitle("ADC counts");
+    }
+    PMTDigitizedWaveforms[ipmt].SetLineColor(ipmt+1);
+    PMTDigitizedWaveforms[ipmt].Draw("LINE same");
+    //      PMTDigitizedWaveforms[ipmt].ComputeRange(xmin_temp,xmax_temp,ymin_temp,ymax_temp);
   }
 #endif
 

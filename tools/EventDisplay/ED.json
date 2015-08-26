@@ -20,6 +20,6 @@
     "event_option": "",     // Drawing options: "pe" -> only events with at least one PE,
                             //                  "cherenkov" -> only events with a cherenkov process
     "intersection_zplane": [200.0,200.0,-25.0], // Photon-plane intersection dimensions and Z position [XSIDE, YSIDE, ZPOS]
-    "debug_level": 1,
+    "debug_level": 2,
 
 }

@@ -1,4 +1,4 @@
-//#define __WAVEFORMS_IN_DS__
+#define __WAVEFORMS_IN_DS__
 
 #ifndef __EventDisplay__
 #define __EventDisplay__
@@ -71,12 +71,15 @@ protected:
   RAT::DSReader *dsreader;
   RAT::DS::Root *rds;
   RAT::DS::MC *mc;
+  RAT::DS::EV *ev;
   int nevents;
   std::map<int,bool> hitpmts;
   std::vector<TPolyLine3D> pl_tracks;
-  std::vector<TGraph> PMTWaveforms;
+  std::vector<TGraph> MCPMTWaveforms;
+  std::vector<TGraph> MCPMTDigitizedWaveforms;
   std::vector<TGraph> PMTDigitizedWaveforms;
-  std::map< int, std::vector<double> > vPMTWaveforms;
+  std::map< int, std::vector<double> > vMCPMTWaveforms;
+  std::map< int, std::vector<int> > vMCPMTDigitizedWaveforms;
   std::map< int, std::vector<int> > vPMTDigitizedWaveforms;
   std::map<std::string,TH2F*> hxyplane;
   TCanvas *canvas_event;
