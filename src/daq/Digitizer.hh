@@ -18,6 +18,8 @@
 
 #include <map>
 #include <RAT/PMTWaveform.hh>
+#include <RAT/DB.hh>
+#include <RAT/Log.hh>
 
 namespace RAT {
 
@@ -27,15 +29,6 @@ namespace RAT {
     Digitizer();
     virtual ~Digitizer();
 
-    virtual void SetStepTime(double _steptime){fStepTime=_steptime;};
-    virtual void SetVHigh(double _vhigh){fVhigh=_vhigh;};
-    virtual void SetVLow(double _vlow){fVlow=_vlow;};
-    virtual void SetOffSet(double _offset){fOffset=_offset;};
-    virtual void SetNBits(int _nbits){fNBits=_nbits;};
-    virtual void SetResistance(double _res){fResistance=_res;};
-    virtual void SetNoiseAmplitude(double _fnoise){fNoiseAmpl=_fnoise;};
-    virtual void SetSamplingWindow(double _fwindow){fSamplingWindow=_fwindow;};
-    virtual void SetSampleDelay(double _fdelay){fSampleDelay=_fdelay;};
     virtual void SetThreshold(double);
     virtual void Clear();
 
@@ -43,8 +36,9 @@ namespace RAT {
     virtual int GetNSamples(int ich){return fDigitWaveForm[ich].size();};
     virtual void GenerateElectronicNoise(int,PMTWaveform);
     //    virtual void DigitizeWaveForm(PMTWaveform);
-    virtual std::vector<unsigned short int> GetDigitizedWaveform(int ich){return fDigitWaveForm[ich];};
-    virtual std::vector<unsigned short int> SampleWaveform(std::vector<unsigned short int>, int);
+    virtual std::vector<double> GetAnalogueWaveform(int ich){return fAnalogueWaveForm[ich];};
+    virtual std::vector<UShort_t> GetDigitizedWaveform(int ich){return fDigitWaveForm[ich];};
+    virtual std::vector<UShort_t> SampleWaveform(std::vector<UShort_t>, int);
     virtual int GoToEndOfSample(int);
     // virtual double IntegrateCharge(std::vector<int>);
     virtual double GetDigitizedThreshold(){return fDigitizedThreshold;};
@@ -52,6 +46,8 @@ namespace RAT {
     // virtual double GetTimeAtThreshold(int,int);
 
   protected:
+
+    DBLinkPtr fLdaq;
 
     double fStepTime; //Time resolution in ns
     int fNBits; //N bits of the digitizer
@@ -63,8 +59,9 @@ namespace RAT {
     double fDigitizedThreshold; //Trigger threshold in ADC counts
     int fSamplingWindow; //Width of the sampling windows in ns
     int fSampleDelay; //Samples before crossing threshold that we will store
-    std::map< int, std::vector<double> > fNoise; //Electronic noise non-digitized for each channel
-    std::map< int, std::vector<unsigned short int> > fDigitWaveForm; //Digitized waveform for each channel
+    std::map< int, std::vector<double> > fNoise; //Channel:Electronic noise non-digitized
+    std::map< int, std::vector<double> > fAnalogueWaveForm; //Channel:Real waveform for each channel
+    std::map< int, std::vector<UShort_t> > fDigitWaveForm; //Channel:Digitized waveform for each channel
 
   };
 

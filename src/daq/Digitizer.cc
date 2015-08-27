@@ -4,7 +4,44 @@
 
 namespace RAT {
 
-  Digitizer::Digitizer(){}
+  Digitizer::Digitizer(){
+
+    //Set configuration according to DAQ.ratdb
+    fLdaq = DB::Get()->GetLink("DAQ");
+    //time resolution
+    fStepTime = fLdaq->GetD("step_time");
+    //Offset
+    fOffset = fLdaq->GetD("offset");
+    //High voltage
+    fVhigh = fLdaq->GetD("volt_high");
+    //Low voltage
+    fVlow = fLdaq->GetD("volt_low");
+    //Circuit resistance
+    fResistance = fLdaq->GetD("resistance");
+    //N bits
+    fNBits = fLdaq->GetI("nbits");
+    //width of noise in adc counts
+    fNoiseAmpl = fLdaq->GetD("noise_amplitude");
+    //PMT trigger thresholds
+    this->SetThreshold(fLdaq->GetD("trigger_threshold"));
+    //sampling time in ns
+    fSamplingWindow = fLdaq->GetD("sampling_time");
+    //time before discriminator fires that sampling gate opens
+    fSampleDelay = fLdaq->GetD("gate_delay");
+
+    detail << dformat("  Digitizer: Hi Freq. Channel Noise: ................ %6.2f adc counts\n", fNoiseAmpl);
+    detail << dformat("  Digitizer: PMT Trigger threshold: ................. %5.1f mV\n", fLdaq->GetD("trigger_threshold"));
+    detail << dformat("  Digitizer: PMT Trigger threshold (Digit): ......... %5.1f samples\n", fDigitizedThreshold);
+    detail << dformat("  Digitizer: Stepping Time: ......................... %6.2f ns\n", fStepTime);
+    detail << dformat("  Digitizer: Total Sample Time: ..................... %6.2f ns\n", fSamplingWindow);
+    detail << dformat("  Digitizer: Gate Delay: ............................ %5.1f ns\n", fSampleDelay);
+    detail << dformat("  Digitizer: Voltage offset: ........................ %6.2f mV\n", fOffset);
+    detail << dformat("  Digitizer: Voltage High: .......................... %6.2f mV\n", fVhigh);
+    detail << dformat("  Digitizer: Voltage Low: ........................... %6.2f mV\n", fVlow);
+    detail << dformat("  Digitizer: Resistance: ............................ %6.2f mV\n", fResistance);
+
+  }
+
   Digitizer::~Digitizer(){}
 
 
@@ -116,6 +153,7 @@ namespace RAT {
       else if(adcs>=nADCs) adcs = nADCs - 1;
 
       //Save sample
+      fAnalogueWaveForm[ichannel].push_back(pmtwf.GetHeight(currenttime));
       fDigitWaveForm[ichannel].push_back(adcs);
       //      std::cout<<isample<<" "<<volt<<" "<<adcs<<" "<<pmtwf.GetHeight(currenttime)<<" "<<fNoise[ichannel][isample]<<std::endl;
 
@@ -131,14 +169,14 @@ namespace RAT {
   //Retrieves a chunk of the digitized waveform in a sampling
   //window defined by the user by fSampleDelay and fSamplingWindow
   //[init_sample-fSampleDelay, thres_sample+fSamplingWindow]
-  std::vector<unsigned short int> Digitizer::SampleWaveform(std::vector<unsigned short int> completewaveform, int init_sample){
+  std::vector<UShort_t> Digitizer::SampleWaveform(std::vector<UShort_t> completewaveform, int init_sample){
 
     int sample_delay = (int)fSampleDelay/fStepTime;
     int start_sample = init_sample - sample_delay;
     if(start_sample<0) start_sample = 0; //FIXME: this changes size of sample_delay
     int end_sample = init_sample+(int)fSamplingWindow/fStepTime;
     if(end_sample>completewaveform.size()-1) end_sample = completewaveform.size() - 1;
-    std::vector<unsigned short int> sampledwaveform;
+    std::vector<UShort_t> sampledwaveform;
 
     while(start_sample<=end_sample){
       sampledwaveform.push_back(completewaveform[start_sample]);
@@ -225,7 +263,10 @@ namespace RAT {
 
   void Digitizer::Clear(){
 
-    for(std::map<int, std::vector<unsigned short int> >::iterator it = fDigitWaveForm.begin(); it!=fDigitWaveForm.end(); it++){
+    for(std::map<int, std::vector<double> >::iterator it = fAnalogueWaveForm.begin(); it!=fAnalogueWaveForm.end(); it++){
+      it->second.clear();
+    }
+    for(std::map<int, std::vector<UShort_t> >::iterator it = fDigitWaveForm.begin(); it!=fDigitWaveForm.end(); it++){
       it->second.clear();
     }
     for(std::map<int, std::vector<double> >::iterator it = fNoise.begin(); it!=fNoise.end(); it++){

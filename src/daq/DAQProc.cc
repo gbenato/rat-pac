@@ -22,41 +22,21 @@ namespace RAT {
     DAQProc::DAQProc() : Processor("daq") {
       fLdaq = DB::Get()->GetLink("DAQ");
 
+      //Pulses and waveforms features
       //sampling time in ns --- this is the size of a PMT time window
       fSamplingTimeDB = fLdaq->GetD("sampling_time");
-      //integration time in ns
-      // fIntTimeDB = fLdaq->GetD("int_time");
       //width of a PMT pulse in ns
       fPulseWidthDB = fLdaq->GetD("pulse_width");
       //offset of a PMT pulse in mV
       fPulseOffsetDB = fLdaq->GetD("pulse_offset");
       //Minimum pulse height to consider
       fPulseMinDB = fLdaq->GetD("pulse_min");
-      //time before discriminator fires that sampling gate opens
-      fGDelayDB = fLdaq->GetD("gate_delay");
-      //width of noise in adc counts
-      fNoiseAmplDB = fLdaq->GetD("noise_amplitude");
-      //PMT thresholds
-      fTriggerThresholdDB = fLdaq->GetD("trigger_threshold");
       //Pulse type: 0=square pulses, 1=real pulses
       fPulseTypeDB = fLdaq->GetI("pulse_type");
       //mean of a PMT pulse in ns
       fPulseMeanDB = fLdaq->GetD("pulse_mean");
-
-      //Digitizer
       //stepping time for discrimination
       fStepTimeDB = fLdaq->GetD("step_time");
-      //Offset
-      fOffSetDB = fLdaq->GetD("offset");
-      //High voltage
-      fVHigh = fLdaq->GetD("volt_high");
-      //Low voltage
-      fVLow = fLdaq->GetD("volt_low");
-      //Circuit resistance
-      fResistance = fLdaq->GetD("resistance");
-      //N bits
-      fNBits = fLdaq->GetI("nbits");
-
 
       detail << "DAQProc: DAQ constants loaded" << newline;
       detail << "  PMT Pulse type: " << (fPulseTypeDB==0 ? "square" : "realistic") << newline;
@@ -64,14 +44,6 @@ namespace RAT {
       detail << dformat("  PMT Pulse Width: ....................... %5.1f ns\n", fPulseWidthDB);
       detail << dformat("  PMT Pulse Offset: ...................... %5.1f ADC Counts\n", fPulseOffsetDB);
       detail << dformat("  Min PMT Pulse Height: .................. %5.1f mV\n", fPulseMinDB);
-      detail << dformat("  Hi Freq. Channel Noise: ................ %6.2f adc counts\n", fNoiseAmplDB);
-      detail << dformat("  PMT Trigger threshold: ................. %5.1f mV\n", fTriggerThresholdDB);
-      // detail << dformat("  PMT Channel Integration Time: .......... %6.2f ns\n", fIntTimeDB);
-
-      detail << dformat("  Digitizer Stepping Time: ............. %6.2f ns\n", fStepTimeDB);
-      detail << dformat("  Digitizer Total Sample Time: ......... %6.2f ns\n", fSamplingTimeDB);
-      detail << dformat("  Digitizer voltage offset: .............. %6.2f mV\n", fOffSetDB);
-      detail << dformat("  Digitizer Gate Delay: .................... %5.1f ns\n", fGDelayDB);
 
       fEventCounter = 0;
     }
@@ -94,25 +66,8 @@ namespace RAT {
       //store each sampled piece as a new event
 
       DS::MC *mc = ds->GetMC();
-      // if(ds->ExistEV()) {  // there is already a EV branch present
-      //   ds->PruneEV();     // remove it, otherwise we'll have multiple detector events
-      //                      // in this physics event
-      //                      // we really should warn the user what is taking place
-      // }
 
-      //Setup digitizer
-      fDigitizer.SetNBits(fNBits);
-      fDigitizer.SetStepTime(fStepTimeDB);
-      fDigitizer.SetOffSet(fOffSetDB);
-      fDigitizer.SetVHigh(fVHigh);
-      fDigitizer.SetVLow(fVLow);
-      fDigitizer.SetResistance(fResistance);
-      fDigitizer.SetNoiseAmplitude(fNoiseAmplDB);
-      fDigitizer.SetSamplingWindow(fSamplingTimeDB);
-      fDigitizer.SetSampleDelay((int)fGDelayDB);
-      fDigitizer.SetThreshold(fTriggerThresholdDB);
       //Loop through the PMTs in the MC generated event
-      //    std::map< int, std::vector<int> > DigitizedWaveforms; //ID-Waveform map
       for (int imcpmt=0; imcpmt < mc->GetMCPMTCount(); imcpmt++){
 
         DS::MCPMT *mcpmt = mc->GetMCPMT(imcpmt);
@@ -151,26 +106,12 @@ namespace RAT {
         //Sort pulses in time order
         std::sort(pmtwf.fPulse.begin(),pmtwf.fPulse.end(),Cmp_PMTPulse_TimeAscending);
 
-        //At this point the PMT waveform is defined for the whole event for this PMT, so save it
-        //only for drawing purposes
-        //      mcpmt->SetWaveform(pmtwf); //DEBUG!
-        std::vector<double> waveform;
-        double StepTime=0.01;
-        int nsteps = (int)fSamplingTimeDB/StepTime;
-        for(int istep=0; istep<=nsteps ;istep++){
-          double currenttime = istep*StepTime;
-          double height = pmtwf.GetHeight(currenttime);
-          waveform.push_back(height);
-          //std::cout<<" istep "<<istep<<" time "<<time<<" height "<<height<<std::endl;
-        }
-        mcpmt->SetWaveform(waveform);
-
-        //Digitize waveform (electronic noise is added by the digitizer) and save it
-        //in MCPMT object only for drawing purpose (in the future we might want to do
-        //the charge integration off-line)
+        //Digitize waveform -- electronic noise is added by the digitizer. Save analogue
+        //waveform in MCPMT object only for drawing purpose and save the digitized one
+        //for posterior analysis
         fDigitizer.AddChannel(mcpmt->GetID(),pmtwf);
+        mcpmt->SetWaveform(fDigitizer.GetAnalogueWaveform(mcpmt->GetID()));
         mcpmt->SetDigitizedWaveform(fDigitizer.GetDigitizedWaveform(mcpmt->GetID()));
-        //      DigitizedWaveform[mcpmt->GetID()] = fDigitizer.GetDigitizedWaveform();
 
       } //end pmt loop
 
@@ -242,7 +183,7 @@ namespace RAT {
           int pmtID = mc->GetMCPMT(imcpmt)->GetID();
           //Sample digitized waveform and look for triggers
           int nsamples = fDigitizer.GetNSamples(pmtID);
-          std::vector<unsigned short int> DigitizedWaveform = fDigitizer.GetDigitizedWaveform(pmtID);
+          std::vector<UShort_t> DigitizedWaveform = fDigitizer.GetDigitizedWaveform(pmtID);
           for(int isample=0; isample<nsamples; isample++){
             if (DigitizedWaveform[isample]<=fDigitizer.GetDigitizedThreshold()){ //hit above threshold! (remember the pulses are negative)
 
@@ -272,7 +213,7 @@ namespace RAT {
         //threshold
         if(triggerID>-1){ //means the trigger PMT exists in the event and hence we have a hit
           int nsamples = fDigitizer.GetNSamples(triggerID);
-          std::vector<unsigned short int> DigitizedTriggerWaveform = fDigitizer.GetDigitizedWaveform(triggerID);
+          std::vector<UShort_t> DigitizedTriggerWaveform = fDigitizer.GetDigitizedWaveform(triggerID);
           //Sample the digitized waveform to look for triggers
           for(int isample=0; isample<nsamples; isample++){
 

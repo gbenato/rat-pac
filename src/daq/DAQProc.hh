@@ -3,7 +3,6 @@
 
 #include <string>
 #include <RAT/Processor.hh>
-#include <RAT/DS/PMT.hh>
 #include <RAT/DB.hh>
 #include <CLHEP/Random/RandGeneral.h>
 #include <RAT/Digitizer.hh>
@@ -42,7 +41,7 @@ protected:
   double fVLow;
   double fResistance;
   int fNBits;
-    
+
   Digitizer fDigitizer;
 
   std::string fTriggerType;

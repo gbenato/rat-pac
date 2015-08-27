@@ -18,8 +18,7 @@
 #include <assert.h>
 #include <regex>
 
-typedef unsigned short int usi_t;
-typedef std::map< int, std::vector< std::vector<usi_t> > > mw_t; //channel:[event,waveform]
+typedef std::map< int, std::vector< std::vector<UShort_t> > > mw_t; //channel:[event,waveform]
 
 namespace RAT {
 
@@ -161,14 +160,14 @@ namespace RAT {
 
       //Get traces
       const int nevents = dims[0], nsamples = dims[1];
-      usi_t *data = new usi_t[nevents*nsamples];
+      UShort_t *data = new UShort_t[nevents*nsamples];
       dataset->read(data,H5::PredType::NATIVE_UINT16,dataspace);
       for(int iev=0; iev<nevents; iev++){
-        std::vector<usi_t> waveform;
+        std::vector<UShort_t> waveform;
         for(int isample=0; isample<nsamples; isample++){
           waveform.push_back(data[iev*nsamples + isample]);
         }
-        waveforms[chnumber].push_back( (std::vector<usi_t>) waveform);
+        waveforms[chnumber].push_back( (std::vector<UShort_t>) waveform);
       }
     }
 
