@@ -29,9 +29,7 @@ namespace RAT {
     // double starttime = pmtwf.fPulse.front()->GetPulseStartTime();
     // double endtime = pmtwf.fPulse.back()->GetPulseEndTime();
     // if(starttime-endtime < fSamplingWindow) endtime = starttime + fSamplingWindow;
-    double starttime = 0.;
-    double endtime = fSamplingWindow;
-    int nsamples = (endtime - starttime)/fStepTime;
+    int nsamples = fSamplingWindow/fStepTime;
     fNoise[ichannel].resize(nsamples);
     float NoiseAmpl = fNoiseAmpl;
     for(int istep=0; istep<nsamples ;istep++){
@@ -94,9 +92,9 @@ namespace RAT {
     //    double starttime = pmtwf.fPulse.front()->GetPulseStartTime();
     //    double endtime = pmtwf.fPulse.back()->GetPulseEndTime();
     //    if(endtime-starttime < fSamplingWindow) endtime = starttime + fSamplingWindow;
-    double starttime = 0.;
-    double endtime = fSamplingWindow;
-    int nsamples = (endtime - starttime)/fStepTime;
+    double starttime = -fSampleDelay;
+    double endtime = starttime + fSamplingWindow;
+    int nsamples = fSamplingWindow/fStepTime;
     int nADCs = 1 << fNBits; //Calculate the number of adc counts
     double adcpervolt = nADCs/(fVhigh - fVlow);
     double charge = 0.;
@@ -127,7 +125,6 @@ namespace RAT {
 
     //    std::cout<<"Analogue integrated charge "<<charge<<std::endl;
 
-
   }
 
 
@@ -136,7 +133,9 @@ namespace RAT {
   //[init_sample-fSampleDelay, thres_sample+fSamplingWindow]
   std::vector<unsigned short int> Digitizer::SampleWaveform(std::vector<unsigned short int> completewaveform, int init_sample){
 
-    int start_sample = init_sample-fSampleDelay;
+    int sample_delay = (int)fSampleDelay/fStepTime;
+    int start_sample = init_sample - sample_delay;
+    if(start_sample<0) start_sample = 0; //FIXME: this changes size of sample_delay
     int end_sample = init_sample+(int)fSamplingWindow/fStepTime;
     if(end_sample>completewaveform.size()-1) end_sample = completewaveform.size() - 1;
     std::vector<unsigned short int> sampledwaveform;
@@ -152,10 +151,10 @@ namespace RAT {
 
   //Moves the sampling point towards the end of the sampling window defined by the
   //user
-  int Digitizer::GoToEndOfSample(int isample){
+  int Digitizer::GoToEndOfSample(int start_sample){
 
-    int end_sample = isample+(int)fSamplingWindow/fStepTime;
-    return end_sample;  //set the step at the end of the sampling window
+    int end_sample = start_sample+(int)fSamplingWindow/fStepTime;
+    return end_sample;
 
   }
 

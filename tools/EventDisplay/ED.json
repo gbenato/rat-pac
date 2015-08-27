@@ -5,21 +5,22 @@
 
     //Analysis
 //    "input_file": "../../mac/sphere_betas.root", // Analysis ROOT file
-    "input_file": "../../mac/hdf5_converted.root", // Analysis ROOT file
+//    "input_file": "../../mac/hdf5_converted.root", // Analysis ROOT file
+    "input_file": "../../mac/TheiaRnDQuickTest.root", // Analysis ROOT file
 
     //Geometry files: used only if 'draw_geo==1'
     "pmtinfo_file": "/Users/snoplus/snoing/install/rat-pac/data/sphere/PMTINFO.ratdb",
-    "geo_file": "/Users/snoplus/snoing/install/rat-pac/data/sphere/sphere.geo",
-    
+    "geo_file": "/Users/snoplus/snoing/install/rat-pac/data/TheiaRnD/onepmt_new_close.geo",
+
     //Flags
     "event_number": -1,     // Event number to draw: Negative -> Event by event mode
     "initial_track": 0,     // First track to be drawn
-    "final_track": 10000,     // Last track to be drawn: Negative -> Set to max
-    "draw_geo": 0,          // 1 -> Draw Detector geometry
+    "final_track": -1,     // Last track to be drawn: Negative -> Set to max
+    "draw_geo": 1,          // 1 -> Draw Detector geometry
     "draw_pmts": 0,         // 1 -> Draw PMTs stored in PMTINFO
     "event_option": "",     // Drawing options: "pe" -> only events with at least one PE,
                             //                  "cherenkov" -> only events with a cherenkov process
     "intersection_zplane": [200.0,200.0,-25.0], // Photon-plane intersection dimensions and Z position [XSIDE, YSIDE, ZPOS]
-    "debug_level": 0,
+    "debug_level": 1,
 
 }

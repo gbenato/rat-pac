@@ -9,7 +9,7 @@ noise_rate: 0.0,
 
 //Pulses
 pulse_type: 1, //0=square pulses, 1=realistic pulses
-              //must change pulse_width depending on selection 
+               //must change pulse_width depending on selection 
 pulse_width: 0.5, //0.15, 0.22 PMT pulse width in log(ns) for real pulses
 pulse_offset: 0.0, //PMT pulse offset in pA
 pulse_min: -0.001, //minimum pulse height to consider in mV
@@ -20,18 +20,18 @@ noise_amplitude: 1.0, //amplitude of high frequency noise in mV
 
 //Digitizer
 nbits: 14, //number of bits
-step_time: 2.0, //time resolution in ns (2.0)
+step_time: 2.0, //time resolution in ns
 volt_high: 1000.0, //upper voltage limit in mV
 volt_low: -1000.0, //lower voltage limit in mV
 offset: 0.0, //voltage offset in mV
 resistance: 50.0, //resistance of the output circuit in Ohms
-sampling_time: 100.0, //full gate for grouping hits in a single integration in ns
+sampling_time: 1000.0, //full gate for grouping hits in a single integration in ns
 int_time: 20.0, //charge integration time in ns
 
 
-//Trigger and builder
+//Trigger
 trigger_threshold: -20.0, //PMT threshold to issue a trigger mV
-gate_delay: 0. //time before discriminator fires that sampling gate opens (in samples)
+gate_delay: 400. //time before discriminator fires that sampling gate opens (in ns)
 
 
 }

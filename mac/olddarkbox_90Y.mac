@@ -9,20 +9,20 @@
 ##### Visualization ##########################
 
 ###OPENGL
-# /vis/open OGLSXm
-# /vis/scene/create
-# /vis/scene/add/volume
-# /vis/sceneHandler/attach
-# /vis/scene/add/trajectories
-# /tracking/storeTrajectory 1
-# /vis/viewer/refresh
-# /vis/scene/endOfEventAction accumulate
-# /vis/drawVolume darkbox
-# /vis/viewer/set/background white
-# /vis/viewer/set/style s
-# /vis/viewer/set/projection p
-# /vis/viewer/set/upVector 0 0 1
-# /vis/viewer/set/viewpointThetaPhi 50 -90
+ /vis/open OGLSXm
+ /vis/scene/create
+ /vis/scene/add/volume
+ /vis/sceneHandler/attach
+ /vis/scene/add/trajectories
+ /tracking/storeTrajectory 1
+ /vis/viewer/refresh
+ /vis/scene/endOfEventAction accumulate
+ /vis/drawVolume darkbox
+ /vis/viewer/set/background white
+ /vis/viewer/set/style s
+ /vis/viewer/set/projection p
+ /vis/viewer/set/upVector 0 0 1
+ /vis/viewer/set/viewpointThetaPhi 50 -90
 
 ###RAYTRACER
 #/vis/open RayTracer
@@ -47,18 +47,18 @@
 
 ###############################################
 
-#/tracking/storeTrajectory 1
+/tracking/storeTrajectory 1
 
 ##### BEGIN EVENT LOOP ##################
 #/rat/proc simpledaq
 /rat/proc daq
-/rat/procset trigger "allpmts" #triggerpmt, allpmts
+/rat/procset trigger "triggerpmt" #triggerpmt, allpmts
 /rat/proc count
 /rat/procset update 100
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "../results/olddarkbox_90Y_fitter.root"
+/rat/procset file "../results/olddarkbox_90Y_newdaq.root"
 #########################################
 
 ##### GENERATORS #################

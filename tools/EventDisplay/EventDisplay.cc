@@ -81,7 +81,7 @@ void EventDisplay::CustomizeTrack(TPolyLine3D *track, RAT::DS::MCTrack *mctrack)
 
   RAT::DS::MCTrackStep *firststep = mctrack->GetMCTrackStep(0);
   if(firststep->GetProcess()=="Scintillation")
-    mctrack->SetPDGCode(9999);
+  mctrack->SetPDGCode(9999);
 
   //Set color
   //track->SetLineColor(ParticleColor[mctrack->GetPDGCode()]);
@@ -95,13 +95,18 @@ void EventDisplay::CustomizeTrack(TPolyLine3D *track, RAT::DS::MCTrack *mctrack)
 
 void EventDisplay::LoadEvent(int ievt){
 
-  if(debugLevel > 0) std::cout<<"Loading event "<<ievt<<"......."<<std::endl;
+  if(debugLevel > 0) std::cout<<"EventDisplay::LoadEvent -- Loading event "<<ievt<<"......."<<std::endl;
 
   //Initialize
+  SetParameters();
   //Objects
   rds = dsreader->GetEvent(ievt);
   mc = rds->GetMC();
   if(rds->ExistEV()) ev = rds->GetEV(0); //FIXME: so far get only first event
+  else if(debugLevel > 0) std::cout<<"EventDisplay::LoadEvent -- EV do not exist! "<<std::endl;
+
+
+
   //Event features
   elength=0.; //e- lenght
   //Particles
@@ -113,13 +118,13 @@ void EventDisplay::LoadEvent(int ievt){
   MCPMTDigitizedWaveforms.clear();
   PMTDigitizedWaveforms.clear();
   for (std::map<std::string,TH2F*>::iterator it=hxyplane.begin();it!=hxyplane.end();it++)
-    it->second->Reset();
+  it->second->Reset();
   npe.clear();
   if (finalTrack<=0 || finalTrack > mc->GetMCTrackCount()) finalTrack = mc->GetMCTrackCount();
   //Load tracks
   for (int itr = initialTrack; itr < finalTrack; itr++) {
 
-    if(debugLevel > 0) std::cout<<"  Track "<<itr<<std::endl;
+    if(debugLevel > 0) std::cout<<"  Track "<<itr<<"/"<<finalTrack-1<<std::endl;
 
     RAT::DS::MCTrack *mctrack = mc->GetMCTrack(itr);
     //Create new track
@@ -145,36 +150,40 @@ void EventDisplay::LoadEvent(int ievt){
     TVector3 int_pos(9999.,9999.,9999.);//intersection point
     for (int istep = 0; istep < nsteps; istep++) {
 
-      if(debugLevel > 0) std::cout<<"  |->Step "<<istep<<std::endl;
+      if(debugLevel > 0) std::cout<<"  |->Step "<<istep<<"/"<<nsteps-1<<" ";
 
       RAT::DS::MCTrackStep *step = mctrack->GetMCTrackStep(istep);
       const TVector3 endpointstep = step->GetEndpoint();
       pl_tracks.back().SetPoint(istep,endpointstep.X(),endpointstep.Y(),endpointstep.Z());
+
+      if(debugLevel > 0) std::cout<<" -- DONE "<<std::endl;
 
       //Calculate intersection with XY plane
       // std::cout<<"step "<<istep<<" "<<top_pos.X()<<" "<<top_pos.Y()<<" "<<top_pos.Z()<<std::endl;
       // std::cout<<"step "<<istep<<" "<<bottom_pos.X()<<" "<<bottom_pos.Y()<<" "<<bottom_pos.Z()<<std::endl;
       if(mctrack->GetPDGCode()!=0 && mctrack->GetPDGCode()!=9999) continue; //only for OPTICAL photons
 
+      if(debugLevel > 0) std::cout<<"    Intersectng Optical Photon "<<std::endl;
+
       if(bottom_pos.Z()!=-9999.){ //we haven't found the point yet
-      	if(endpointstep.Z()>intersection_zplane[2]){
-	  if(debugLevel > 0) std::cout<<"      Case 1: "<<std::endl;
-	  top_pos = endpointstep;
-	}
-      	else if(top_pos.Z()!=-9999.){ //this is our guy
+        if(endpointstep.Z()>intersection_zplane[2]){
+          if(debugLevel > 0) std::cout<<"      Case 1: "<<std::endl;
+          top_pos = endpointstep;
+        }
+        else if(top_pos.Z()!=-9999.){ //this is our guy
 
-	  if(debugLevel > 0) std::cout<<"      Case 2: "<<firststep->GetProcess()<<std::endl;
+          if(debugLevel > 0) std::cout<<"      Case 2: "<<firststep->GetProcess()<<std::endl;
 
-      	  bottom_pos = endpointstep;
-      	  //Intersect!
-      	  double lambda = (intersection_zplane[2] - top_pos.Z())/(bottom_pos.Z() - top_pos.Z());
-      	  int_pos = top_pos + (bottom_pos - top_pos)*lambda;
-      	  //	  std::cout<<"FILL IT! "<<int_pos.X()<<" "<<int_pos.Y()<<" "<<int_pos.Z()<<std::endl;
-      	  if(firststep->GetProcess()=="Reemission") hxyplane["Scintillation"]->Fill(int_pos.X(),int_pos.Y());
-	  else hxyplane[firststep->GetProcess()]->Fill(int_pos.X(),int_pos.Y());
-	  bottom_pos.SetZ(-9999.);
+          bottom_pos = endpointstep;
+          //Intersect!
+          double lambda = (intersection_zplane[2] - top_pos.Z())/(bottom_pos.Z() - top_pos.Z());
+          int_pos = top_pos + (bottom_pos - top_pos)*lambda;
+          //	  std::cout<<"FILL IT! "<<int_pos.X()<<" "<<int_pos.Y()<<" "<<int_pos.Z()<<std::endl;
+          if(firststep->GetProcess()=="Reemission") hxyplane["Scintillation"]->Fill(int_pos.X(),int_pos.Y());
+          else hxyplane[firststep->GetProcess()]->Fill(int_pos.X(),int_pos.Y());
+          bottom_pos.SetZ(-9999.);
 
-	}
+        }
       }
 
       if(debugLevel > 0) std::cout<<"   EventDisplay::LoadEvent (Passed intersection) "<<std::endl;
@@ -183,7 +192,7 @@ void EventDisplay::LoadEvent(int ievt){
   } //end track loop
 
   //Load photoelectrons
-  for (int ipmt = 0; ipmt < 16; ipmt++){
+  for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++){
     npe[ipmt]=0;
   }
   for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++){
@@ -198,13 +207,13 @@ void EventDisplay::LoadEvent(int ievt){
     }
   }
 
+
 #ifdef __WAVEFORMS_IN_DS__
   ////////////
   // PMT waveforms
   ////////////
   MCPMTWaveforms.resize(mc->GetMCPMTCount());
   MCPMTDigitizedWaveforms.resize(mc->GetMCPMTCount());
-  PMTDigitizedWaveforms.resize(ev->GetPMTCount());
   double ymin=9999999.; //yaxis min limit analogue
   UShort_t ymax_d=0.; //yaxis max limit digital
   UShort_t ymin_d=9999999.; //yaxis min limit digital
@@ -212,6 +221,8 @@ void EventDisplay::LoadEvent(int ievt){
   double ymin_temp=0.;
   double xmax_temp=0.;//dummy
   double xmin_temp=0.;//dummy
+
+  if(debugLevel > 1) std::cout<<" EventDisplay::LoadEvent - GetMCPMTCount "<<mc->GetMCPMTCount()<<std::endl;
 
   for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++) {
 
@@ -235,8 +246,20 @@ void EventDisplay::LoadEvent(int ievt){
 
   }
 
+  //Set correct limits for drawing purposes
+  for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++) {
+    MCPMTWaveforms[ipmt].GetYaxis()->SetRangeUser(1.2*ymin,.5);
+    MCPMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.99*ymin_d,1.01*ymax_d);
+  }
+
   if(debugLevel > 1) std::cout<<" EventDisplay::LoadEvent - GetPMTCount "<<ev->GetPMTCount()<<std::endl;
 
+  if(!rds->ExistEV()) {
+    if(debugLevel > 0) std::cout<<" EventDisplay::LoadEvent - DONE (EV do not exist) "<<std::endl;
+    return;
+  }
+
+  PMTDigitizedWaveforms.resize(ev->GetPMTCount());
   for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
 
     RAT::DS::PMT *pmt = ev->GetPMT(ipmt);
@@ -255,13 +278,10 @@ void EventDisplay::LoadEvent(int ievt){
   }
 
   //Set correct limits for drawing purposes
-  for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++) {
-    MCPMTWaveforms[ipmt].GetYaxis()->SetRangeUser(1.2*ymin,.5);
-    MCPMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.99*ymin_d,1.01*ymax_d);
-  }
   for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
     PMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.99*ymin_d,1.01*ymax_d);
   }
+
 #endif
 
   if(debugLevel > 0) std::cout<<" EventDisplay::LoadEvent - DONE "<<std::endl;
@@ -383,17 +403,17 @@ void EventDisplay::DisplayEvent(int ievt){
   hxyplane["Cerenkov"]->SetLineColor(ParticleColor[0]);
   hxyplane["Scintillation"]->SetLineColor(ParticleColor[9999]);
   if(hxyplane["Cerenkov"]->GetEntries()>0)
-    hxyplane["Cerenkov"]->Draw("box");
+  hxyplane["Cerenkov"]->Draw("box");
   else if(hxyplane["Scintillation"]->GetEntries()>0)
-    hxyplane["Scintillation"]->Draw("box");
+  hxyplane["Scintillation"]->Draw("box");
   else
-    hxyplane["start"]->Draw("box");
+  hxyplane["start"]->Draw("box");
   for (std::map<std::string,TH2F*>::iterator it=hxyplane.begin();it!=hxyplane.end();it++){
     it->second->Draw("box same");
   }
   if(drawPMTs) EDGeo->DrawPMTMap();
 
-#ifdef __WAVEFORMS_IN_DS__
+  #ifdef __WAVEFORMS_IN_DS__
   //Waveforms
   if(debugLevel > 0) std::cout<<"Display canvas 3 "<<std::endl;
 
@@ -424,15 +444,17 @@ void EventDisplay::DisplayEvent(int ievt){
     MCPMTDigitizedWaveforms[ipmt].Draw("LINE same");
     //      MCPMTDigitizedWaveforms[ipmt].ComputeRange(xmin_temp,xmax_temp,ymin_temp,ymax_temp);
   }
-  for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
-    if(ipmt==0){
-      PMTDigitizedWaveforms[ipmt].Draw("AP");
-      PMTDigitizedWaveforms[ipmt].GetXaxis()->SetTitle("sample");
-      PMTDigitizedWaveforms[ipmt].GetYaxis()->SetTitle("ADC counts");
+  if(rds->ExistEV()){
+    for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
+      if(ipmt==0){
+        PMTDigitizedWaveforms[ipmt].Draw("AP");
+        PMTDigitizedWaveforms[ipmt].GetXaxis()->SetTitle("sample");
+        PMTDigitizedWaveforms[ipmt].GetYaxis()->SetTitle("ADC counts");
+      }
+      PMTDigitizedWaveforms[ipmt].SetLineColor(ipmt+1);
+      PMTDigitizedWaveforms[ipmt].Draw("LINE same");
+      //      PMTDigitizedWaveforms[ipmt].ComputeRange(xmin_temp,xmax_temp,ymin_temp,ymax_temp);
     }
-    PMTDigitizedWaveforms[ipmt].SetLineColor(ipmt+1);
-    PMTDigitizedWaveforms[ipmt].Draw("LINE same");
-    //      PMTDigitizedWaveforms[ipmt].ComputeRange(xmin_temp,xmax_temp,ymin_temp,ymax_temp);
   }
 #endif
 
@@ -442,32 +464,32 @@ void EventDisplay::DisplayEvent(int ievt){
   TLine* xline;
   TLine* yline;
   for(int iline=0; iline<nlines; iline++){
-    xline = new TLine(-XP_XSIDE,iline*pmtwidth-nlines/2.*pmtwidth,XP_XSIDE,iline*pmtwidth-nlines/2.*pmtwidth);
-    xline->SetLineWidth(1.);
-    xline->SetLineStyle(3);
-    xline->SetLineColor(kGray);
-    xline->Draw("same");
-    yline = new TLine(iline*pmtwidth-nlines/2.*pmtwidth,-XP_YSIDE,iline*pmtwidth-nlines/2.*pmtwidth,XP_YSIDE);
-    yline->SetLineWidth(1.);
-    yline->SetLineStyle(3);
-    yline->SetLineColor(kGray);
-    yline->Draw("same");
-  }
+  xline = new TLine(-XP_XSIDE,iline*pmtwidth-nlines/2.*pmtwidth,XP_XSIDE,iline*pmtwidth-nlines/2.*pmtwidth);
+  xline->SetLineWidth(1.);
+  xline->SetLineStyle(3);
+  xline->SetLineColor(kGray);
+  xline->Draw("same");
+  yline = new TLine(iline*pmtwidth-nlines/2.*pmtwidth,-XP_YSIDE,iline*pmtwidth-nlines/2.*pmtwidth,XP_YSIDE);
+  yline->SetLineWidth(1.);
+  yline->SetLineStyle(3);
+  yline->SetLineColor(kGray);
+  yline->Draw("same");
+}
 
-  //Draw pmts
-  for(int ipmt=0; ipmt<vpmtbox.size();ipmt++)
-    vpmtbox[ipmt].Draw("LINE same");
-  */
+//Draw pmts
+for(int ipmt=0; ipmt<vpmtbox.size();ipmt++)
+vpmtbox[ipmt].Draw("LINE same");
+*/
 
-  //Wait for user action
-  canvas_event->Modified();
-  canvas_event->Update();
-  canvas_event->WaitPrimitive();
+//Wait for user action
+canvas_event->Modified();
+canvas_event->Update();
+canvas_event->WaitPrimitive();
 
-  //  if(event_number>=0) exit(0);
-  if(event_number>=0) dummyApp->Run();
+//  if(event_number>=0) exit(0);
+if(event_number>=0) dummyApp->Run();
 
-  if(debugLevel > 0) std::cout<<" EventDisplay::DisplayEvent - DONE "<<std::endl;
+if(debugLevel > 0) std::cout<<" EventDisplay::DisplayEvent - DONE "<<std::endl;
 
 }
 
@@ -481,7 +503,7 @@ bool EventDisplay::IsPE(){
 
   int npe_total = 0;
   for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++)
-    npe_total += npe[mc->GetMCPMT(ipmt)->GetID()];
+  npe_total += npe[mc->GetMCPMT(ipmt)->GetID()];
 
   return npe_total>0;
 
@@ -502,8 +524,10 @@ void EventDisplay::DumpDisplayInfo(){
 void EventDisplay::Open(){
 
   //Display events
-  for(int ievt=0; ievt<nevents ; ievt++){
-    this->DisplayEvent(ievt);
+  if(event_number>=0) this->DisplayEvent(event_number);
+  else{
+    for(int ievt=0; ievt<nevents ; ievt++){
+      this->DisplayEvent(ievt);
+    }
   }
-
 }

@@ -3,8 +3,8 @@
 
 /rat/db/set DETECTOR experiment "TheiaRnD"
 #/rat/db/set DETECTOR geo_file "TheiaRnD/pmt_test.geo"
-/rat/db/set DETECTOR geo_file "TheiaRnD/pmt_array.geo"
-#/rat/db/set DETECTOR geo_file "TheiaRnD/onepmt_new_close.geo"
+#/rat/db/set DETECTOR geo_file "TheiaRnD/pmt_array.geo"
+/rat/db/set DETECTOR geo_file "TheiaRnD/onepmt_new_close.geo"
 #/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD.geo"
 
 /run/initialize
@@ -66,7 +66,7 @@
 
 ##### BEGIN EVENT LOOP ##################
 /rat/proc daq
-/rat/procset trigger "allpmts" #simpledaq, triggerpmt, allpmts
+/rat/procset trigger "triggerpmt" #simpledaq, triggerpmt, allpmts
 /rat/proc analysis
 /rat/proc count
 /rat/procset update 100
@@ -89,8 +89,8 @@
 ###COSMIC
 /generator/add combo gun2:point
 # vertical muon
-/generator/vtx/set mu- 0.0 0.0 -1.0 0 3000.0 3000.0
-/generator/pos/set 0.0 0.0 280.0
+#/generator/vtx/set mu- 0.0 0.0 -1.0 0 3000.0 3000.0
+#/generator/pos/set 0.0 0.0 280.0
 # tilted muon
 #/generator/vtx/set mu- 0.0 -10.0 -70.0 0 3000.0 3000.0
 #/generator/pos/set 0.0 13.0 250.0
@@ -119,11 +119,11 @@
 # /generator/pos/set source
 
 ###RADIACTIVE SOURCE DECAYCHAIN
-#/generator/add decaychain 90Y:fill:uniform
+/generator/add decaychain 90Y:fill:uniform
 #/generator/pos/set -410.0 -410.0 0.0 #corner of the box (for TheiaRnD.geo)
 #/generator/pos/set 0 0 423.0 #top of the box
-#/generator/pos/set -464.287 -25.0 -300.0 #side of the box (for onepmt_new_close.geo)
-#/generator/pos/set source
+/generator/pos/set -464.287 -25.0 -300.0 #side of the box (for onepmt_new_close.geo)
+/generator/pos/set source
 
 ###SOLAR NEUTRINOS
 #/generator/add solar pep:nue
@@ -132,4 +132,4 @@
 #######################################
 
 ##### RUN ###########
-/run/beamOn 10
+/run/beamOn 1000
