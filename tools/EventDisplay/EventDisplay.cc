@@ -111,6 +111,7 @@ void EventDisplay::LoadEvent(int ievt){
   pl_tracks.clear();
   MCPMTWaveforms.clear();
   MCPMTDigitizedWaveforms.clear();
+  PMTDigitizedWaveforms.clear();
   for (std::map<std::string,TH2F*>::iterator it=hxyplane.begin();it!=hxyplane.end();it++)
     it->second->Reset();
   npe.clear();
@@ -197,6 +198,7 @@ void EventDisplay::LoadEvent(int ievt){
     }
   }
 
+#ifdef __WAVEFORMS_IN_DS__
   ////////////
   // PMT waveforms
   ////////////
@@ -204,22 +206,19 @@ void EventDisplay::LoadEvent(int ievt){
   MCPMTDigitizedWaveforms.resize(mc->GetMCPMTCount());
   PMTDigitizedWaveforms.resize(ev->GetPMTCount());
   double ymin=9999999.; //yaxis min limit analogue
-  unsigned short int ymax_d=0.; //yaxis max limit digital
-  unsigned short int ymin_d=9999999.; //yaxis min limit digital
+  UShort_t ymax_d=0.; //yaxis max limit digital
+  UShort_t ymin_d=9999999.; //yaxis min limit digital
   double ymax_temp=0.;
   double ymin_temp=0.;
   double xmax_temp=0.;//dummy
   double xmin_temp=0.;//dummy
-
 
   for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++) {
 
     RAT::DS::MCPMT *mcpmt = mc->GetMCPMT(ipmt);
 
     //Set analogue graphs
-#ifdef __WAVEFORMS_IN_DS__
     vMCPMTWaveforms[ipmt] = mcpmt->GetWaveform();
-#endif
     for(int isample=0; isample<vMCPMTWaveforms[ipmt].size(); isample++){
       //      std::cout<<"waveform "<<isample<<" "<<vPMTWaveforms[ipmt][isample]<<std::endl;
       MCPMTWaveforms[ipmt].SetPoint(isample,isample,vMCPMTWaveforms[ipmt][isample]);
@@ -227,9 +226,7 @@ void EventDisplay::LoadEvent(int ievt){
     }
 
     //Set digitized graphs
-#ifdef __WAVEFORMS_IN_DS__
     vMCPMTDigitizedWaveforms[ipmt] = mcpmt->GetDigitizedWaveform();
-#endif
     for(int isample=0; isample<vMCPMTDigitizedWaveforms[ipmt].size(); isample++){
       MCPMTDigitizedWaveforms[ipmt].SetPoint(isample,isample,vMCPMTDigitizedWaveforms[ipmt][isample]);
       ymax_d = TMath::Max(ymax_d,vMCPMTDigitizedWaveforms[ipmt][isample]);
@@ -265,6 +262,7 @@ void EventDisplay::LoadEvent(int ievt){
   for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
     PMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.99*ymin_d,1.01*ymax_d);
   }
+#endif
 
   if(debugLevel > 0) std::cout<<" EventDisplay::LoadEvent - DONE "<<std::endl;
 

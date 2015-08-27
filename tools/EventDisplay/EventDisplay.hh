@@ -1,5 +1,3 @@
-#define __WAVEFORMS_IN_DS__
-
 #ifndef __EventDisplay__
 #define __EventDisplay__
 
@@ -79,8 +77,8 @@ protected:
   std::vector<TGraph> MCPMTDigitizedWaveforms;
   std::vector<TGraph> PMTDigitizedWaveforms;
   std::map< int, std::vector<double> > vMCPMTWaveforms;
-  std::map< int, std::vector<unsigned short int> > vMCPMTDigitizedWaveforms;
-  std::map< int, std::vector<unsigned short int> > vPMTDigitizedWaveforms;
+  std::map< int, std::vector<UShort_t> > vMCPMTDigitizedWaveforms;
+  std::map< int, std::vector<UShort_t> > vPMTDigitizedWaveforms;
   std::map<std::string,TH2F*> hxyplane;
   TCanvas *canvas_event;
 

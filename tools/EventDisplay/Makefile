@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Wno-write-strings -DSWAP_BYTES -g -fdiagnostics-show-option -std=c++0x
+CFLAGS = -Wall -Wno-write-strings -DSWAP_BYTES -g -fdiagnostics-show-option -std=c++0x -D__WAVEFORMS_IN_DS__
 LFLAGS = -L/usr/lib -L$(ROOTSYS)/lib -L$(RATROOT)/lib
 CC= g++
 
