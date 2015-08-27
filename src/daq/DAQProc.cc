@@ -76,9 +76,10 @@ namespace RAT {
       daqHeader->SetAttribute("V_OFFSET",fDigitizer.GetVOffSet());
       daqHeader->SetAttribute("V_HIGH",fDigitizer.GetVHigh());
       daqHeader->SetAttribute("V_LOW",fDigitizer.GetVLow());
+      daqHeader->SetAttribute("RESISTANCE",fDigitizer.GetResistance());
 
       DS::Run *run = DS::RunStore::GetRun(ds);
-      run->SetID(43);
+      run->SetID(1);
       run->SetType(0x00001111);
       run->SetStartTime(1440638077);
       run->SetDAQHeader(daqHeader);
