@@ -247,7 +247,7 @@ void EventDisplay::LoadEvent(int ievt){
     if(debugLevel > 1) std::cout<<" EventDisplay::LoadEvent - DigitWF: nsamples "<<vPMTDigitizedWaveforms[ipmt].size()<<std::endl;
 
     for(int isample=0; isample<vPMTDigitizedWaveforms[ipmt].size(); isample++){
-      MCPMTDigitizedWaveforms[ipmt].SetPoint(isample,isample,vPMTDigitizedWaveforms[ipmt][isample]);
+      PMTDigitizedWaveforms[ipmt].SetPoint(isample,isample,vPMTDigitizedWaveforms[ipmt][isample]);
 
       if(debugLevel > 1) std::cout<<" EventDisplay::LoadEvent - Digit WF: "
       <<"sample "<<isample<<" "<<vPMTDigitizedWaveforms[ipmt][isample]<<std::endl;

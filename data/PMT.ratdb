@@ -11,6 +11,7 @@ photocathode_surface: "photocathode",
 mirror_surface: "mirror",
 dynode_surface: "stainless_steel",
 
+shape: "torus", //torus, cube
 dynode_radius: 27.5, // mm
 dynode_top:   -30.0, // mm
 wall_thickness: 3.0, // mm
@@ -33,6 +34,7 @@ photocathode_surface: "photocathode_R1408",
 mirror_surface: "mirror",
 dynode_surface: "stainless_steel",
 
+shape: "torus", //torus, cube
 dynode_radius: 27.5, // mm
 dynode_top:   -30.0, // mm
 wall_thickness: 3.0, // mm
@@ -55,6 +57,7 @@ photocathode_surface: "photocathode_R11065",
 mirror_surface: "mirror",
 dynode_surface: "stainless_steel",
 
+shape: "torus", //torus, cube
 dynode_radius: 23.0, // mm
 dynode_top:   -30.0, // mm
 wall_thickness: 3.0, // mm
@@ -174,6 +177,7 @@ photocathode_surface: "photocathode_et9390b",
 mirror_surface: "mirror",
 dynode_surface: "stainless_steel",
 
+shape: "torus", //torus, cube
 dynode_radius: 2.0, // wild guess in mm
 dynode_top:   -100.375, // wild guess in mm was -20.625
 wall_thickness: 3.0, // wild guess in mm
