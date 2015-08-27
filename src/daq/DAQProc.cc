@@ -25,7 +25,7 @@ namespace RAT {
       //sampling time in ns --- this is the size of a PMT time window
       fSamplingTimeDB = fLdaq->GetD("sampling_time");
       //integration time in ns
-      fIntTimeDB = fLdaq->GetD("int_time");
+      // fIntTimeDB = fLdaq->GetD("int_time");
       //width of a PMT pulse in ns
       fPulseWidthDB = fLdaq->GetD("pulse_width");
       //offset of a PMT pulse in mV
@@ -60,16 +60,18 @@ namespace RAT {
 
       detail << "DAQProc: DAQ constants loaded" << newline;
       detail << "  PMT Pulse type: " << (fPulseTypeDB==0 ? "square" : "realistic") << newline;
+      detail << dformat("  PMT Pulse Mean: ........................ %5.1f\n", fPulseMeanDB);
       detail << dformat("  PMT Pulse Width: ....................... %5.1f ns\n", fPulseWidthDB);
       detail << dformat("  PMT Pulse Offset: ...................... %5.1f ADC Counts\n", fPulseOffsetDB);
       detail << dformat("  Min PMT Pulse Height: .................. %5.1f mV\n", fPulseMinDB);
-      detail << dformat("  PMT Channel Integration Time: .... %6.2f ns\n", fIntTimeDB);
-      detail << dformat("  PMT Channel Total Sample Time: ......... %6.2f ns\n", fSamplingTimeDB);
-      detail << dformat("  PMT Channel Stepping Time: ............. %6.2f ns\n", fStepTimeDB);
-      detail << dformat("  Channel Gate Delay: .................... %5.1f ns\n", fGDelayDB);
       detail << dformat("  Hi Freq. Channel Noise: ................ %6.2f adc counts\n", fNoiseAmplDB);
-      detail << dformat("  PMT Trigger threshold: ......................... %5.1f mV\n", fTriggerThresholdDB);
-      detail << dformat("  PMT Pulse Mean: ........................ %5.1f\n", fPulseMeanDB);
+      detail << dformat("  PMT Trigger threshold: ................. %5.1f mV\n", fTriggerThresholdDB);
+      // detail << dformat("  PMT Channel Integration Time: .......... %6.2f ns\n", fIntTimeDB);
+
+      detail << dformat("  Digitizer Stepping Time: ............. %6.2f ns\n", fStepTimeDB);
+      detail << dformat("  Digitizer Total Sample Time: ......... %6.2f ns\n", fSamplingTimeDB);
+      detail << dformat("  Digitizer voltage offset: .............. %6.2f mV\n", fOffSetDB);
+      detail << dformat("  Digitizer Gate Delay: .................... %5.1f ns\n", fGDelayDB);
 
       fEventCounter = 0;
     }

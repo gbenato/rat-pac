@@ -23,7 +23,7 @@ nbits: 14, //number of bits
 step_time: 2.0, //time resolution in ns
 volt_high: 1000.0, //upper voltage limit in mV
 volt_low: -1000.0, //lower voltage limit in mV
-offset: 0.0, //voltage offset in mV
+offset: -500.0, //voltage offset in mV
 resistance: 50.0, //resistance of the output circuit in Ohms
 sampling_time: 1000.0, //full gate for grouping hits in a single integration in ns
 int_time: 20.0, //charge integration time in ns
