@@ -6,6 +6,7 @@
 #include <RAT/SignalHandler.hh>
 #include <RAT/Log.hh>
 #include <RAT/DB.hh>
+#include <RAT/DS/DAQHeader.hh>
 
 #include <G4UIdirectory.hh>
 #include <G4UIcmdWithAString.hh>
@@ -101,8 +102,10 @@ namespace RAT {
     H5::H5File *h5file = new H5::H5File(filename, H5F_ACC_RDONLY);
     H5::Group *h5rootgrp = new H5::Group(h5file->openGroup("/"));
     //Loop over groups (each group should be a different channel)
-    //and fill the waveforms in event order
+    //and fill the waveforms in event order and the DAQHeader.
     mw_t waveforms;
+    bool daqHeader_filled = false;
+    DS::DAQHeader *daqHeader = new DS::DAQHeader();
     int ngroups = h5rootgrp->getNumObjs();
     for (int i = 0; i < ngroups; i++){
       H5std_string grpname = h5rootgrp->getObjnameByIdx(i);
@@ -122,6 +125,25 @@ namespace RAT {
       }
 
       H5::Group *group = new H5::Group(h5file->openGroup("/"+grpname));
+      //Get DAQ attributes from first channel
+      if(!daqHeader_filled){
+        uint32_t bits,voffset,ns_sample;
+        H5::Attribute bits_attr = group->openAttribute("bits");
+        bits_attr.read(H5::PredType::NATIVE_UINT32, &bits);
+        H5::Attribute voffset_attr = group->openAttribute("offset");
+        voffset_attr.read(H5::PredType::NATIVE_UINT32, &voffset);
+        H5::Attribute ns_sample_attr = group->openAttribute("ns_sample");
+        ns_sample_attr.read(H5::PredType::NATIVE_UINT32, &ns_sample);
+
+        daqHeader->SetAttribute("DAQ_NAME","DIGITIZER_V16");
+        daqHeader->SetAttribute("NBITS",(int)bits);
+        daqHeader->SetAttribute("TIME_RES",(int)ns_sample);
+        daqHeader->SetAttribute("V_OFFSET",(int)voffset);
+        daqHeader->SetAttribute("V_HIGH",1000);
+        daqHeader->SetAttribute("V_LOW",-1000);
+        daqHeader_filled = true;
+      }
+      //Now retrieve the samples
       info<<"Getting samples from group " + grpname + "\n";
       H5::DataSet *dataset;
       try{
@@ -164,6 +186,18 @@ namespace RAT {
         //   info<<"   "<<isample<<" "<<pmt->GetWaveform()[isample]<<" "<<iwaveform->second.at(iev)[isample]<<"\n";
         // }
       }
+
+      //Now set the DAQHeader
+      DS::Run *run = new DS::Run();
+      run->SetID(43);
+      run->SetType(0x00001111);
+      run->SetStartTime(1440638077);
+      run->SetDAQHeader(daqHeader);
+
+      DS::RunStore::AddNewRun(run);
+
+
+
       mainBlock->DSEvent(ds);
     }
 
