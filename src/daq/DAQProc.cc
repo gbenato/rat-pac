@@ -5,6 +5,9 @@
 #include <RAT/DetectorConstruction.hh>
 #include <RAT/PMTPulse.hh>
 #include <RAT/PMTWaveform.hh>
+#include <RAT/DS/DAQHeader.hh>
+#include <RAT/DS/RunStore.hh>
+
 #include <CLHEP/Random/RandGauss.h>
 
 using namespace std;
@@ -64,6 +67,22 @@ namespace RAT {
     Processor::Result DAQProc::DSEvent(DS::Root *ds) {
       //This processor build waveforms for each PMT in the MC generated event, sample them and
       //store each sampled piece as a new event
+
+      //Set DAQ header in run structure
+      DS::DAQHeader *daqHeader = new DS::DAQHeader();
+      daqHeader->SetAttribute("DAQ_NAME","VIRTUAL_DIGITIZER");
+      daqHeader->SetAttribute("NBITS",fDigitizer.GetNBits());
+      daqHeader->SetAttribute("TIME_RES",fDigitizer.GetStepTime());
+      daqHeader->SetAttribute("V_OFFSET",fDigitizer.GetVOffSet());
+      daqHeader->SetAttribute("V_HIGH",fDigitizer.GetVHigh());
+      daqHeader->SetAttribute("V_LOW",fDigitizer.GetVLow());
+
+      DS::Run *run = DS::RunStore::GetRun(ds);
+      run->SetID(43);
+      run->SetType(0x00001111);
+      run->SetStartTime(1440638077);
+      run->SetDAQHeader(daqHeader);
+
 
       DS::MC *mc = ds->GetMC();
 
