@@ -9,6 +9,7 @@
 #define __RAT_DS_Run__
 
 #include <RAT/DS/PMTInfo.hh>
+#include <RAT/DS/DAQHeader.hh>
 #include <TObject.h>
 #include <vector>
 #include <time.h>
@@ -49,6 +50,10 @@ public:
   virtual bool ExistPMTInfo() { return !pmtinfo.empty(); }
   virtual void PrunePMTInfo() { pmtinfo.resize(0); }
 
+  /** DAQ header */
+  virtual DAQHeader GetDAQHeader() const { return daqHeader; }
+  virtual void SetDAQHeader(DAQHeader *_daqHeader) { daqHeader = *_daqHeader; }
+
   ClassDef(Run, 1)
 
 protected:
@@ -56,10 +61,10 @@ protected:
   ULong64_t type;
   time_t startTime;
   std::vector<PMTInfo> pmtinfo;
+  DAQHeader daqHeader;
 };
 
   } // namespace DS
 } // namespace RAT
 
 #endif
-
