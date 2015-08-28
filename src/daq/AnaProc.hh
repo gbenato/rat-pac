@@ -5,6 +5,7 @@
 #include <RAT/Processor.hh>
 #include <RAT/DS/DAQHeader.hh>
 #include <RAT/DS/RunStore.hh>
+#include <RAT/DB.hh>
 
 namespace RAT {
 
@@ -22,6 +23,14 @@ protected:
   DS::Run *run;
   DS::DAQHeader *daqHeader;
   bool gotDAQHeader;
+
+  DBLinkPtr fLdaq;
+
+  double ped_start;
+  double ped_end;
+  double max_spread;
+  double int_start;
+  double int_end;
 
 };
 
