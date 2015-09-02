@@ -35,15 +35,23 @@ namespace RAT {
     virtual void AddChannel(int,PMTWaveform);
     virtual int GetNSamples(int ich){return fDigitWaveForm[ich].size();};
     virtual void GenerateElectronicNoise(int,PMTWaveform);
-    //    virtual void DigitizeWaveForm(PMTWaveform);
     virtual std::vector<double> GetAnalogueWaveform(int ich){return fAnalogueWaveForm[ich];};
     virtual std::vector<UShort_t> GetDigitizedWaveform(int ich){return fDigitWaveForm[ich];};
     virtual std::vector<UShort_t> SampleWaveform(std::vector<UShort_t>, int);
     virtual int GoToEndOfSample(int);
-    // virtual double IntegrateCharge(std::vector<int>);
     virtual double GetDigitizedThreshold(){return fDigitizedThreshold;};
-    // virtual double GetTimeAtPeak(int,int);
-    // virtual double GetTimeAtThreshold(int,int);
+
+    //Getters
+    virtual double GetStepTime(){return fStepTime;};
+    virtual int GetNBits(){return fNBits;};
+    virtual double GetVHigh(){return fVhigh;};
+    virtual double GetVLow(){return fVlow;};
+    virtual double GetVOffSet(){return fOffset;};
+    virtual double GetResistance(){return fResistance;};
+    virtual double GetNoiseAmpl(){return fNoiseAmpl;};
+    virtual double GetDigitThres(){return fDigitizedThreshold;};
+    virtual int GetSamplingWindow(){return fSamplingWindow;};
+    virtual int GetSampleDelay(){return fSampleDelay;};
 
   protected:
 

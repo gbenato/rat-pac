@@ -69,7 +69,7 @@
 /rat/procset trigger "triggerpmt" #simpledaq, triggerpmt, allpmts
 /rat/proc analysis
 /rat/proc count
-/rat/procset update 100
+/rat/procset update 1000
 
 #Output file
 /rat/proclast outroot

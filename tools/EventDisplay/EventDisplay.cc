@@ -436,6 +436,7 @@ void EventDisplay::DisplayEvent(int ievt){
   canvas_event->cd(4);
   for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++) {
     if(ipmt==0){
+      MCPMTDigitizedWaveforms[ipmt].SetTitle("Non-triggered event");
       MCPMTDigitizedWaveforms[ipmt].Draw("AP");
       MCPMTDigitizedWaveforms[ipmt].GetXaxis()->SetTitle("sample");
       MCPMTDigitizedWaveforms[ipmt].GetYaxis()->SetTitle("ADC counts");
@@ -447,6 +448,7 @@ void EventDisplay::DisplayEvent(int ievt){
   if(rds->ExistEV()){
     for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
       if(ipmt==0){
+        PMTDigitizedWaveforms[ipmt].SetTitle("Triggered event");
         PMTDigitizedWaveforms[ipmt].Draw("AP");
         PMTDigitizedWaveforms[ipmt].GetXaxis()->SetTitle("sample");
         PMTDigitizedWaveforms[ipmt].GetYaxis()->SetTitle("ADC counts");

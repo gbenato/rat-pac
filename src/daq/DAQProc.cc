@@ -5,6 +5,9 @@
 #include <RAT/DetectorConstruction.hh>
 #include <RAT/PMTPulse.hh>
 #include <RAT/PMTWaveform.hh>
+#include <RAT/DS/DAQHeader.hh>
+#include <RAT/DS/RunStore.hh>
+
 #include <CLHEP/Random/RandGauss.h>
 
 using namespace std;
@@ -35,8 +38,8 @@ namespace RAT {
       fPulseTypeDB = fLdaq->GetI("pulse_type");
       //mean of a PMT pulse in ns
       fPulseMeanDB = fLdaq->GetD("pulse_mean");
-      //stepping time for discrimination
-      fStepTimeDB = fLdaq->GetD("step_time");
+      //pulse step time
+      fPulseStepTimeDB = fLdaq->GetD("pulse_step_time");
 
       detail << "DAQProc: DAQ constants loaded" << newline;
       detail << "  PMT Pulse type: " << (fPulseTypeDB==0 ? "square" : "realistic") << newline;
@@ -65,6 +68,23 @@ namespace RAT {
       //This processor build waveforms for each PMT in the MC generated event, sample them and
       //store each sampled piece as a new event
 
+      //Set DAQ header in run structure
+      DS::DAQHeader *daqHeader = new DS::DAQHeader();
+      daqHeader->SetAttribute("DAQ_NAME","VIRTUAL_DIGITIZER");
+      daqHeader->SetAttribute("NBITS",fDigitizer.GetNBits());
+      daqHeader->SetAttribute("TIME_RES",fDigitizer.GetStepTime());
+      daqHeader->SetAttribute("V_OFFSET",fDigitizer.GetVOffSet());
+      daqHeader->SetAttribute("V_HIGH",fDigitizer.GetVHigh());
+      daqHeader->SetAttribute("V_LOW",fDigitizer.GetVLow());
+      daqHeader->SetAttribute("RESISTANCE",fDigitizer.GetResistance());
+
+      DS::Run *run = DS::RunStore::GetRun(ds);
+      run->SetID(1);
+      run->SetType(0x00001111);
+      run->SetStartTime(1440638077);
+      run->SetDAQHeader(daqHeader);
+
+
       DS::MC *mc = ds->GetMC();
 
       //Loop through the PMTs in the MC generated event
@@ -74,7 +94,7 @@ namespace RAT {
 
         //For each PMT loop over hit photons and create a waveform for each of them
         PMTWaveform pmtwf;
-        pmtwf.SetStepTime(fStepTimeDB);
+        pmtwf.SetStepTime(fPulseStepTimeDB);
         pmtwf.SetSamplingWindow(fSamplingTimeDB);
         //      double PulseDuty=0.0;
 
@@ -92,7 +112,7 @@ namespace RAT {
           }
 
           pmtpulse->SetPulseMean(fPulseMeanDB);
-          pmtpulse->SetStepTime(fStepTimeDB);
+          pmtpulse->SetStepTime(fPulseStepTimeDB);
           pmtpulse->SetPulseMin(fPulseMinDB);
           pmtpulse->SetPulseCharge(mcphotoelectron->GetCharge());
           pmtpulse->SetPulseWidth(fPulseWidthDB);
@@ -109,6 +129,9 @@ namespace RAT {
         //Digitize waveform -- electronic noise is added by the digitizer. Save analogue
         //waveform in MCPMT object only for drawing purpose and save the digitized one
         //for posterior analysis
+
+//        std::cout<<" CHARGE "<<mcpmt->GetCharge()<<" "<<-pmtwf.GetCharge(0.,200.)<<std::endl;
+        mcpmt->SetWFCharge(pmtwf.GetCharge(0.,200.));//for debugging
         fDigitizer.AddChannel(mcpmt->GetID(),pmtwf);
         mcpmt->SetWaveform(fDigitizer.GetAnalogueWaveform(mcpmt->GetID()));
         mcpmt->SetDigitizedWaveform(fDigitizer.GetDigitizedWaveform(mcpmt->GetID()));
@@ -212,14 +235,15 @@ namespace RAT {
         //If trigger PMT has been hit, sample its waveform and check if it crosses
         //threshold
         if(triggerID>-1){ //means the trigger PMT exists in the event and hence we have a hit
-          int nsamples = fDigitizer.GetNSamples(triggerID);
           std::vector<UShort_t> DigitizedTriggerWaveform = fDigitizer.GetDigitizedWaveform(triggerID);
           //Sample the digitized waveform to look for triggers
-          for(int isample=0; isample<nsamples; isample++){
+          for(int isample=0; isample<DigitizedTriggerWaveform.size(); isample++){
 
-            //	  std::cout<<" SAMPLE "<<isample<<" "<<DigitizedTriggerWaveform[isample]<<" "<<fDigitizer.GetDigitizedThreshold()<<std::endl;
+//            std::cout<<" SAMPLE "<<isample<<"/"<<DigitizedTriggerWaveform.size()<<" "<<DigitizedTriggerWaveform[isample]<<" "<<fDigitizer.GetDigitizedThreshold()<<std::endl;
 
             if (DigitizedTriggerWaveform[isample]<=fDigitizer.GetDigitizedThreshold()){ //hit above threshold! (remember the pulses are negative)
+
+              // std::cout<<" Above threshold "<<isample<<"/"<<DigitizedTriggerWaveform.size()<<" "<<DigitizedTriggerWaveform[isample]<<" "<<fDigitizer.GetDigitizedThreshold()<<std::endl;
 
               //Create a new event
               DS::EV *ev = ds->AddNewEV();

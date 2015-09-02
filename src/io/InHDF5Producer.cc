@@ -140,6 +140,7 @@ namespace RAT {
         daqHeader->SetAttribute("V_OFFSET",(int)voffset);
         daqHeader->SetAttribute("V_HIGH",1000);
         daqHeader->SetAttribute("V_LOW",-1000);
+        daqHeader->SetAttribute("RESISTANCE",50);
         daqHeader_filled = true;
       }
       //Now retrieve the samples
@@ -188,7 +189,7 @@ namespace RAT {
 
       //Now set the DAQHeader
       DS::Run *run = new DS::Run();
-      run->SetID(43);
+      run->SetID(1);
       run->SetType(0x00001111);
       run->SetStartTime(1440638077);
       run->SetDAQHeader(daqHeader);

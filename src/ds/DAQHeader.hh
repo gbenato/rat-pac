@@ -23,13 +23,10 @@ public:
   virtual ~DAQHeader() {}
 
   /** Attributes */
-  template <class T>
-  T GetAttribute(std::string attr)
-  {
-    if(int_attr[attr] != 0)         return int_attr[attr];
-    else if(double_attr[attr] != 0) return double_attr[attr];
-    else if(string_attr[attr] != 0) return string_attr[attr];
-  }
+  virtual int GetIntAttribute(std::string attr){ return int_attr[attr];}
+  virtual double GetDoubleAttribute(std::string attr){ return double_attr[attr];}
+  virtual std::string GetStringAttribute(std::string attr){ return string_attr[attr];}
+
   virtual std::map<std::string,int> GetIntAttributes() const { return int_attr; }
   virtual std::map<std::string,double> GetDoubleAttributes() const { return double_attr; }
   virtual std::map<std::string,std::string> GetStringAttributes() const { return string_attr; }

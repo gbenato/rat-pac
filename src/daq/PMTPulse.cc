@@ -17,9 +17,9 @@ PMTPulse::~PMTPulse()
 {
 }
 
-float SquarePMTPulse::GetPulseHeight(double time)
+double SquarePMTPulse::GetPulseHeight(double time)
 {
-    float height;
+    double height;
     if (time-fStartTime < fPulseWidth && time >= fStartTime){
       height = fPulseCharge; //units are now DAC counts = ADC counts
     }
@@ -35,11 +35,11 @@ void SquarePMTPulse::SetPulseStartTime(double time)
     fEndTime = fStartTime+fPulseWidth;
 }
 
-float SquarePMTPulse::Integrate(double time1, double time2)
+double SquarePMTPulse::Integrate(double time1, double time2)
 {
-    float totalQ=0.0;
-    float height1=GetPulseHeight(time1);
-    float height2=GetPulseHeight(time2);
+    double totalQ=0.0;
+    double height1=GetPulseHeight(time1);
+    double height2=GetPulseHeight(time2);
     if (time1>fEndTime || time2<fStartTime){
         totalQ=0.0;
     }
@@ -63,10 +63,10 @@ float SquarePMTPulse::Integrate(double time1, double time2)
     return totalQ;
 }
 
-float RealPMTPulse::GetPulseHeight(double time)
+double RealPMTPulse::GetPulseHeight(double time)
 {
-    float height;
-    //    float norm=fPulseCharge*exp(fPulseMean); //Orebi Gann normalization
+    double height;
+    //    double norm=fPulseCharge*exp(fPulseMean); //Orebi Gann normalization
     double delta_t = (time-fStartTime);
 
     // if (delta_t > 1.0) {
@@ -98,22 +98,21 @@ void RealPMTPulse::SetPulseStartTime(double time)
     fEndTime = EndTime;
 }
 
-float RealPMTPulse::Integrate(double time1, double time2)
+double RealPMTPulse::Integrate(double time1, double time2)
 {
-    float totalQ=0;
-    if (time1>fEndTime || time2<fStartTime){
+    double totalQ=0;
+    //    if (time1>fEndTime || time2<fStartTime){
+    if (time2<fStartTime){
         totalQ=0.0;
     }
     else if ((time1<fStartTime) && (time2>fEndTime)){
-        totalQ=GetPulseCharge();
+      totalQ=GetPulseCharge();
     }
     else{
-      double time=time1;
-      float norm = exp(-fPulseMean)/
-          sqrt(2.0*3.1415*fPulseWidth*fPulseWidth);
-      while (time < time2){
-          totalQ+=norm*GetPulseHeight(time)*fStepTime;
-          time+=fStepTime;
+      double currenttime=time1;
+      while (currenttime < time2){
+          totalQ+=GetPulseHeight(currenttime)*fStepTime;
+          currenttime+=fStepTime;
       }
     }
     return totalQ;
