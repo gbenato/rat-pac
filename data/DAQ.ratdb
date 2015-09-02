@@ -17,7 +17,7 @@ pulse_mean: 1.7, //(2.727) PMT pulse mean in log(ns) (for lognormal shape only)
 pulse_step_time: 0.001, //time step in ns
 
 //Electronic noise
-noise_amplitude: 1.0, //amplitude of high frequency noise in mV
+noise_amplitude: 0.0, //amplitude of high frequency noise in mV
 
 //Digitizer
 nbits: 14, //number of bits

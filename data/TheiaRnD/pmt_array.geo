@@ -51,13 +51,13 @@
   valid_end: [0, 0],
   invisible: 0, // omitted for visualization
   mother: "inner",
-//Cylinder
-//  type: "tube",
-//  r_max: 150.0, //mm 200.0
-//  size_z: 50.0, //mm 19.0
-//Cuboid
+  //Cylinder
+  //  type: "tube",
+  //  r_max: 150.0, //mm 200.0
+  //  size_z: 50.0, //mm 19.0
+  //Cuboid
   type: "box",
-  size: [160.0,160.0,25.0], //tank 35.0
+  size: [160.0,160.0,16.15], //tank 35.0
   position: [0.0, 0.0, 0.0], //179.5
   material: "acrylic_berkeley", //quartz, acrylic_berkeley
   color: [0.1, 0.3, 0.8, 0.1],
@@ -92,7 +92,7 @@
   type: "tube",
   position: [0.0, 0.0, 0.0], //-15.0
   r_max: 10.0, // 5.0
-  size_z: 25.0, // 35.0
+  size_z: 16.15, // 35.0
   material: "air", //air
   color: [0.0, 0.0, 0.0, 0.1],
 }
@@ -119,16 +119,15 @@
   valid_end: [0, 0],
   invisible: 0, // omitted for visualization
   mother: "inner", //inner_vessel
-//Cylinder
-//  type: "tube",
-//  r_max: 30.0, //mm
-//  size_z: 15.0, //mm 19.0
-//Cuboid
+  //Cylinder
+  //  type: "tube",
+  //  r_max: 30.0, //mm
+  //  size_z: 15.0, //mm 19.0
+  //Cuboid
   type: "box",
   rotation:  [0.0, 0.0, 0.0],
-  size: [60.0,60.0,19.0], //17.5
-  position: [0.0, 0.0, 44.0], //54.0
-//  position: [0.0, 0.0, 14.5], //29.5
+  size: [100.0,100.0,15.0], //17.5
+  position: [0.0, 0.0, 31.15], //54.0
   material: "acrylic_berkeley",
   color: [0.1, 0.3, 0.8, 0.1],
 }
@@ -140,15 +139,15 @@
   valid_end: [0, 0],
   invisible: 0, // omitted for visualization
   mother: "container",
-//Cylinder
+  //Cylinder
   type: "tube",
-  r_max: 10.0, //10.0, 30.0
-  size_z: 17.5, //mm 17.5
-//Cuboid
-//  type: "box",
-//  size: [25.0,25.0,10.0], //25.0, 10.0
+  r_max: 50.0, //10.0, 30.0
+  size_z: 15.0, //mm 17.5
+  //Cuboid
+  //  type: "box",
+  //  size: [25.0,25.0,10.0], //25.0, 10.0
   position: [0.0, 0.0, 0.0], //2.5
-  material: "wbls_10pct", //water, wbls_5pct, wbls_10pct, labppo_scintillator
+  material: "labppo_scintillator", //water, wbls_5pct, wbls_10pct, labppo_scintillator
   color: [0.5, 0.1, 0.5, 0.5],
 }
 
@@ -293,27 +292,27 @@
 // ANALYSIS TUBES
 
 //Container for pmts
-{
-  name: "GEO",
-  index: "pmt_holder",
-  valid_begin: [0, 0],
-  valid_end: [0, 0],
-  invisible: 0, // omitted for visualization
-  mother: "inner",
-//Cuboid
-  type: "box",
-  size: [121.0,121.0,15.0],
-  position: [0.0, 0.0, -40.0],
-  material: "acrylic_black",
-  color: [0.5, 0.0, 0.0, 0.5],
-}
+//{
+//  name: "GEO",
+//  index: "pmt_holder",
+//  valid_begin: [0, 0],
+//  valid_end: [0, 0],
+//  invisible: 0, // omitted for visualization
+//  mother: "inner",
+////Cuboid
+//  type: "box",
+//  size: [121.0,121.0,15.0],
+//  position: [0.0, 0.0, -40.0],
+//  material: "acrylic_black",
+//  color: [0.5, 0.0, 0.0, 0.5],
+//}
 
 {
   name: "GEO",
   index: "pmts",
   valid_begin: [0, 0],
   valid_end: [0, 0],
-  mother: "pmt_holder",
+  mother: "inner",
 //  mother: "vessel",
   type: "pmtarray",
   pmt_model: "h11934", //h11934, r7081_hqe, r11780_hqe
