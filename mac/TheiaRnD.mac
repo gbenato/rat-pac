@@ -16,17 +16,17 @@
 ##### Visualization ##########################
 
 ###HEPREP
-# /run/initialize
-# /vis/open HepRepFile
-# /vis/heprep/setFileDir ../results/heprep/
-# /vis/scene/create
-# /vis/scene/add/volume
-# /vis/sceneHandler/attach
-# /vis/viewer/set/style s
-# /vis/scene/add/trajectories
-# /vis/scene/add/hits
-# /vis/viewer/set/viewpointThetaPhi 30 30
-# /vis/viewer/flush
+#/run/initialize
+#/vis/open HepRepFile
+#/vis/heprep/setFileDir ../results/heprep/
+#/vis/scene/create
+#/vis/scene/add/volume
+#/vis/sceneHandler/attach
+#/vis/viewer/set/style s
+#/vis/scene/add/trajectories
+#/vis/scene/add/hits
+#/vis/viewer/set/viewpointThetaPhi 30 30
+#/vis/viewer/flush
 
 #Extra useless commands
 #/vis/modeling/trajectories/create/generic
@@ -132,4 +132,4 @@
 #######################################
 
 ##### RUN ###########
-/run/beamOn 1000
+/run/beamOn 10000
