@@ -25,7 +25,7 @@ protected:
   double fIntTimeDB; ///< integration time in ns
   float fPulseWidthDB; ///< width of a PMT pulse in ns
   float fPulseOffsetDB; ///< offset of a PMT pulse in mV
-  float fStepTimeDB; ///< stepping time for discrimination
+  float fPulseStepTimeDB; ///< stepping time for analogue pulse
   float fPulseMinDB; ///< Minimum pulse height to consider
   float fNoiseAmplDB; ///< width of noise in adc counts
   double fGDelayDB; ///< time before discriminator fires that sampling gate opens

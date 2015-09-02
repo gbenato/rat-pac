@@ -30,6 +30,8 @@ public:
 
   /** Charge */
   virtual Float_t GetCharge() const;
+  virtual void SetWFCharge(double _charge) {wf_charge = _charge;};
+  virtual Float_t GetWFCharge() const {return wf_charge;};
 
   /** Time */
   virtual void SetTime() {time = this->GetTime();};
@@ -57,12 +59,12 @@ public:
   std::vector<double> GetWaveform() { return waveform;};
   //  void SetWaveform(PMTWaveform _waveform) {_waveform.SetGraph(); waveform = _waveform; };
   void SetWaveform(std::vector<double> _waveform) {waveform = _waveform;};
-  void SetDigitizedWaveform(std::vector<unsigned short int> _digitwaveform) {digitWaveForm = _digitwaveform;};
-  std::vector<unsigned short int> GetDigitizedWaveform() {return digitWaveForm;};
+  void SetDigitizedWaveform(std::vector<UShort_t> _digitwaveform) {digitWaveForm = _digitwaveform;};
+  std::vector<UShort_t> GetDigitizedWaveform() {return digitWaveForm;};
 
   /** Total charge as the sum of the charge of all the PE. */
-  Float_t GetTotalCharge() const { return qTotal; }
-  void SetTotalCharge() { qTotal = this->GetCharge(); }
+  Float_t GetTotalCharge() const { return charge; }
+  void SetTotalCharge() { charge = this->GetCharge(); }
 
 
   ClassDef(MCPMT, 1)
@@ -70,12 +72,13 @@ public:
 protected:
   Int_t id;
   Int_t type;
-  Float_t qTotal;
+  Float_t charge;
+  Float_t wf_charge;
   Float_t time;
   Float_t feTime;
   std::vector<MCPhoton> photon;
   //  PMTWaveform waveform;
-  std::vector<unsigned short int> digitWaveForm;
+  std::vector<UShort_t> digitWaveForm;
   std::vector<double> waveform;
 
 };

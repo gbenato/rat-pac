@@ -14,7 +14,8 @@ public:
   PMTWaveform();
   virtual ~PMTWaveform();
   //  virtual void GenerateElectronicNoise(double);
-  virtual float GetHeight(double time);
+  virtual double GetHeight(double time);
+  virtual double GetCharge(double time1, double time2);
   virtual int GetNext(double time);
   virtual void SetGraph(); //Set the graph with the pulses that are stored in the moment you call this method
   virtual void SetStepTime(double step){fStepTime=step;};
@@ -29,7 +30,7 @@ protected:
   double fStepTime;
   double fSamplingTime;
   std::vector<double> fNoise;
-  
+
 };
 
 } // namespace RAT

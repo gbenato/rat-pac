@@ -86,10 +86,10 @@ namespace RAT {
     double ped_min,ped_max,ped_mean;
     ped_min = ped_max = ped_mean = dWaveform[s_ped_start]*voltsperadc + fVLow - fVOffSet;
     for (size_t isample = s_ped_start+1; isample < s_ped_end; isample++) {
-        double voltage = dWaveform[isample]*voltsperadc + fVLow - fVOffSet;
-        if (ped_min > voltage) ped_min = voltage;
-        if (ped_max < voltage) ped_max = voltage;
-        ped_mean += voltage;
+      double voltage = dWaveform[isample]*voltsperadc + fVLow - fVOffSet;
+      if (ped_min > voltage) ped_min = voltage;
+      if (ped_max < voltage) ped_max = voltage;
+      ped_mean += voltage;
     }
     ped_mean /= (double)(ped_end-ped_start);
     // if (ped_max - ped_min > mv_max_spread) continue;
