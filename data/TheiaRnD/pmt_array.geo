@@ -57,7 +57,7 @@
   //  size_z: 50.0, //mm 19.0
   //Cuboid
   type: "box",
-  size: [160.0,160.0,16.15], //tank 35.0
+  size: [160.0,160.0,32.5],
   position: [0.0, 0.0, 0.0], //179.5
   material: "acrylic_berkeley", //quartz, acrylic_berkeley
   color: [0.1, 0.3, 0.8, 0.1],
@@ -91,8 +91,8 @@
   mother: "outer_vessel",
   type: "tube",
   position: [0.0, 0.0, 0.0], //-15.0
-  r_max: 10.0, // 5.0
-  size_z: 16.15, // 35.0
+  r_max: 5.0,
+  size_z: 32.5,
   material: "air", //air
   color: [0.0, 0.0, 0.0, 0.1],
 }
@@ -127,7 +127,7 @@
   type: "box",
   rotation:  [0.0, 0.0, 0.0],
   size: [100.0,100.0,15.0], //17.5
-  position: [0.0, 0.0, 31.15], //54.0
+  position: [0.0, 0.0, 47.5],
   material: "acrylic_berkeley",
   color: [0.1, 0.3, 0.8, 0.1],
 }
@@ -142,7 +142,7 @@
   //Cylinder
   type: "tube",
   r_max: 50.0, //10.0, 30.0
-  size_z: 15.0, //mm 17.5
+  size_z: 13.0, //mm 17.5
   //Cuboid
   //  type: "box",
   //  size: [25.0,25.0,10.0], //25.0, 10.0
@@ -319,7 +319,7 @@
   pmt_detector_type: "idpmt",
   sensitive_detector: "/mydet/pmt/inner",
   efficiency_correction: 1.0,
-  pos_table: "PMTINFO_CROSS_SPARSE",
+  pos_table: "PMTINFO_ARRAY",
   orientation: "manual",
 }
 

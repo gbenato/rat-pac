@@ -42,7 +42,7 @@ protected:
   double fResistance;
   int fNBits;
 
-  Digitizer fDigitizer;
+  Digitizer *fDigitizer;
 
   std::string fTriggerType;
 

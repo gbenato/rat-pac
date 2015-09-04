@@ -17,8 +17,9 @@
 #include<RAT/DSReader.hh>
 #include<RAT/DS/Root.hh>
 #include <RAT/DB.hh>
+#include <RAT/DS/RunStore.hh>
 
-#define NPMTs 15
+#define NPMTs 81
 #define USERROOTLOOP true
 #define DRAWONLYCHARGE false
 #define NLOGENTRIES 20
@@ -34,7 +35,7 @@ void PrintHistos(char*);
 void NormalizeHistos();
 
 //Global variables
-double pos_pmts[50][3];
+std::vector < std::vector < double > > pos_pmts;
 
 
 //Histograms
@@ -56,7 +57,7 @@ int main(int argc, char **argv){
 
   //Init********
   int appargc = 0;
-  char **appargv = NULL;  
+  char **appargv = NULL;
   TApplication dummy("App", &appargc, appargv);
   ParseArgs(argc, argv);
   //************
@@ -68,7 +69,7 @@ int main(int argc, char **argv){
   DrawHistos();
   if(gOutFile)
     PrintHistos(gOutFile);
-  
+
   new TBrowser;
   dummy.Run();
   return 1;
@@ -81,25 +82,41 @@ void GetHistos(){
   //MC
   std::cout<<" GetMCPDFs "<<std::endl;
   //Init pmt positions
-  pos_pmts[0][0] = -30.; pos_pmts[0][1] = 0.; pos_pmts[0][2] = 115.;
-  pos_pmts[1][0] = -20.; pos_pmts[1][1] = 0.; pos_pmts[1][2] = 115.;
-  pos_pmts[2][0] = -10.; pos_pmts[2][1] = 0.; pos_pmts[2][2] = 115.;
-  pos_pmts[3][0] = 0.; pos_pmts[3][1] = 0.; pos_pmts[3][2] = 115.;
-  pos_pmts[4][0] = 10.; pos_pmts[4][1] = 0.; pos_pmts[4][2] = 115.;
-  pos_pmts[5][0] = 20.; pos_pmts[5][1] = 0.; pos_pmts[5][2] = 115.;
-  pos_pmts[6][0] = 30.; pos_pmts[6][1] = 0.; pos_pmts[6][2] = 115.;
-  pos_pmts[7][0] = 0.; pos_pmts[7][1] = -30.; pos_pmts[7][2] = 115.;
-  pos_pmts[8][0] = 0.; pos_pmts[8][1] = -20.; pos_pmts[8][2] = 115.;
-  pos_pmts[9][0] = 0.; pos_pmts[9][1] = -10.; pos_pmts[9][2] = 115.;
-  pos_pmts[10][0] = 0.; pos_pmts[10][1] = 10.; pos_pmts[10][2] = 115.;
-  pos_pmts[11][0] = 0.; pos_pmts[11][1] = 20.; pos_pmts[11][2] = 115.;
-  pos_pmts[12][0] = 0.; pos_pmts[12][1] = 30.; pos_pmts[12][2] = 115.;
-  pos_pmts[13][0] = 20.; pos_pmts[13][1] = 20.; pos_pmts[13][2] = 115.;
-  pos_pmts[14][0] = -20.; pos_pmts[14][1] = -20.; pos_pmts[14][2] = 115.;
-  
+
+  RAT::DSReader *dsreader = new RAT::DSReader(gInputFileMC);
+  TTree *runT = dsreader->GetRunT();
+  RAT::DS::Run *run = 0;
+  runT->SetBranchAddress("run",&run);
+  runT->GetEntry(0);
+  RAT::DS::PMTInfo *pmtInfo = run->GetPMTInfo();
+
+  for (size_t ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
+    std::vector <double> pmt_temp;
+    pmt_temp.push_back(pmtInfo->GetPosition(ipmt)[0]);
+    pmt_temp.push_back(pmtInfo->GetPosition(ipmt)[1]);
+    pmt_temp.push_back(pmtInfo->GetPosition(ipmt)[2]);
+    pos_pmts.push_back(pmt_temp);
+  }
+
+  // pos_pmts[0][0] = -30.; pos_pmts[0][1] = 0.; pos_pmts[0][2] = 115.;
+  // pos_pmts[1][0] = -20.; pos_pmts[1][1] = 0.; pos_pmts[1][2] = 115.;
+  // pos_pmts[2][0] = -10.; pos_pmts[2][1] = 0.; pos_pmts[2][2] = 115.;
+  // pos_pmts[3][0] = 0.; pos_pmts[3][1] = 0.; pos_pmts[3][2] = 115.;
+  // pos_pmts[4][0] = 10.; pos_pmts[4][1] = 0.; pos_pmts[4][2] = 115.;
+  // pos_pmts[5][0] = 20.; pos_pmts[5][1] = 0.; pos_pmts[5][2] = 115.;
+  // pos_pmts[6][0] = 30.; pos_pmts[6][1] = 0.; pos_pmts[6][2] = 115.;
+  // pos_pmts[7][0] = 0.; pos_pmts[7][1] = -30.; pos_pmts[7][2] = 115.;
+  // pos_pmts[8][0] = 0.; pos_pmts[8][1] = -20.; pos_pmts[8][2] = 115.;
+  // pos_pmts[9][0] = 0.; pos_pmts[9][1] = -10.; pos_pmts[9][2] = 115.;
+  // pos_pmts[10][0] = 0.; pos_pmts[10][1] = 10.; pos_pmts[10][2] = 115.;
+  // pos_pmts[11][0] = 0.; pos_pmts[11][1] = 20.; pos_pmts[11][2] = 115.;
+  // pos_pmts[12][0] = 0.; pos_pmts[12][1] = 30.; pos_pmts[12][2] = 115.;
+  // pos_pmts[13][0] = 20.; pos_pmts[13][1] = 20.; pos_pmts[13][2] = 115.;
+  // pos_pmts[14][0] = -20.; pos_pmts[14][1] = -20.; pos_pmts[14][2] = 115.;
+
 
   //Init histos
-  h_mcpmt_npevspos = new TH2F("h_mcpmt_npevspos","h_mcpmt_npevspos",7,-40,40,7,-40,40);
+  h_mcpmt_npevspos = new TH2F("h_mcpmt_npevspos","h_mcpmt_npevspos",9,-9*15,9*15,9,-9*15,9*15);
   for(int ih=0; ih<NPMTs; ih++){
     h_mcpmt_npe.push_back(new TH1F(Form("h_mcpmt_npe_%i",ih),"h_mcpmt_npe",10,0,10));
     h_mcpmt_charge.push_back(new TH1F(Form("h_mcpmt_charge_%i",ih),"h_mcpmt_charge",200,0,100));
@@ -120,7 +137,7 @@ void GetHistos(){
     int nentries = tree->GetEntries();
     std::cout<<" Number of entries: "<<nentries<<std::endl;
     for(int ientry=0; ientry<nentries;++ientry){
-      
+
       if(nentries>NLOGENTRIES && ientry%(nentries/NLOGENTRIES) == 0) std::cout<<" Entry "<<ientry<<std::endl;
       //    if(ientry>1000000) break;
       tree->GetEntry(ientry);
@@ -148,7 +165,7 @@ void GetHistos(){
 	  h_mcpmt_fetime_total->Fill(mcpmt->GetMCPhoton(iph)->GetFrontEndTime());
       	}
       } //end MCPMT loop
-      
+
       //DAQ EVENTS*****
       //Event loop
       int nevents = rds->GetEVCount();
@@ -202,11 +219,11 @@ void GetHistos(){
       }
     }
   }
-  
+
   //REAL DATA
-  if(gInputFileDT.size()>0){ 
+  if(gInputFileDT.size()>0){
     std::cout<<" GetDataPDFs "<<std::endl;
-    
+
     TGraph* gpdf_dt;
     TH1F* hdata;
     TH1F* hscale;
@@ -227,7 +244,7 @@ void GetHistos(){
       h_dt_charge.push_back(hdata);
     }
   }
-  
+
 
 }
 
@@ -300,7 +317,7 @@ void DrawHistos(){
 void PrintHistos(char *filename){
 
   std::cout<<" Output histrograms to "<<filename<<std::endl;
-    
+
   TFile *fout = new TFile(filename,"RECREATE");
   fout->cd();
   for(int ipmt=0; ipmt<NPMTs;ipmt++){
@@ -315,8 +332,8 @@ void PrintHistos(char *filename){
   h_charge_total->Write();
   h_mcpmt_fetime_total->Write();
   fout->Close();
-  
-  
+
+
 }
 
 void NormalizeHistos(){
@@ -329,12 +346,12 @@ void NormalizeHistos(){
     h_mcpmt_charge[ipmt]->Scale(1./norm);
     std::cout<<" norm "<<ipmt<<" "<<norm<<std::endl;
   }
-  
+
   if(gInputFileDT.size()>0){
     double norm = h_dt_charge[0]->Integral(2,100);
     h_dt_charge[0]->Scale(1./norm);
   }
-  
+
 }
 
 

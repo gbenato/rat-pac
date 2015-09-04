@@ -145,11 +145,7 @@ namespace RAT {
     double tadcs = 0.;
     for(int isample = 0; isample<nsamples; isample++){
 
-
-//      charge = pmtwf.GetHeight(currenttime)*fStepTime;
-
       charge = pmtwf.GetCharge(currenttime-fStepTime, currenttime);
-
 
       volt = charge*fResistance/fStepTime; //convert to voltage
       // volt = volt + fNoise[ichannel][isample]; //add electronic noise
@@ -176,7 +172,8 @@ namespace RAT {
     }
 
     //Ensure we always have enough samples in the pedestal window
-    //Insert samples with pure noise at the begining (FIXME: might allow to have darks hit)
+    //Insert samples with pure noise at the begining
+    //(FIXME: might allow to have darks hit)
     int nsamples_delay = (int)fSampleDelay/fStepTime;
     for (size_t isample = 0; isample < nsamples_delay; isample++) {
       volt = fNoiseAmpl*CLHEP::RandGauss::shoot();
@@ -198,6 +195,7 @@ namespace RAT {
   //[init_sample-fSampleDelay, thres_sample+fSamplingWindow]
   std::vector<UShort_t> Digitizer::SampleWaveform(std::vector<UShort_t> completewaveform, int init_sample){
 
+    //FIXME: might ensure we extract always the good number of samples
     // std::cout<<" 0 - SampleWaveform "<<completewaveform.size()<<std::endl;
 
     int nsamples_delay = (int)fSampleDelay/fStepTime;

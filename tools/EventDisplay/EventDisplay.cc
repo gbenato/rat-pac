@@ -192,18 +192,19 @@ void EventDisplay::LoadEvent(int ievt){
   } //end track loop
 
   //Load photoelectrons
-  for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++){
+  //  for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++){
+  for (int ipmt = 0; ipmt < 999; ipmt++){
     npe[ipmt]=0;
   }
-  for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++){
+  for(int ipmt=0; ipmt<mc->GetMCPMTCount(); ipmt++){
     int pmtID = mc->GetMCPMT(ipmt)->GetID();
     npe[pmtID] = mc->GetMCPMT(ipmt)->GetMCPhotonCount();
   }
 
   if(drawPMTs){
     //Highlight PMT if was hit
-    for(int ipmt=0; ipmt<npe.size(); ipmt++){
-      if(npe[ipmt]>0) EDGeo->HitPMT(ipmt,npe[ipmt]);
+    for(std::map<int, int>::iterator itpmt=npe.begin(); itpmt!=npe.end(); itpmt++){
+      if(itpmt->first<mc->GetMCPMTCount()) EDGeo->HitPMT(itpmt->first,itpmt->second);
     }
   }
 
