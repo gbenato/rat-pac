@@ -43,7 +43,7 @@ public:
     }
     return volume;
   };
-  
+
 protected:
 
   std::string name;
@@ -51,7 +51,7 @@ protected:
   std::vector<double> size;
   std::vector<double> pos;
   TGeoVolume *volume;
-  
+
 };
 
 class EDGeoTube{
@@ -85,7 +85,7 @@ public:
     }
     return volume;
   };
-  
+
 protected:
 
   std::string name;
@@ -95,7 +95,7 @@ protected:
   double height;
   std::vector<double> pos;
   TGeoVolume *volume;
-  
+
 };
 
 
@@ -129,7 +129,7 @@ public:
     }
     return volume;
   };
-  
+
 protected:
 
   std::string name;
@@ -138,10 +138,10 @@ protected:
   double r_max;
   std::vector<double> pos;
   TGeoVolume *volume;
-  
+
 };
 
-  
+
 class EDGeoPMT{
 public:
   EDGeoPMT(std::string _name){SetName(_name); volume = NULL;};
@@ -152,12 +152,14 @@ public:
   void SetSize(std::vector<double> _size){ size = _size; };
   void SetPos(std::vector<double> _pos){ pos = _pos; };
   void SetNPE(int _npe){ npe = _npe; };
+  void SetType(int _type){ type = _type; };
 
   std::string GetMother(){ return mother;};
   std::string GetName(){ return name;};
   std::vector<double> GetPos(){ return pos;};
   std::vector<double> GetSize(){ return size;};
   int GetNPE(){ return npe; };
+  int GetType(){ return type; };
 
   void AddVolume(TGeoVolume* vworld, std::vector<double> absPos){
     TGeoTranslation *trans_local = new TGeoTranslation(pos[0] + absPos[0], pos[1] + absPos[1], pos[2] + absPos[2]);
@@ -168,36 +170,48 @@ public:
     if(volume==NULL){
       TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
       TGeoMedium *med = new TGeoMedium("MED",1,mat);
-      TGeoBBox *b = new TGeoBBox(name.c_str(), size[0], size[1], size[2]);
+      TGeoBBox *b;
+      if(type==1) {
+        b = new TGeoBBox(name.c_str(), size[0], size[1], size[2]);
+      }
+      else if(type == 2){
+        b = new TGeoSphere(name.c_str(),0.0,size[0]);
+      }
+      else{
+        std::cout<<" EDGeoPMT::GetVolume: type "<<type<<"not defined!"<<std::endl;
+        exit(0);
+      }
       volume = new TGeoVolume(name.c_str(),b,med);
       volume->SetLineWidth(1);
       volume->SetLineColor(1);
     }
     return volume;
   };
-  
+
 protected:
 
   std::string name;
   std::string mother;
   std::vector<double> size;
   std::vector<double> pos;
+  int type;
   int npe;
   TGeoVolume *volume;
-  
+
 };
 
 
-  
+
 class EventGeometry{
 public:
-  EventGeometry(std::string,std::string dbPMTInfoFile = "");
+  EventGeometry(std::string,std::string analysisFile = "");
   ~EventGeometry(){};
 
   void AddNewBox(std::string,std::string,std::vector<double>,std::vector<double>);
   void AddNewTube(std::string,std::string,std::vector<double>,double,double,double);
   void AddNewSphere(std::string,std::string,std::vector<double>,double,double);
-  void AddNewPMT(std::string,std::string,double,double,double);
+  void AddNewPMT(std::string,std::string,double,double,double,int);
+  int GetPMTCount(){return pmts.size();};
 
   void BuildGeometry();
   void BuildPMTMap();

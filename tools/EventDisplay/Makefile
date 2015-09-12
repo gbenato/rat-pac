@@ -5,15 +5,15 @@ CC= g++
 INCLUDES= `root-config --cflags --glibs` -lGeom\
 -Iinclude \
 -Iinclude/RAT \
--I/Users/snoplus/snoing/install/rat-pac/include \
--I/Users/snoplus/snoing/install/rat-pac/include/RAT \
--I/Users/snoplus/snoing/install/rat-pac/include/RAT/DS \
+-I/Users/snoplus/Work/snoing/install/rat-pac/include \
+-I/Users/snoplus/Work/snoing/install/rat-pac/include/RAT \
+-I/Users/snoplus/Work/snoing/install/rat-pac/include/RAT/DS \
 -lRATEvent
 
 INCLUDES2= `root-config --cflags` \
--I/Users/snoplus/snoing/install/rat-pac/include \
--I/Users/snoplus/snoing/install/rat-pac/include/RAT \
--I/Users/snoplus/snoing/install/rat-pac/include/RAT/DS \
+-I/Users/snoplus/Work/snoing/install/rat-pac/include \
+-I/Users/snoplus/Work/snoing/install/rat-pac/include/RAT \
+-I/Users/snoplus/Work/snoing/install/rat-pac/include/RAT/DS \
 
 SRCS= EventGeometry.cc EventDisplay.cc EventDisplayMain.cc
 OBJS=$(subst .cc,.o,$(SRCS))

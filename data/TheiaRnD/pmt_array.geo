@@ -19,7 +19,6 @@
   mother: "world",
   type: "box",
   size: [762.0,762.0,508.0], //mm, half-lenght
-//  size: [400.0,400.0,250.0], //mm, half-lenght
   material: "acrylic_black", //acrylic_black
   color: [0.5, 0.2, 0.1, 0.1],
 }
@@ -33,7 +32,6 @@
   mother: "darkbox",
   type: "box",
   size: [711.2,711.2,457.2], //mm, half-lenght
-//  size: [370.0,370.0,220.0], //mm, half-lenght
   material: "air",
   color: [0.0, 0.0, 0.0, 0.1],
 }
@@ -43,7 +41,7 @@
 ///////////////////////////////////////
 
 ///////////////////////////////////////
-//// FISH TANK
+//// FISH TANK | ACRYLIC BLOCK
 {
   name: "GEO",
   index: "outer_vessel",
@@ -58,7 +56,7 @@
   //Cuboid
   type: "box",
   size: [160.0,160.0,32.5],
-  position: [0.0, 0.0, 0.0], //179.5
+  position: [-400.0, -400.0, 0.0], //179.5
   material: "acrylic_berkeley", //quartz, acrylic_berkeley
   color: [0.1, 0.3, 0.8, 0.1],
 }
@@ -93,7 +91,7 @@
   position: [0.0, 0.0, 0.0], //-15.0
   r_max: 5.0,
   size_z: 32.5,
-  material: "air", //air
+  material: "acrylic_black", //air
   color: [0.0, 0.0, 0.0, 0.1],
 }
 
@@ -120,14 +118,14 @@
   invisible: 0, // omitted for visualization
   mother: "inner", //inner_vessel
   //Cylinder
-  //  type: "tube",
-  //  r_max: 30.0, //mm
-  //  size_z: 15.0, //mm 19.0
+  type: "tube",
+  r_max: 75.0, //mm
+  size_z: 15.0, //mm 19.0
   //Cuboid
-  type: "box",
-  rotation:  [0.0, 0.0, 0.0],
-  size: [100.0,100.0,15.0], //17.5
-  position: [0.0, 0.0, 47.5],
+  //  type: "box",
+  //  rotation:  [0.0, 0.0, 0.0],
+  //  size: [50.0,50.0,15.0],
+  position: [-400.0, -400.0, 47.5],
   material: "acrylic_berkeley",
   color: [0.1, 0.3, 0.8, 0.1],
 }
@@ -141,12 +139,12 @@
   mother: "container",
   //Cylinder
   type: "tube",
-  r_max: 50.0, //10.0, 30.0
-  size_z: 13.0, //mm 17.5
+  r_max: 35.0, //LAB->35.0, WBLS->30.0
+  size_z: 14.0,
   //Cuboid
   //  type: "box",
   //  size: [25.0,25.0,10.0], //25.0, 10.0
-  position: [0.0, 0.0, 0.0], //2.5
+  position: [0.0, 0.0, 1.0],
   material: "labppo_scintillator", //water, wbls_5pct, wbls_10pct, labppo_scintillator
   color: [0.5, 0.1, 0.5, 0.5],
 }
@@ -299,28 +297,43 @@
 //  valid_end: [0, 0],
 //  invisible: 0, // omitted for visualization
 //  mother: "inner",
-////Cuboid
 //  type: "box",
-//  size: [121.0,121.0,15.0],
-//  position: [0.0, 0.0, -40.0],
+//  size: [110.0,110.0,15.0],
+//  position: [-400.0, -400.0, 0.0],
 //  material: "acrylic_black",
 //  color: [0.5, 0.0, 0.0, 0.5],
 //}
 
 {
   name: "GEO",
-  index: "pmts",
+  index: "small_pmts",
   valid_begin: [0, 0],
   valid_end: [0, 0],
   mother: "inner",
 //  mother: "vessel",
   type: "pmtarray",
-  pmt_model: "h11934", //h11934, r7081_hqe, r11780_hqe
+  pmt_model: "h11934", //h11934
   pmt_detector_type: "idpmt",
   sensitive_detector: "/mydet/pmt/inner",
   efficiency_correction: 1.0,
-  pos_table: "PMTINFO_ARRAY",
+  pos_table: "PMTINFO_CROSS_SIDE",
   orientation: "manual",
+}
+
+{
+  name: "GEO",
+  index: "big_pmts",
+  valid_begin: [0, 0],
+  valid_end: [0, 0],
+  mother: "inner",
+  type: "pmtarray",
+  pmt_model: "r7081_hqe", //r7081_hqe, r11780_hqe
+  pmt_detector_type: "idpmt",
+  sensitive_detector: "/mydet/pmt/inner",
+  efficiency_correction: 1.0,
+  pos_table: "PMTINFO_CLOSE",
+  orientation: "point",
+  orient_point: [-400.0, -400.0, 0.0],
 }
 
 // {
@@ -337,21 +350,6 @@
 //   pos_table: "PMTINFO_TRIGGER",
 //   orientation: "point",
 //   orient_point: [0.0, 0.0, 400.0],
-// }
-
-// {
-//   name: "GEO",
-//   index: "source",
-//   valid_begin: [0, 0],
-//   valid_end: [0, 0],
-//   invisible: 0, // omitted for visualization
-//   mother: "inner",
-//   type: "tube",
-//   position: [0.0, 0.0, 423.0],
-//   r_max: 12.7,
-//   size_z: 1.5, //half-height
-//   material: "strontium", //strontium
-//   color: [0.1, 1.0, 0.3, 0.8],
 // }
 
 ///////////////////////////////////////////////////////
@@ -371,3 +369,19 @@
   material: "air",
   color: [1.0, 0.1, 0.5, 0.5],
 }
+
+//Radiactive
+// {
+//   name: "GEO",
+//   index: "source",
+//   valid_begin: [0, 0],
+//   valid_end: [0, 0],
+//   invisible: 0, // omitted for visualization
+//   mother: "inner",
+//   type: "tube",
+//   position: [0.0, 0.0, 423.0],
+//   r_max: 12.7,
+//   size_z: 1.5, //half-height
+//   material: "strontium", //strontium
+//   color: [0.1, 1.0, 0.3, 0.8],
+// }

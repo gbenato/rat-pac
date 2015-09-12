@@ -83,20 +83,20 @@
   color: [0.1, 0.3, 0.8, 0.1],
 }
 
-{
-  name: "GEO",
-  index: "content",
-  valid_begin: [0, 0],
-  valid_end: [0, 0],
-  invisible: 0, // omitted for visualization
-  mother: "vessel",
-  type: "tube",
-  position: [0.0, 0.0, 10.0],
-  r_max: 10.0,
-  size_z: 40.8,
-  material: "scintillator", //air, water, scintillator
-  color: [0.1, 0.3, 0.8, 0.3],
-}
+//{
+//  name: "GEO",
+//  index: "content",
+//  valid_begin: [0, 0],
+//  valid_end: [0, 0],
+//  invisible: 0, // omitted for visualization
+//  mother: "vessel",
+//  type: "tube",
+//  position: [0.0, 0.0, 10.0],
+//  r_max: 10.0,
+//  size_z: 40.8,
+//  material: "scintillator", //air, water, scintillator
+//  color: [0.1, 0.3, 0.8, 0.3],
+//}
 
 {
   name: "GEO",
@@ -158,4 +158,3 @@
 //   material: "air",
 //   color: [0.1, 0.3, 0.8, 0.1],
 // }
-

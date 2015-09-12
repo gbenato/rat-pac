@@ -55,9 +55,9 @@ EventDisplay::EventDisplay(){
   ParticleColor[9999]=kRed-7;     ParticleWidth[9999]=1;    ParticleName[9999] = "Scintillation photon"; //Created by me, PDG number doesn't actually exist
 
   //Representation plane
-  hxyplane["start"] = new TH2F("hxyplane_cher","Track intersections with XY plane: Cherenkov",1000,(-1)*intersection_zplane[0],intersection_zplane[0],1000,(-1)*intersection_zplane[1],intersection_zplane[1]);
-  hxyplane["Cerenkov"] = new TH2F("hxyplane_cher","Track intersections with XY plane: Cherenkov",1000,(-1)*intersection_zplane[0],intersection_zplane[0],1000,(-1)*intersection_zplane[1],intersection_zplane[1]);
-  hxyplane["Scintillation"] = new TH2F("hxyplane_scint","Track intersections with XY plane: Scintillation",1000,(-1)*intersection_zplane[0],intersection_zplane[0],1000,(-1)*intersection_zplane[1],intersection_zplane[1]);
+  hxyplane["start"] = new TH2F("hxyplane_cher","Track intersections with XY plane: Cherenkov",1000,intersection_zplane[0],intersection_zplane[1],1000,intersection_zplane[0],intersection_zplane[1]);
+  hxyplane["Cerenkov"] = new TH2F("hxyplane_cher","Track intersections with XY plane: Cherenkov",1000,intersection_zplane[0],intersection_zplane[1],1000,intersection_zplane[0],intersection_zplane[1]);
+  hxyplane["Scintillation"] = new TH2F("hxyplane_scint","Track intersections with XY plane: Scintillation",1000,intersection_zplane[0],intersection_zplane[1],1000,intersection_zplane[0],intersection_zplane[1]);
 
   SetGeometry();
 
@@ -193,7 +193,8 @@ void EventDisplay::LoadEvent(int ievt){
 
   //Load photoelectrons
   //  for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++){
-  for (int ipmt = 0; ipmt < 999; ipmt++){
+
+  for (int ipmt = 0; ipmt < EDGeo->GetPMTCount(); ipmt++){
     npe[ipmt]=0;
   }
   for(int ipmt=0; ipmt<mc->GetMCPMTCount(); ipmt++){
@@ -204,7 +205,7 @@ void EventDisplay::LoadEvent(int ievt){
   if(drawPMTs){
     //Highlight PMT if was hit
     for(std::map<int, int>::iterator itpmt=npe.begin(); itpmt!=npe.end(); itpmt++){
-      if(itpmt->first<mc->GetMCPMTCount()) EDGeo->HitPMT(itpmt->first,itpmt->second);
+      EDGeo->HitPMT(itpmt->first,itpmt->second);
     }
   }
 
@@ -312,15 +313,14 @@ void EventDisplay::SetParameters(){
 
   //Geometry files
   geoFileName = dbED->GetS("geo_file");
-  pmtInfoFileName = dbED->GetS("pmtinfo_file");
 
   //Validate parameters
   if(event_number<-1) std::cout<<" EventDisplay >>> Event by event mode (Event navigation disabled) "<<std::endl;
   if(!fexists(geoFileName.c_str())) {std::cout<<" EventDisplay >>> "<<geoFileName<<" doesn't exist. Exit now!"<<std::endl; exit(0);}
-  if(!fexists(pmtInfoFileName.c_str())) {std::cout<<" EventDisplay >>> "<<pmtInfoFileName<<" doesn't exist. Exit now!"<<std::endl; exit(0);}
+  if(!fexists(inputFileName.c_str())) {std::cout<<" EventDisplay >>> "<<inputFileName<<" doesn't exist. Exit now!"<<std::endl; exit(0);}
   if(drawGeometry) std::cout<<" EventDisplay >>> Draw geometry in "<<geoFileName<<std::endl;
   else std::cout<<" EventDisplay >>> Draw geometry disabled "<<std::endl;
-  if(drawPMTs) std::cout<<" EventDisplay >>> Draw PMTs in "<<pmtInfoFileName<<std::endl;
+  if(drawPMTs) std::cout<<" EventDisplay >>> Draw PMTs from the PMTInfo header "<<std::endl;
   else std::cout<<" EventDisplay >>> Draw PMTs disabled "<<std::endl;
 
 
@@ -333,7 +333,7 @@ void EventDisplay::SetGeometry(){
 
   if(debugLevel > 0) std::cout<<" EventDisplay::SetGeometry "<<std::endl;
 
-  if(drawPMTs) EDGeo = new EventGeometry(geoFileName, pmtInfoFileName);
+  if(drawPMTs) EDGeo = new EventGeometry(geoFileName, inputFileName);
   else EDGeo = new EventGeometry(geoFileName);
 
   if(debugLevel > 0) std::cout<<" EventDisplay::SetGeometry - DONE "<<std::endl;
@@ -376,7 +376,6 @@ void EventDisplay::DumpEventInfo(int ievt){
 
 void EventDisplay::DisplayEvent(int ievt){
 
-
   this->LoadEvent(ievt);
   if(event_option == "cherenkov" && !this->IsCerenkov()) return;
   if(event_option == "pe" && !this->IsPE()) return;
@@ -414,7 +413,7 @@ void EventDisplay::DisplayEvent(int ievt){
   }
   if(drawPMTs) EDGeo->DrawPMTMap();
 
-  #ifdef __WAVEFORMS_IN_DS__
+#ifdef __WAVEFORMS_IN_DS__
   //Waveforms
   if(debugLevel > 0) std::cout<<"Display canvas 3 "<<std::endl;
 
@@ -461,38 +460,14 @@ void EventDisplay::DisplayEvent(int ievt){
   }
 #endif
 
-  /*
-  //Draw grid
-  int nlines = 2*XP_XSIDE/pmtwidth;
-  TLine* xline;
-  TLine* yline;
-  for(int iline=0; iline<nlines; iline++){
-  xline = new TLine(-XP_XSIDE,iline*pmtwidth-nlines/2.*pmtwidth,XP_XSIDE,iline*pmtwidth-nlines/2.*pmtwidth);
-  xline->SetLineWidth(1.);
-  xline->SetLineStyle(3);
-  xline->SetLineColor(kGray);
-  xline->Draw("same");
-  yline = new TLine(iline*pmtwidth-nlines/2.*pmtwidth,-XP_YSIDE,iline*pmtwidth-nlines/2.*pmtwidth,XP_YSIDE);
-  yline->SetLineWidth(1.);
-  yline->SetLineStyle(3);
-  yline->SetLineColor(kGray);
-  yline->Draw("same");
-}
+  //Wait for user action
+  canvas_event->Modified();
+  canvas_event->Update();
+  canvas_event->WaitPrimitive();
 
-//Draw pmts
-for(int ipmt=0; ipmt<vpmtbox.size();ipmt++)
-vpmtbox[ipmt].Draw("LINE same");
-*/
+  if(event_number>=0) dummyApp->Run();
 
-//Wait for user action
-canvas_event->Modified();
-canvas_event->Update();
-canvas_event->WaitPrimitive();
-
-//  if(event_number>=0) exit(0);
-if(event_number>=0) dummyApp->Run();
-
-if(debugLevel > 0) std::cout<<" EventDisplay::DisplayEvent - DONE "<<std::endl;
+  if(debugLevel > 0) std::cout<<" EventDisplay::DisplayEvent - DONE "<<std::endl;
 
 }
 

@@ -1,5 +1,8 @@
 #include"EventGeometry.hh"
+#include<RAT/DSReader.hh>
 #include<RAT/DB.hh>
+#include<RAT/DS/Run.hh>
+
 #include<TGeoManager.h>
 #include<TGeoMaterial.h>
 #include<TGeoMedium.h>
@@ -7,18 +10,25 @@
 #include<TGeoArb8.h>
 
 
-EventGeometry::EventGeometry(std::string dbGeoFile, std::string dbPMTInfoFile){
+EventGeometry::EventGeometry(std::string dbGeoFile, std::string analysisFile){
 
   //  std::cout<<" EventGeometry::EventGeometry "<<std::endl;
 
   bool drawPMTs = false;
-  if(dbPMTInfoFile!="")
+  if(analysisFile!="")
     drawPMTs = true;
 
   world = new EDGeoBox("world");
   RAT::DB* db = RAT::DB::Get();
   db->Load(dbGeoFile);
-  if(drawPMTs) db->Load(dbPMTInfoFile);
+
+  RAT::DSReader *dsreader = new RAT::DSReader(analysisFile.c_str());
+  TTree *runT = dsreader->GetRunT();
+  RAT::DS::Run *run = 0;
+  runT->SetBranchAddress("run",&run);
+  runT->GetEntry(0);
+  RAT::DS::PMTInfo *pmtInfo = run->GetPMTInfo();
+
   RAT::DBLinkGroup mydblink = db->GetLinkGroup("GEO");
 
   for(RAT::DBLinkGroup::iterator it=mydblink.begin(); it!=mydblink.end();it++){
@@ -50,7 +60,7 @@ EventGeometry::EventGeometry(std::string dbGeoFile, std::string dbPMTInfoFile){
       double r_min = 0;
       double height = dbGeo->GetD("size_z");
       try{
-	r_min = dbGeo->GetD("r_min");
+        r_min = dbGeo->GetD("r_min");
       }
       catch(RAT::DBNotFoundError){}
       AddNewTube(volName.c_str(), mother, pos, r_min, r_max, height);
@@ -60,25 +70,23 @@ EventGeometry::EventGeometry(std::string dbGeoFile, std::string dbPMTInfoFile){
       double r_max = dbGeo->GetD("r_max");
       double r_min = 0;
       try{
-	r_min = dbGeo->GetD("r_min");
+        r_min = dbGeo->GetD("r_min");
       }
       catch(RAT::DBNotFoundError){}
       AddNewSphere(volName.c_str(), mother, pos, r_min, r_max);
       if(volName!="") geoHierarchy[volName] = mother;
     }
-    else if( dbGeo->GetS("type") == "pmtarray" && drawPMTs){
+  }
 
-      std::string pos_table = dbGeo->GetS("pos_table");
-      RAT::DBLinkPtr dbPMTPos = db->GetLink(pos_table.c_str());
-      std::vector<double> x_pos = dbPMTPos->GetDArray("x");
-      std::vector<double> y_pos = dbPMTPos->GetDArray("y");
-      std::vector<double> z_pos = dbPMTPos->GetDArray("z");
-      for(int ipmt=0;ipmt<x_pos.size();ipmt++){
-        std::ostringstream volNameUsed;
-        volNameUsed << volName <<"_"<<ipmt;
-        AddNewPMT(volNameUsed.str().c_str(), mother, x_pos[ipmt], y_pos[ipmt], z_pos[ipmt]);
-        if(volNameUsed.str()!="") geoHierarchy[volNameUsed.str()] = mother;
-      }
+  //Build PMTs from PMTInfo
+  if(drawPMTs){
+    for (size_t ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
+      std::string volName = "pmts";
+      std::ostringstream volNameUsed;
+      volNameUsed << volName <<"_"<<ipmt;
+      TVector3 pmt_pos = pmtInfo->GetPosition(ipmt);
+      AddNewPMT(volNameUsed.str().c_str(), "world", pmt_pos[0], pmt_pos[1], pmt_pos[2], pmtInfo->GetType(ipmt));
+      if(volNameUsed.str()!="") geoHierarchy[volNameUsed.str()] = "world";
     }
   }
 
@@ -120,28 +128,28 @@ void EventGeometry::BuildGeometry(){
   for(int ivol=1; ivol<geoOrder.size();ivol++){
     for(int ibox=0; ibox<boxes.size(); ibox++){
       if(boxes[ibox]->GetName() == geoOrder[ivol]){
-	std::vector<double> trans = this->GetAbsolutePositionFor(boxes[ibox]->GetName());
-  	boxes[ibox]->AddVolume(geoVolumes["world"],trans);
-  	geoVolumes[boxes[ibox]->GetName()] = boxes[ibox]->GetVolume();
-  	break;
+        std::vector<double> trans = this->GetAbsolutePositionFor(boxes[ibox]->GetName());
+        boxes[ibox]->AddVolume(geoVolumes["world"],trans);
+        geoVolumes[boxes[ibox]->GetName()] = boxes[ibox]->GetVolume();
+        break;
       }
     }
 
     for(int itube=0; itube<tubes.size(); itube++){
       if(tubes[itube]->GetName() == geoOrder[ivol]){
-	std::vector<double> trans = this->GetAbsolutePositionFor(tubes[itube]->GetName());
-    	tubes[itube]->AddVolume(geoVolumes["world"],trans);
-    	geoVolumes[tubes[itube]->GetName()] = tubes[itube]->GetVolume();
-    	break;
+        std::vector<double> trans = this->GetAbsolutePositionFor(tubes[itube]->GetName());
+        tubes[itube]->AddVolume(geoVolumes["world"],trans);
+        geoVolumes[tubes[itube]->GetName()] = tubes[itube]->GetVolume();
+        break;
       }
     }
 
     for(int isphere=0; isphere<spheres.size(); isphere++){
       if(spheres[isphere]->GetName() == geoOrder[ivol]){
-	std::vector<double> trans = this->GetAbsolutePositionFor(spheres[isphere]->GetName());
-    	spheres[isphere]->AddVolume(geoVolumes["world"],trans);
-    	geoVolumes[spheres[isphere]->GetName()] = spheres[isphere]->GetVolume();
-    	break;
+        std::vector<double> trans = this->GetAbsolutePositionFor(spheres[isphere]->GetName());
+        spheres[isphere]->AddVolume(geoVolumes["world"],trans);
+        geoVolumes[spheres[isphere]->GetName()] = spheres[isphere]->GetVolume();
+        break;
       }
     }
 
@@ -167,7 +175,12 @@ void EventGeometry::BuildPMTMap(){
 
   //PMTs in XY plane
   for(int ipmt=0;ipmt<pmts.size();ipmt++){
-    vpmtbox.push_back(TPaveText(pmts[ipmt]->GetPos()[0] + pmts[ipmt]->GetSize()[0] , pmts[ipmt]->GetPos()[1] + pmts[ipmt]->GetSize()[1] , pmts[ipmt]->GetPos()[0]-pmts[ipmt]->GetSize()[0] , pmts[ipmt]->GetPos()[1]-pmts[ipmt]->GetSize()[1] ));
+    if(pmts[ipmt]->GetType() == 1){
+      vpmtbox.push_back(TPaveText(pmts[ipmt]->GetPos()[0] + pmts[ipmt]->GetSize()[0] , pmts[ipmt]->GetPos()[1] + pmts[ipmt]->GetSize()[1] , pmts[ipmt]->GetPos()[0]-pmts[ipmt]->GetSize()[0] , pmts[ipmt]->GetPos()[1]-pmts[ipmt]->GetSize()[1] ));
+    }
+    else{
+      vpmtbox.push_back(TPaveText(pmts[ipmt]->GetPos()[0] + pmts[ipmt]->GetSize()[0] , pmts[ipmt]->GetPos()[1] + pmts[ipmt]->GetSize()[1] , pmts[ipmt]->GetPos()[0]-pmts[ipmt]->GetSize()[0] , pmts[ipmt]->GetPos()[1]-pmts[ipmt]->GetSize()[1] ));
+    }
     //customize
     vpmtbox[ipmt].SetFillColor(kGray);
     vpmtbox[ipmt].SetFillStyle(3002);
@@ -206,14 +219,14 @@ void EventGeometry::DrawPMTMap(){
   }
 
   for(int ipmt=0; ipmt<vpmtbox.size();ipmt++)
-    vpmtbox[ipmt].Draw("LINE same");
+  vpmtbox[ipmt].Draw("LINE same");
 
 }
 
 
 void EventGeometry::DrawGeometry(){
 
-  //  std::cout<<" EventGeometry::DrawGeometry "<<pmts.size()<<std::endl;
+  std::cout<<" EventGeometry::DrawGeometry "<<pmts.size()<<std::endl;
 
   //Reset PMT colors
   for(int ipmt = 0; ipmt<pmts.size(); ipmt++){
@@ -230,13 +243,12 @@ void EventGeometry::HitPMT(int id, int npe){
 
   //Find PMT
   TGeoVolume* hitpmt = pmts[id]->GetVolume();
-
   hitpmt->SetLineColor(kRed);
   pmts[id]->SetNPE(npe);
 
 }
 
-void EventGeometry::AddNewPMT(std::string name, std::string mother, double x_pos, double y_pos, double z_pos){
+void EventGeometry::AddNewPMT(std::string name, std::string mother, double x_pos, double y_pos, double z_pos, int type){
 
   std::vector<double> pos(3,0);
   pos[0] = x_pos; pos[1] = y_pos; pos[2] = z_pos;
@@ -245,8 +257,21 @@ void EventGeometry::AddNewPMT(std::string name, std::string mother, double x_pos
   newpmt->SetName(name);
   newpmt->SetMother(mother);
   newpmt->SetPos(pos);
-  newpmt->SetSize(std::vector<double>(3,14.5));
+  newpmt->SetType(type);
+  if(type == 1){
+    newpmt->SetSize(std::vector<double>(3,14.5));
+  }
+  else if(type == 2){
+    newpmt->SetSize(std::vector<double>(3,125.0));
+  }
+  else{
+    std::cout<<" EDGeoPMT::AddNewPMT: type "<<type<<"not defined!"<<std::endl;
+    exit(0);
+  }
+
   newpmt->SetNPE(0);
+
+  std::cout<<"Adding PMT "<<name<<" "<<std::endl;
 
 }
 
@@ -297,41 +322,41 @@ std::vector<double> EventGeometry::GetAbsolutePositionFor(std::string volumeName
 
     for(int ibox=0; ibox<boxes.size(); ibox++){
       if(boxes[ibox]->GetName() == geoHierarchy[currentVolume]){
-	std::vector<double> pos = boxes[ibox]->GetPos();
-	pos_total[0] += pos[0];
-	pos_total[1] += pos[1];
-	pos_total[2] += pos[2];
-	break;
+        std::vector<double> pos = boxes[ibox]->GetPos();
+        pos_total[0] += pos[0];
+        pos_total[1] += pos[1];
+        pos_total[2] += pos[2];
+        break;
       }
     }
 
     for(int itube=0; itube<tubes.size(); itube++){
       if(tubes[itube]->GetName() == geoHierarchy[currentVolume]){
-	std::vector<double> pos = tubes[itube]->GetPos();
-	pos_total[0] += pos[0];
-	pos_total[1] += pos[1];
-	pos_total[2] += pos[2];
-	break;
+        std::vector<double> pos = tubes[itube]->GetPos();
+        pos_total[0] += pos[0];
+        pos_total[1] += pos[1];
+        pos_total[2] += pos[2];
+        break;
       }
     }
 
     for(int isphere=0; isphere<spheres.size(); isphere++){
       if(spheres[isphere]->GetName() == geoHierarchy[currentVolume]){
-	std::vector<double> pos = spheres[isphere]->GetPos();
-	pos_total[0] += pos[0];
-	pos_total[1] += pos[1];
-	pos_total[2] += pos[2];
-	break;
+        std::vector<double> pos = spheres[isphere]->GetPos();
+        pos_total[0] += pos[0];
+        pos_total[1] += pos[1];
+        pos_total[2] += pos[2];
+        break;
       }
     }
 
     for(int ipmt=0; ipmt<pmts.size(); ipmt++){
       if(pmts[ipmt]->GetName() == geoHierarchy[currentVolume]){
-	std::vector<double> pos = pmts[ipmt]->GetPos();
-	pos_total[0] += pos[0];
-	pos_total[1] += pos[1];
-	pos_total[2] += pos[2];
-	break;
+        std::vector<double> pos = pmts[ipmt]->GetPos();
+        pos_total[0] += pos[0];
+        pos_total[1] += pos[1];
+        pos_total[2] += pos[2];
+        break;
       }
     }
 

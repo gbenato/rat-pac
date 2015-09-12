@@ -88,57 +88,59 @@ namespace RAT {
 
       DS::MC *mc = ds->GetMC();
 
-      //Loop through the PMTs in the MC generated event
-      for (int imcpmt=0; imcpmt < mc->GetMCPMTCount(); imcpmt++){
+      if(fTriggerType!="simpledaq"){
 
-        DS::MCPMT *mcpmt = mc->GetMCPMT(imcpmt);
+        //Loop through the PMTs in the MC generated event
+        for (int imcpmt=0; imcpmt < mc->GetMCPMTCount(); imcpmt++){
 
-        //For each PMT loop over hit photons and create a waveform for each of them
-        PMTWaveform pmtwf;
-        pmtwf.SetStepTime(fPulseStepTimeDB);
-        pmtwf.SetSamplingWindow(fSamplingTimeDB);
-        //      double PulseDuty=0.0;
+          DS::MCPMT *mcpmt = mc->GetMCPMT(imcpmt);
 
-        for (size_t iph=0; iph < mcpmt->GetMCPhotonCount(); iph++) {
+          //For each PMT loop over hit photons and create a waveform for each of them
+          PMTWaveform pmtwf;
+          pmtwf.SetStepTime(fPulseStepTimeDB);
+          pmtwf.SetSamplingWindow(fSamplingTimeDB);
+          //      double PulseDuty=0.0;
 
-          DS::MCPhoton *mcphotoelectron = mcpmt->GetMCPhoton(iph);
-          double TimePhoton = mcphotoelectron->GetFrontEndTime();
+          for (size_t iph=0; iph < mcpmt->GetMCPhotonCount(); iph++) {
 
-          PMTPulse *pmtpulse;
-          if (fPulseTypeDB==0){
-            pmtpulse = new SquarePMTPulse; //square PMT pulses
-          }
-          else{
-            pmtpulse = new RealPMTPulse; //real PMT pulses shape
-          }
+            DS::MCPhoton *mcphotoelectron = mcpmt->GetMCPhoton(iph);
+            double TimePhoton = mcphotoelectron->GetFrontEndTime();
 
-          pmtpulse->SetPulseMean(fPulseMeanDB);
-          pmtpulse->SetStepTime(fPulseStepTimeDB);
-          pmtpulse->SetPulseMin(fPulseMinDB);
-          pmtpulse->SetPulseCharge(mcphotoelectron->GetCharge());
-          pmtpulse->SetPulseWidth(fPulseWidthDB);
-          pmtpulse->SetPulseOffset(fPulseOffsetDB);
-          pmtpulse->SetPulseStartTime(TimePhoton); //also sets end time according to the pulse width and the pulse mean
-          pmtwf.fPulse.push_back(pmtpulse);
-          //	PulseDuty += pmtpulse->GetPulseEndTime() - pmtpulse->GetPulseStartTime();
+            PMTPulse *pmtpulse;
+            if (fPulseTypeDB==0){
+              pmtpulse = new SquarePMTPulse; //square PMT pulses
+            }
+            else{
+              pmtpulse = new RealPMTPulse; //real PMT pulses shape
+            }
 
-        } // end mcphotoelectron loop: all pulses produced for this PMT
+            pmtpulse->SetPulseMean(fPulseMeanDB);
+            pmtpulse->SetStepTime(fPulseStepTimeDB);
+            pmtpulse->SetPulseMin(fPulseMinDB);
+            pmtpulse->SetPulseCharge(mcphotoelectron->GetCharge());
+            pmtpulse->SetPulseWidth(fPulseWidthDB);
+            pmtpulse->SetPulseOffset(fPulseOffsetDB);
+            pmtpulse->SetPulseStartTime(TimePhoton); //also sets end time according to the pulse width and the pulse mean
+            pmtwf.fPulse.push_back(pmtpulse);
+            //	PulseDuty += pmtpulse->GetPulseEndTime() - pmtpulse->GetPulseStartTime();
 
-        //Sort pulses in time order
-        std::sort(pmtwf.fPulse.begin(),pmtwf.fPulse.end(),Cmp_PMTPulse_TimeAscending);
+          } // end mcphotoelectron loop: all pulses produced for this PMT
 
-        //Digitize waveform -- electronic noise is added by the digitizer. Save analogue
-        //waveform in MCPMT object only for drawing purpose and save the digitized one
-        //for posterior analysis
+          //Sort pulses in time order
+          std::sort(pmtwf.fPulse.begin(),pmtwf.fPulse.end(),Cmp_PMTPulse_TimeAscending);
 
-//        std::cout<<" CHARGE "<<mcpmt->GetCharge()<<" "<<-pmtwf.GetCharge(0.,200.)<<std::endl;
-        mcpmt->SetWFCharge(pmtwf.GetCharge(0.,200.));//for debugging
-        // fDigitizer->AddChannel(mcpmt->GetID(),pmtwf);
-        // mcpmt->SetWaveform(fDigitizer->GetAnalogueWaveform(mcpmt->GetID()));
-        // mcpmt->SetDigitizedWaveform(fDigitizer->GetDigitizedWaveform(mcpmt->GetID()));
+          //Digitize waveform -- electronic noise is added by the digitizer. Save analogue
+          //waveform in MCPMT object only for drawing purpose and save the digitized one
+          //for posterior analysis
 
-      } //end pmt loop
+          //        std::cout<<" CHARGE "<<mcpmt->GetCharge()<<" "<<-pmtwf.GetCharge(0.,200.)<<std::endl;
+          mcpmt->SetWFCharge(pmtwf.GetCharge(0.,200.));//for debugging
+          fDigitizer->AddChannel(mcpmt->GetID(),pmtwf);
+          mcpmt->SetWaveform(fDigitizer->GetAnalogueWaveform(mcpmt->GetID()));
+          mcpmt->SetDigitizedWaveform(fDigitizer->GetDigitizedWaveform(mcpmt->GetID()));
 
+        } //end pmt loop
+      }
 
 
       //////////////////////////////////////////////////////////
@@ -201,6 +203,7 @@ namespace RAT {
         DS::EV *ev;
 
         for (int imcpmt=0; imcpmt < mc->GetMCPMTCount(); imcpmt++){
+
           int pmtID = mc->GetMCPMT(imcpmt)->GetID();
           //Sample digitized waveform and look for triggers
           std::vector<UShort_t> DigitizedWaveform = fDigitizer->GetDigitizedWaveform(pmtID);
