@@ -28,9 +28,10 @@ bool fexists(const char *filename)
   return ifile.good();
 }
 
-EventDisplay::EventDisplay(){
+EventDisplay::EventDisplay(std::string _inputFileName){
 
   //Init
+  inputFileName = _inputFileName;
   SetParameters();
   OpenFile(inputFileName);
   int appargc = 0;
@@ -309,7 +310,7 @@ void EventDisplay::SetParameters(){
   intersection_zplane = dbED->GetDArray("intersection_zplane");
 
   //Analysis file
-  inputFileName = dbED->GetS("input_file");
+  if(inputFileName == "") inputFileName = dbED->GetS("input_file");
 
   //Geometry files
   geoFileName = dbED->GetS("geo_file");

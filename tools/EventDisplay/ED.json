@@ -6,20 +6,21 @@
     //Analysis
 //    "input_file": "../../mac/sphere_betas.root", // Analysis ROOT file
 //    "input_file": "../../mac/hdf5_converted.root", // Analysis ROOT file
-    "input_file": "../../results/TheiaRnD_bigpmts_mu1GeV_scint_LAB.root", // Analysis ROOT file
+    "input_file": "../../results/TheiaRnD_bigpmts_cuboid_mu1GeV_scint_LAB.root", // Analysis ROOT file
 
     //Geometry files: used only if 'draw_geo==1'
-    "geo_file": "/Users/snoplus/Work/snoing/install/rat-pac/data/TheiaRnD/pmt_array.geo",
+    "geo_file": "/Users/snoplus/Work/snoing/install/rat-pac/data/TheiaRnD/4PMTs.geo",
 
     //Flags
-    "event_number": 0,     // Event number to draw: Negative -> Event by event mode
+    "event_number": -1,     // Event number to draw: Negative -> Event by event mode
     "initial_track": 0,     // First track to be drawn
     "final_track": -1,     // Last track to be drawn: Negative -> Set to max
     "draw_geo": 1,          // 1 -> Draw Detector geometry
     "draw_pmts": 1,         // 1 -> Draw PMTs stored in PMTINFO
     "event_option": "",     // Drawing options: "pe" -> only events with at least one PE,
                             //                  "cherenkov" -> only events with a cherenkov process
-    "intersection_zplane": [-600.0,0.0,-32.5], // Photon-plane intersection dimensions and Z position [SIDE_MIN, SIDE_MAX, ZPOS]
+//    "intersection_zplane": [-600.0,0.0,-32.5], // Photon-plane intersection dimensions and Z position [SIDE_MIN, SIDE_MAX, ZPOS]
+    "intersection_zplane": [-70.0,70.0,-25.0], // Photon-plane intersection dimensions and Z position [SIDE_MIN, SIDE_MAX, ZPOS]
     "debug_level": 0,
 
 }

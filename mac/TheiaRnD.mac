@@ -11,7 +11,7 @@
 /process/inactivate Cerenkov
 #/glg4scint/off
 #/glg4scint/reemission off
-/tracking/storeTrajectory 1
+#/tracking/storeTrajectory 1
 
 ##### Visualization ##########################
 
@@ -73,7 +73,7 @@
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "../results/TheiaRnD_bigpmts_mu1GeV_scint_LAB.root"
+/rat/procset file "../results/TheiaRnD_mu1GeV_scint_WBLS1MOD.root"
 #########################################
 
 ##### GENERATORS #################
@@ -128,4 +128,4 @@
 #######################################
 
 ##### RUN ###########
-/run/beamOn 10
+/run/beamOn 100

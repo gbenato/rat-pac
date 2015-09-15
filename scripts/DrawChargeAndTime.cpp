@@ -103,7 +103,8 @@ void GetHistos(){
   }
 
   //Init histos
-  h_mcpmt_npevspos = new TH2F("h_mcpmt_npevspos","h_mcpmt_npevspos",9,-9*15,9*15,9,-9*15,9*15);
+  //  h_mcpmt_npevspos = new TH2F("h_mcpmt_npevspos","h_mcpmt_npevspos",27,-27*15,27*15,27,-27*15,27*15);
+  h_mcpmt_npevspos = new TH2F("h_mcpmt_npevspos","h_mcpmt_npevspos",20,-600.0,0.0,20,-600.0,0.0);
   for(int ih=0; ih<npmts; ih++){
     h_mcpmt_npe.push_back(new TH1F(Form("h_mcpmt_npe_%i",ih),"h_mcpmt_npe",200,0,200));
     h_mcpmt_charge.push_back(new TH1F(Form("h_mcpmt_charge_%i",ih),"h_mcpmt_charge",200,0,100));
@@ -147,9 +148,7 @@ void GetHistos(){
         int pmtid = mcpmt->GetID();
         //count PE
         h_mcpmt_npe[pmtid]->Fill(mcpmt->GetMCPhotonCount());
-        if(mcpmt->GetType() == 1){
-          h_mcpmt_npevspos->Fill(pos_pmts[pmtid]->X(),pos_pmts[pmtid]->Y(),mcpmt->GetMCPhotonCount()/(double)nentries);
-        }
+        h_mcpmt_npevspos->Fill(pos_pmts[pmtid]->X(),pos_pmts[pmtid]->Y(),mcpmt->GetMCPhotonCount()/(double)nentries);
 
         if(!DRAWONLYCHARGE){
           for (int iph=0; iph < mcpmt->GetMCPhotonCount(); iph++){

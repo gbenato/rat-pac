@@ -25,7 +25,7 @@
 
 class EventDisplay{
 public:
-  EventDisplay();
+  EventDisplay(std::string _inputFileName = "");
   ~EventDisplay(){};
   void Open();
   void OpenFile(std::string);

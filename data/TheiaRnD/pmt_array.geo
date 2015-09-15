@@ -41,7 +41,7 @@
 ///////////////////////////////////////
 
 ///////////////////////////////////////
-//// FISH TANK | ACRYLIC BLOCK
+//// ACRYLIC BLOCK
 {
   name: "GEO",
   index: "outer_vessel",
@@ -49,66 +49,73 @@
   valid_end: [0, 0],
   invisible: 0, // omitted for visualization
   mother: "inner",
-  //Cylinder
-  //  type: "tube",
-  //  r_max: 150.0, //mm 200.0
-  //  size_z: 50.0, //mm 19.0
-  //Cuboid
   type: "box",
   size: [160.0,160.0,32.5],
-  position: [-400.0, -400.0, 0.0], //179.5
-  material: "acrylic_berkeley", //quartz, acrylic_berkeley
+  position: [-400.0, -400.0, -200.0],
+  material: "acrylic_berkeley",
   color: [0.1, 0.3, 0.8, 0.1],
 }
 
-// {
-//   name: "GEO",
-//   index: "inner_vessel",
-//   valid_begin: [0, 0],
-//   valid_end: [0, 0],
-//   invisible: 0, // omitted for visualization
-//   mother: "outer_vessel",
-// //Cylinder
-// //  type: "tube",
-// //  r_max: 140.0, //mm
-// //  size_z: 44.5, //mm
-// //Cuboid
-//   type: "box",
-//   size: [190.0,190.0,20.0], //tank
-//   position: [0.0, 0.0, 4.5],
-//   material: "acrylic_berkeley", //water, acrylic_berkeley
-//   color: [0.1, 0.8, 0.8, 0.1],
-// }
+{
+  name: "GEO",
+  index: "felt",
+  valid_begin: [0, 0],
+  valid_end: [0, 0],
+  invisible: 0, // omitted for visualization
+  mother: "outer_vessel",
+  type: "box",
+  size: [160.0,160.0,0.5],
+  position: [0.0,0.0,32.0],
+  material: "acrylic_black",
+  color: [0.5, 0.2, 0.1, 0.1],
+}
 
 {
   name: "GEO",
-  index: "hollow_inner",
+  index: "felt_window",
+  valid_begin: [0, 0],
+  valid_end: [0, 0],
+  invisible: 0, // omitted for visualization
+  mother: "felt",
+  //Cylinder
+  type: "tube",
+  r_max: 50.0,
+  size_z: 0.5,
+  position: [0.0,0.0,0.0],
+  material: "acrylic_berkeley",
+  color: [0.1, 0.3, 0.8, 0.1],
+}
+
+{
+  name: "GEO",
+  index: "felt_hollow",
+  valid_begin: [0, 0],
+  valid_end: [0, 0],
+  invisible: 0, // omitted for visualization
+  mother: "felt_window",
+  //Cylinder
+  type: "tube",
+  r_max: 5.0,
+  size_z: 0.5,
+  position: [0.0,0.0,0.0],
+  material: "acrylic_black",
+  color: [0.0, 0.0, 0.0, 0.1],
+}
+
+{
+  name: "GEO",
+  index: "hollow",
   valid_begin: [0, 0],
   valid_end: [0, 0],
   invisible: 0, // omitted for visualization
   mother: "outer_vessel",
   type: "tube",
-  position: [0.0, 0.0, 0.0], //-15.0
+  position: [0.0, 0.0, -0.5],
   r_max: 5.0,
-  size_z: 32.5,
-  material: "acrylic_black", //air
+  size_z: 32.0,
+  material: "acrylic_black",
   color: [0.0, 0.0, 0.0, 0.1],
 }
-
-// {
-//   name: "GEO",
-//   index: "hollow_outer",
-//   valid_begin: [0, 0],
-//   valid_end: [0, 0],
-//   invisible: 0, // omitted for visualization
-//   mother: "outer_vessel",
-//   type: "tube",
-//   position: [0.0, 0.0, -45.0], //(-20.0)
-//   r_max: 10.0, //5.0
-//   size_z: 5.0, //5.0
-//   material: "air", //air
-//   color: [0.0, 0.0, 0.0, 0.1],
-// }
 
 {
   name: "GEO",
@@ -119,13 +126,13 @@
   mother: "inner", //inner_vessel
   //Cylinder
   type: "tube",
-  r_max: 75.0, //mm
-  size_z: 15.0, //mm 19.0
+  r_max: 50.0,
+  size_z: 15.0,
   //Cuboid
-  //  type: "box",
-  //  rotation:  [0.0, 0.0, 0.0],
-  //  size: [50.0,50.0,15.0],
-  position: [-400.0, -400.0, 47.5],
+//  type: "box",
+//  rotation:  [0.0, 0.0, 0.0],
+//  size: [50.0,50.0,15.0],
+  position: [-400.0, -400.0, -152.5],
   material: "acrylic_berkeley",
   color: [0.1, 0.3, 0.8, 0.1],
 }
@@ -137,15 +144,11 @@
   valid_end: [0, 0],
   invisible: 0, // omitted for visualization
   mother: "container",
-  //Cylinder
   type: "tube",
   r_max: 35.0, //LAB->35.0, WBLS->30.0
   size_z: 14.0,
-  //Cuboid
-  //  type: "box",
-  //  size: [25.0,25.0,10.0], //25.0, 10.0
   position: [0.0, 0.0, 1.0],
-  material: "labppo_scintillator", //water, wbls_5pct, wbls_10pct, labppo_scintillator
+  material: "wbls_1pct_mod", //water, wbls_1pct_mod, wbls_1pct, wbls_5pct, wbls_10pct, labppo_scintillator
   color: [0.5, 0.1, 0.5, 0.5],
 }
 
@@ -287,7 +290,7 @@
 /////////////////////////////////////////////////
 
 /////////////////////////////////////////////////
-// ANALYSIS TUBES
+// // ANALYSIS TUBES
 
 //Container for pmts
 //{
@@ -333,7 +336,7 @@
   efficiency_correction: 1.0,
   pos_table: "PMTINFO_CLOSE",
   orientation: "point",
-  orient_point: [-400.0, -400.0, 0.0],
+  orient_point: [-400.0, -400.0, -200.0],
 }
 
 // {
