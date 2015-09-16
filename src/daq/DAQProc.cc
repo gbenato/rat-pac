@@ -58,7 +58,7 @@ namespace RAT {
       if(param=="trigger")
       fTriggerType = value;
 
-      if(fTriggerType!="allpmts" && fTriggerType!="triggerpmt" && fTriggerType!="simpledaq"){
+      if(fTriggerType!="allpmts" && fTriggerType!="triggerpmt" && fTriggerType!="simple"){
         std::cerr<<"DAQ: "<<fTriggerType<<" option unknown... EXIT "<<std::endl;
         exit(0);
       }
@@ -84,11 +84,12 @@ namespace RAT {
       run->SetType(0x00001111);
       run->SetStartTime(1440638077);
       run->SetDAQHeader(daqHeader);
+      RAT::DS::PMTInfo *pmtInfo = run->GetPMTInfo();
 
 
       DS::MC *mc = ds->GetMC();
 
-      if(fTriggerType!="simpledaq"){
+      if(fTriggerType!="simple"){
 
         //Loop through the PMTs in the MC generated event
         for (int imcpmt=0; imcpmt < mc->GetMCPMTCount(); imcpmt++){
@@ -101,7 +102,7 @@ namespace RAT {
           pmtwf.SetSamplingWindow(fSamplingTimeDB);
           //      double PulseDuty=0.0;
 
-          for (size_t iph=0; iph < mcpmt->GetMCPhotonCount(); iph++) {
+          for (int iph=0; iph < mcpmt->GetMCPhotonCount(); iph++) {
 
             DS::MCPhoton *mcphotoelectron = mcpmt->GetMCPhoton(iph);
             double TimePhoton = mcphotoelectron->GetFrontEndTime();
@@ -150,37 +151,39 @@ namespace RAT {
       //////////////////////////////////////////////////////////
 
       //Switch among triggers
-      //simpledaq for debugging
-      if(fTriggerType=="simpledaq"){
+      //simple trigger like simpledaq but triggering off one user-defined trigger PMT
+      if(fTriggerType=="simple"){
 
-        DS::EV *ev = ds->AddNewEV(); //Remove it if no PMT cross threshold
-        ev->SetID(fEventCounter);
-        fEventCounter++; //simpledaq
+        DS::EV *ev; //will add a new event if trigger PMT fires
 
-        //simpleDAQ
         double totalQ = 0.0;
-        double calibQ = 0.0;
+        //Get trigger PMT id
         for (int imcpmt=0; imcpmt < mc->GetMCPMTCount(); imcpmt++) {
-          DS::MCPMT *mcpmt = mc->GetMCPMT(imcpmt);
-          int pmtID = mcpmt->GetID();
 
-          if (mcpmt->GetMCPhotonCount() > 0) {
-            // Need at least one photon to trigger
+          // std::cout<<" simple "<<imcpmt<<"/"<<mc->GetMCPMTCount()<<std::endl;
+
+          DS::MCPMT *mctriggerpmt = mc->GetMCPMT(imcpmt);
+          if(mctriggerpmt->GetType() != 0) continue; //didn't found the trigger PMT yet
+          //Found trigger PMT!
+          if (mctriggerpmt->GetMCPhotonCount() < 40) break;
+          //Trigger PMT has PEs!
+          ev = ds->AddNewEV();
+          ev->SetID(fEventCounter);
+
+          for (int jmcpmt=0; jmcpmt < mc->GetMCPMTCount(); jmcpmt++) {
+            DS::MCPMT *mcpmt = mc->GetMCPMT(jmcpmt);
+            int pmtID = mcpmt->GetID();
+
             DS::PMT* pmt = ev->AddNewPMT();
             pmt->SetID(pmtID);
-
-            // Create one sample, hit time is determined by first hit,
-            // "infinite" charge integration time
-            // WARNING: gets multiphoton effect right, but not walk correction
-            // Write directly to calibrated waveform branch
 
             double time = mcpmt->GetMCPhoton(0)->GetFrontEndTime();
             double charge = 0;
 
-            for (int i=0; i < mcpmt->GetMCPhotonCount(); i++)  {
-              if (time > mcpmt->GetMCPhoton(i)->GetHitTime())
-              time = mcpmt->GetMCPhoton(i)->GetHitTime();
-              charge += mcpmt->GetMCPhoton(i)->GetCharge();
+            for (int ipe=0; ipe < mcpmt->GetMCPhotonCount(); ipe++)  {
+              if (time > mcpmt->GetMCPhoton(ipe)->GetHitTime())
+              time = mcpmt->GetMCPhoton(ipe)->GetHitTime();
+              charge += mcpmt->GetMCPhoton(ipe)->GetCharge();
             }
 
             //pmt->SetCalibratedCharge(charge);
@@ -189,11 +192,16 @@ namespace RAT {
             //charge *= fSPECharge[pmtID] * 1e12; /* convert to pC */
             pmt->SetTime(time);
             pmt->SetCharge(charge);
-            calibQ += charge;
-          }
-        }
 
-        ev->SetTotalCharge(totalQ);
+          } //end adding PMTs to EV
+
+          ev->SetTotalCharge(totalQ);
+
+          //if got here it found trigger PMT -> break now
+          fEventCounter++;
+          break;
+
+        } //end look for the trigger PMT
 
       }
       //First trigger type: store all PMTs crossing threshold

@@ -80,7 +80,7 @@ public:
 protected:
   std::vector<TVector3> pos;
   std::vector<TVector3> dir;
-  std::vector<int> type;
+  std::vector<int> type; //PMT type ordered by ID
   std::map <int,int> npmts_type;
   std::vector<int> modeltype;
   std::vector<std::string> models;

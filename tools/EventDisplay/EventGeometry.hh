@@ -171,14 +171,14 @@ public:
       TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
       TGeoMedium *med = new TGeoMedium("MED",1,mat);
       TGeoBBox *b;
-      if(type==1) {
+      if(type==0 || type==1) {
         b = new TGeoBBox(name.c_str(), size[0], size[1], size[2]);
       }
       else if(type == 2){
         b = new TGeoSphere(name.c_str(),0.0,size[0]);
       }
       else{
-        std::cout<<" EDGeoPMT::GetVolume: type "<<type<<"not defined!"<<std::endl;
+        std::cout<<" EDGeoPMT::GetVolume: type "<<type<<" not defined!"<<std::endl;
         exit(0);
       }
       volume = new TGeoVolume(name.c_str(),b,med);

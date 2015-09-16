@@ -258,14 +258,14 @@ void EventGeometry::AddNewPMT(std::string name, std::string mother, double x_pos
   newpmt->SetMother(mother);
   newpmt->SetPos(pos);
   newpmt->SetType(type);
-  if(type == 1){
+  if(type == 0 || type == 1){
     newpmt->SetSize(std::vector<double>(3,14.5));
   }
   else if(type == 2){
     newpmt->SetSize(std::vector<double>(3,125.0));
   }
   else{
-    std::cout<<" EDGeoPMT::AddNewPMT: type "<<type<<"not defined!"<<std::endl;
+    std::cout<<" EDGeoPMT::AddNewPMT: type "<<type<<" not defined!"<<std::endl;
     exit(0);
   }
 

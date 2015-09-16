@@ -22,6 +22,9 @@
 #define USERROOTLOOP true
 #define DRAWONLYCHARGE false
 #define NLOGENTRIES 20
+#define NBINS 20
+#define MIN -100.0
+#define MAX 100.0
 
 //Methods
 char *gInputFileMC = NULL;
@@ -51,6 +54,7 @@ std::vector<TH2F*> h_charge_scat; //PMT charge vs trigger charge
 TH1F* h_charge_total;
 TH1F* h_mcpmt_fetime_total;
 TH2F* h_mcpmt_npevspos;
+TH2F* h_pmt_qvspos;
 
 //Real data
 std::vector<TH1F*> h_dt_charge; //Measured charge
@@ -65,7 +69,6 @@ int main(int argc, char **argv){
   //************
 
   GetHistos();
-  if(gInputFileDT.size()>0)
   NormalizeHistos();
 
   DrawHistos();
@@ -104,7 +107,8 @@ void GetHistos(){
 
   //Init histos
   //  h_mcpmt_npevspos = new TH2F("h_mcpmt_npevspos","h_mcpmt_npevspos",27,-27*15,27*15,27,-27*15,27*15);
-  h_mcpmt_npevspos = new TH2F("h_mcpmt_npevspos","h_mcpmt_npevspos",20,-600.0,0.0,20,-600.0,0.0);
+  h_mcpmt_npevspos = new TH2F("h_mcpmt_npevspos","h_mcpmt_npevspos",NBINS,MIN,MAX,NBINS,MIN,MAX);
+  h_pmt_qvspos = new TH2F("h_pmt_qvspos","h_pmt_qvspos",NBINS,MIN,MAX,NBINS,MIN,MAX);
   for(int ih=0; ih<npmts; ih++){
     h_mcpmt_npe.push_back(new TH1F(Form("h_mcpmt_npe_%i",ih),"h_mcpmt_npe",200,0,200));
     h_mcpmt_charge.push_back(new TH1F(Form("h_mcpmt_charge_%i",ih),"h_mcpmt_charge",200,0,100));
@@ -180,6 +184,7 @@ void GetHistos(){
           int pmtid = ev->GetPMT(ipmt)->GetID();
           charge = ev->GetPMT(ipmt)->GetCharge();
           h_charge[pmtid]->Fill(charge);
+          h_pmt_qvspos->Fill(pos_pmts[pmtid]->X(),pos_pmts[pmtid]->Y(),charge);
           h_charge_scat[pmtid]->Fill(charge,charge_trig); //charge vs trigger charge
           h_time[pmtid]->Fill(ev->GetPMT(ipmt)->GetTime());
           totalcharge += charge;
@@ -289,7 +294,11 @@ void DrawHistos(){
   }// end PMT type loop
 
   TCanvas *c_npevspos = new TCanvas("c_npevspos","c_npevspos",400,400);
+  c_npevspos->Divide(2,1);
+  c_npevspos->cd(1);
   h_mcpmt_npevspos->Draw("colz text");
+  c_npevspos->cd(2);
+  h_pmt_qvspos->Draw("colz text");
 
 }
 
@@ -333,6 +342,10 @@ void NormalizeHistos(){
     double norm = h_dt_charge[0]->Integral(2,100);
     h_dt_charge[0]->Scale(1./norm);
   }
+
+  double norm = (double)h_pmt_qvspos->GetEntries();
+  std::cout<<" h_pmt_qvspos "<<norm<<std::endl;
+  h_pmt_qvspos->Scale(1./norm);
 
 }
 
