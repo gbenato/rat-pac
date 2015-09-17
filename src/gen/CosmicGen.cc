@@ -50,10 +50,22 @@ namespace RAT {
     //Get a random point in the world surface
     G4Navigator* gNavigator = G4TransportationManager::GetTransportationManager()->GetNavigatorForTracking();
     G4VSolid* worldSolid = gNavigator->GetWorldVolume()->GetLogicalVolume()->GetSolid();
-    G4VPhysicalVolume *sensiVol = gNavigator->LocateGlobalPointAndSetup(*sensiVolPos,0,false);
-    G4VSolid *sensiSolid= sensiVol->GetLogicalVolume()->GetSolid();
-    G4AffineTransform local_to_global = gNavigator->GetLocalToGlobalTransform();
-    G4AffineTransform global_to_local = gNavigator->GetGlobalToLocalTransform();
+    std::vector<G4VPhysicalVolume*> sensiVol;
+    std::vector<G4VSolid*> sensiSolid;
+    std::vector<G4AffineTransform> local_to_global;
+    std::vector<G4AffineTransform> global_to_local;
+    for(int ivol=0; ivol<sensiVolName.size(); ivol++){
+      sensiVol.push_back(gNavigator->LocateGlobalPointAndSetup(*sensiVolPos[ivol],0,false));
+      sensiSolid.push_back(sensiVol[ivol]->GetLogicalVolume()->GetSolid());
+      if(sensiVolName[ivol] != sensiSolid[ivol]->GetName()){
+        std::cout<<" Selected point ["<<sensiVolPos[ivol]->x()<<", "<<sensiVolPos[ivol]->y()<<", "<<sensiVolPos[ivol]->z()
+                 <<"] is not contained in volume "<<sensiVolName[ivol]<<" but in volume "<< sensiSolid[ivol]->GetName()<<"\n"
+                 <<" Change point position or volume name!"<<std::endl;
+        exit(0);
+      }
+      local_to_global.push_back(gNavigator->GetLocalToGlobalTransform());
+      global_to_local.push_back(gNavigator->GetGlobalToLocalTransform());
+    }
 
     //Get an angle and momentum following a given distribution
     double energy = 1000.0;
@@ -62,22 +74,28 @@ namespace RAT {
     TF1 *theta_dist = new TF1("f","cos(x)*cos(x)",TMath::Pi()/2.,TMath::Pi());
 
     G4ThreeVector startPos;
-    G4double dist = -999.;
+    G4double dist = 0.;
     G4ThreeVector dir(0.0,0.0,0.0);
     double theta = 0.;
     do{
       startPos = worldSolid->GetPointOnSurface();
-      global_to_local.ApplyPointTransform(startPos); // convert to local coords
       theta = theta_dist->GetRandom();
       dir = G4ThreeVector(sin(theta)*sin(phi),
                           sin(theta)*cos(phi),
                           cos(theta));
-      dist = sensiSolid->DistanceToIn(startPos,dir); //a solid has no position defined in space
-                                                     //hence this method DO NOT take into account
-                                                     //the global coordinates and we need to work
-                                                     //in locals
-      local_to_global.ApplyPointTransform(startPos); // convert back to global coords
-    } while(dist<0 || dist == kInfinity);
+
+      dist = 0.;
+
+      for(int ivol=0; ivol<sensiVolName.size(); ivol++){
+        //  A solid has no position defined in space hence 'DistanceToIn'
+        //method DO NOT take into account the global coordinates and we
+        //need to work in locals and transform back to globals
+        global_to_local[ivol].ApplyPointTransform(startPos); // convert to local coords
+        dist += sensiSolid[ivol]->DistanceToIn(startPos,dir); // return kInfinity if intersection does not exist
+        local_to_global[ivol].ApplyPointTransform(startPos); // convert back to global coords
+      }
+
+    } while(dist<0 || dist >= kInfinity);
 
     double mass = muonm->GetPDGMass();
     double mom = sqrt(energy*energy - mass*mass);
@@ -117,16 +135,19 @@ namespace RAT {
 #endif
 
     state = util_strip_default(state);
-    std::vector<std::string> cmds = util_split(state, ":");
-    std::vector<std::string> pos = util_split(cmds[0], " ");
-    sensiVolPos = new G4ThreeVector(std::stoi(pos[0]),std::stoi(pos[1]),std::stoi(pos[2]));
-    sensiVolName = cmds[1];
+    std::vector<std::string> allVolumes = util_split(state, ":");
+    for(int ivol=0; ivol<allVolumes.size(); ivol++){
+      allVolumes[ivol] = util_strip_default(allVolumes[ivol]);
+      std::vector<std::string> volume = util_split(allVolumes[ivol], " ");
+      sensiVolPos.push_back(new G4ThreeVector(std::stoi(volume[0]),std::stoi(volume[1]),std::stoi(volume[2])));
+      sensiVolName.push_back(volume[3]);
+    }
 
   }
 
   G4String CosmicGen::GetState() const
   {
-    return util_dformat("%ld\t%ld\t%ld", sensiVolPos->x(), sensiVolPos->y(), sensiVolPos->z());
+    return util_dformat("%ld\t%ld\t%ld", sensiVolPos[0]->x(), sensiVolPos[0]->y(), sensiVolPos[0]->z());
   }
 
 } // namespace RAT

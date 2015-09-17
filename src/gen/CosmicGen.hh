@@ -5,6 +5,7 @@
 #include <G4ThreeVector.hh>
 
 #include <globals.hh>
+#include <vector>
 
 class G4Event;
 class G4ParticleDefinition;
@@ -27,8 +28,8 @@ namespace RAT {
 
   protected:
 
-    G4ThreeVector *sensiVolPos; //random point inside the sensitive volume defined by the user
-    G4String sensiVolName;
+    std::vector<G4ThreeVector*> sensiVolPos; //random point inside the sensitive volume defined by the user
+    std::vector<G4String> sensiVolName;
     G4String stateStr;
     G4ParticleDefinition *muonm, *muonp;
     GLG4TimeGen* timeGen;

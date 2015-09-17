@@ -50,8 +50,9 @@ EventDisplay::EventDisplay(std::string _inputFileName){
   //Particle maps
   ParticleColor[11]=kGreen;   ParticleWidth[11]=1;   ParticleName[11]="Electron";
   ParticleColor[22]=kYellow;     ParticleWidth[22]=1;   ParticleName[22] = "Standard photon";
-  ParticleColor[13]=kOrange;  ParticleWidth[13]=2;   ParticleName[13] = "Muon";
-  ParticleColor[211]=kOrange; ParticleWidth[211]=2;  ParticleName[211]= "Pi+";
+  ParticleColor[13]=kOrange;  ParticleWidth[13]=2;   ParticleName[13] = "Muon-";
+  ParticleColor[-13]=kOrange+1;  ParticleWidth[-13]=2;   ParticleName[-13] = "Muon+";
+  ParticleColor[211]=kOrange-1; ParticleWidth[211]=2;  ParticleName[211]= "Pi+";
   ParticleColor[0]=kCyan+1;     ParticleWidth[0]=1;    ParticleName[0] = "Cherenkov photon"; //Indeed this is an optical photon, but I changed the definition
   ParticleColor[9999]=kRed-7;     ParticleWidth[9999]=1;    ParticleName[9999] = "Scintillation photon"; //Created by me, PDG number doesn't actually exist
 
