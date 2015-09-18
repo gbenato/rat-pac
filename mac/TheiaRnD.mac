@@ -3,15 +3,14 @@
 
 /rat/db/set DETECTOR experiment "TheiaRnD"
 #/rat/db/set DETECTOR geo_file "TheiaRnD/pmt_test.geo"
-/rat/db/set DETECTOR geo_file "TheiaRnD/pmt_array.geo"
 #/rat/db/set DETECTOR geo_file "TheiaRnD/onepmt_new_close.geo"
-#/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD.geo"
+/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD.geo"
 
 /run/initialize
-/process/inactivate Cerenkov
+#/process/inactivate Cerenkov
 #/glg4scint/off
 #/glg4scint/reemission off
-#/tracking/storeTrajectory 1
+/tracking/storeTrajectory 1
 
 ##### Visualization ##########################
 
@@ -66,14 +65,14 @@
 
 ##### BEGIN EVENT LOOP ##################
 /rat/proc daq
-/rat/procset trigger "simpledaq" #simpledaq, triggerpmt, allpmts
+/rat/procset trigger "simple" #simple, triggerpmt, allpmts
 #/rat/proc analysis
 /rat/proc count
-/rat/procset update 10
+/rat/procset update 1
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "../results/TheiaRnD_mu1GeV_scint_WBLS1MOD.root"
+/rat/procset file "../results/TheiaRnD_cosmics_all_LAB.root"
 #########################################
 
 ##### GENERATORS #################
@@ -83,10 +82,13 @@
 # /generator/pos/set 0 0 422.0
 
 ###COSMIC
-/generator/add combo gun2:point
+# cosmic generator
+/generator/add cosmics -400.0 -400.0 -112.5 tag1 : -400.0 -400.0 -257.5 tag2
+
+#/generator/add combo gun2:point
 # vertical muon
-/generator/vtx/set mu- 0.0 0.0 -1.0 0 1000.0 1000.0
-/generator/pos/set -400.0 -400.0 280.0
+#/generator/vtx/set mu- 0.0 0.0 -1.0 0 1000.0 1000.0
+#/generator/pos/set -400.0 -400.0 280.0
 # tilted muon
 #/generator/vtx/set mu- 0.0 -10.0 -70.0 0 3000.0 3000.0
 #/generator/pos/set 0.0 13.0 250.0
@@ -128,4 +130,4 @@
 #######################################
 
 ##### RUN ###########
-/run/beamOn 100
+/run/beamOn 10

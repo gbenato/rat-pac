@@ -78,7 +78,11 @@ namespace RAT {
     G4ThreeVector dir(0.0,0.0,0.0);
     double theta = 0.;
     do{
-      startPos = worldSolid->GetPointOnSurface();
+      // startPos = worldSolid->GetPointOnSurface();
+      //Pick a random sensi volume
+      int randVol = (int)G4UniformRand();
+      startPos = sensiSolid[randVol]->GetPointOnSurface();
+      local_to_global[randVol].ApplyPointTransform(startPos); // convert from local coords of randVol to global
       theta = theta_dist->GetRandom();
       dir = G4ThreeVector(sin(theta)*sin(phi),
                           sin(theta)*cos(phi),
@@ -90,7 +94,7 @@ namespace RAT {
         //  A solid has no position defined in space hence 'DistanceToIn'
         //method DO NOT take into account the global coordinates and we
         //need to work in locals and transform back to globals
-        global_to_local[ivol].ApplyPointTransform(startPos); // convert to local coords
+        global_to_local[ivol].ApplyPointTransform(startPos); // convert from global to local coords of ivol
         dist += sensiSolid[ivol]->DistanceToIn(startPos,dir); // return kInfinity if intersection does not exist
         local_to_global[ivol].ApplyPointTransform(startPos); // convert back to global coords
       }
