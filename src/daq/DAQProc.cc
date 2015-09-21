@@ -108,12 +108,7 @@ namespace RAT {
             double TimePhoton = mcphotoelectron->GetFrontEndTime();
 
             PMTPulse *pmtpulse;
-            if (fPulseTypeDB==0){
-              pmtpulse = new SquarePMTPulse; //square PMT pulses
-            }
-            else{
-              pmtpulse = new RealPMTPulse; //real PMT pulses shape
-            }
+            pmtpulse = new RealPMTPulse; //real PMT pulses shape
 
             pmtpulse->SetPulseMean(fPulseMeanDB);
             pmtpulse->SetStepTime(fPulseStepTimeDB);
@@ -134,7 +129,7 @@ namespace RAT {
           //waveform in MCPMT object only for drawing purpose and save the digitized one
           //for posterior analysis
 
-          //        std::cout<<" CHARGE "<<mcpmt->GetCharge()<<" "<<-pmtwf.GetCharge(0.,200.)<<std::endl;
+          std::cout<<" CHARGE "<<mcpmt->GetCharge()<<" "<<-pmtwf.GetCharge(0.,200.)<<std::endl;
           mcpmt->SetWFCharge(pmtwf.GetCharge(0.,200.));//for debugging
           fDigitizer->AddChannel(mcpmt->GetID(),pmtwf);
           mcpmt->SetWaveform(fDigitizer->GetAnalogueWaveform(mcpmt->GetID()));
@@ -146,8 +141,6 @@ namespace RAT {
 
       //////////////////////////////////////////////////////////
       //FROM HERE THE TRIGGER PROCESSOR SHOULD TAKE OVER!
-      //1) Check trigger condition and divide waveforms in chunks
-      //2) Build events containing digitized waveform samples and integrated charges
       //////////////////////////////////////////////////////////
 
       //Switch among triggers
@@ -165,7 +158,7 @@ namespace RAT {
           DS::MCPMT *mctriggerpmt = mc->GetMCPMT(imcpmt);
           if(mctriggerpmt->GetType() != 0) continue; //didn't found the trigger PMT yet
           //Found trigger PMT!
-          if (mctriggerpmt->GetMCPhotonCount() < 40) break;
+          if (mctriggerpmt->GetMCPhotonCount() == 0) break;
           //Trigger PMT has PEs!
           ev = ds->AddNewEV();
           ev->SetID(fEventCounter);
@@ -186,10 +179,8 @@ namespace RAT {
               charge += mcpmt->GetMCPhoton(ipe)->GetCharge();
             }
 
-            //pmt->SetCalibratedCharge(charge);
             totalQ += charge;
 
-            //charge *= fSPECharge[pmtID] * 1e12; /* convert to pC */
             pmt->SetTime(time);
             pmt->SetCharge(charge);
 

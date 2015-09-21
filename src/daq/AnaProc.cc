@@ -100,11 +100,11 @@ namespace RAT {
     double charge = 0.;
     for (size_t isample = s_int_start; isample < s_int_end; isample++) {
       charge += ((double)dWaveform[isample]*voltsperadc + fVLow - fVOffSet - ped_mean)*fStepTime/fResistance; //ADC to charge
-//      std::cout<<" charge "<<isample<<"/"<<dWaveform.size()<<" "<<charge<<std::endl;
+    //  std::cout<<" charge "<<isample<<"/"<<dWaveform.size()<<" "<<charge<<std::endl;
     }
 
     charge=std::abs(charge); //pulses are negative so covert to positive charge
-    // std::cout<<" Integrated charge "<<charge<<" pedestal "<<ped_mean<<" "<<s_int_start<<" "<<s_int_end<<std::endl;
+    std::cout<<" Integrated charge "<<charge<<" pedestal "<<ped_mean<<" "<<s_int_start<<" "<<s_int_end<<std::endl;
 
     return charge;
   }

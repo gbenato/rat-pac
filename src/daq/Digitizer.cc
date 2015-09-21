@@ -160,7 +160,8 @@ namespace RAT {
       if(adcs<0) adcs = 0;
       else if(adcs>=nADCs) adcs = nADCs - 1;
 
-      tadcs += (volt - fVlow + fOffset)*adcpervolt;
+      // tadcs += (volt - fVlow + fOffset)*adcpervolt;
+      tadcs += adcs;
 
       //Save sample
       fAnalogueWaveForm[ichannel].push_back(charge);
@@ -185,7 +186,7 @@ namespace RAT {
       fDigitWaveForm[ichannel].insert(fDigitWaveForm[ichannel].begin(),adcs);
     }
 
-    std::cout<<" Digit charge in channel "<<ichannel<<": "<<-tcharge<<" "<<(tadcs/adcpervolt + fVlow*nsamples - fOffset*nsamples)*fStepTime/fResistance<<std::endl;
+    std::cout<<" Digit charge in channel "<<ichannel<<": "<<tcharge<<" "<<(tadcs/adcpervolt + fVlow*nsamples - fOffset*nsamples)*fStepTime/fResistance<<std::endl;
 
   }
 

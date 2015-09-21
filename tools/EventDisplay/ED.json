@@ -12,15 +12,15 @@
     "geo_file": "/Users/snoplus/Work/snoing/install/rat-pac/data/TheiaRnD/TheiaRnD.geo",
 
     //Flags
-    "event_number": -1,     // Event number to draw: Negative -> Event by event mode
+    "event_number": 0,     // Event number to draw: Negative -> Event by event mode
     "initial_track": 0,     // First track to be drawn
-    "final_track": -1,     // Last track to be drawn: Negative -> Set to max
+    "final_track": -1,      // Last track to be drawn: Negative -> Set to max
     "draw_geo": 1,          // 1 -> Draw Detector geometry
     "draw_pmts": 1,         // 1 -> Draw PMTs stored in PMTINFO
     "event_option": "",     // Drawing options: "pe" -> only events with at least one PE,
                             //                  "cherenkov" -> only events with a cherenkov process
-//    "intersection_zplane": [-600.0,0.0,-32.5], // Photon-plane intersection dimensions and Z position [SIDE_MIN, SIDE_MAX, ZPOS]
-    "intersection_zplane": [-600.0,-200.0,-232.5], // Photon-plane intersection dimensions and Z position [SIDE_MIN, SIDE_MAX, ZPOS]
+    "intersection_zplane": [-600.0,0.0,-232.5], // Photon-plane intersection dimensions and Z position [SIDE_MIN, SIDE_MAX, ZPOS]
+//    "intersection_zplane": [-600.0,-200.0,-232.5], // Photon-plane intersection dimensions and Z position [SIDE_MIN, SIDE_MAX, ZPOS]
     "debug_level": 0,
 
 }

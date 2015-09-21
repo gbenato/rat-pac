@@ -4,6 +4,7 @@
 #include <vector>
 #include <RAT/PMTPulse.hh>
 #include <RAT/Log.hh>
+#include <TMath.h>
 
 
 namespace RAT {
@@ -15,52 +16,6 @@ PMTPulse::PMTPulse()
 
 PMTPulse::~PMTPulse()
 {
-}
-
-double SquarePMTPulse::GetPulseHeight(double time)
-{
-    double height;
-    if (time-fStartTime < fPulseWidth && time >= fStartTime){
-      height = fPulseCharge; //units are now DAC counts = ADC counts
-    }
-    else {
-       height = 0;
-    }
-    return height;
-}
-
-void SquarePMTPulse::SetPulseStartTime(double time)
-{
-    fStartTime = time;
-    fEndTime = fStartTime+fPulseWidth;
-}
-
-double SquarePMTPulse::Integrate(double time1, double time2)
-{
-    double totalQ=0.0;
-    double height1=GetPulseHeight(time1);
-    double height2=GetPulseHeight(time2);
-    if (time1>fEndTime || time2<fStartTime){
-        totalQ=0.0;
-    }
-    else if ((time1<fStartTime) && (time2>fEndTime)){
-        totalQ=GetPulseCharge();
-    }
-    else{
-      if (height1==height2 && (height1!=0)){
-        totalQ = GetPulseHeight(time2)*(time2-time1)/(fPulseWidth);
-      }
-      else if (height1==0 && height2!=0){
-        totalQ = height2*(time2-fStartTime)/(fPulseWidth);
-      }
-      else if (height1!=0 && height2==0){
-        totalQ = height1*(fEndTime-time1)/(fPulseWidth);
-      }
-      else if (height1==0 && height2==0){
-        totalQ = 0.0; //can only be completely off pulse
-      }
-    }
-    return totalQ;
 }
 
 double RealPMTPulse::GetPulseHeight(double time)
@@ -78,7 +33,8 @@ double RealPMTPulse::GetPulseHeight(double time)
     // }
 
     if (delta_t > 0.0) {
-      height = fPulseOffset - (fPulseCharge/(delta_t*fPulseWidth*sqrt(2*3.14159)))*exp(-0.5*pow(((log(delta_t)-fPulseMean)/fPulseWidth),2));
+      //      height = fPulseOffset - (fPulseCharge/(delta_t*fPulseWidth*sqrt(2*3.14159)))*exp(-0.5*pow(((log(delta_t)-fPulseMean)/fPulseWidth),2));
+      height = fPulseOffset - (fPulseCharge*TMath::LogNormal(delta_t, fPulseWidth, 0., fPulseMean) );
     }
     else{
       height = -1.0E-50; //non-zero at start time
@@ -91,7 +47,7 @@ double RealPMTPulse::GetPulseHeight(double time)
 void RealPMTPulse::SetPulseStartTime(double time)
 {
     fStartTime = time;
-    double EndTime = fStartTime + exp(fPulseMean - fPulseWidth*fPulseWidth);
+    double EndTime = fStartTime + fPulseMean * exp(- fPulseWidth*fPulseWidth);
     while (GetPulseHeight(EndTime)<fPulseMin){
       EndTime+=fStepTime;
     }
@@ -109,13 +65,26 @@ double RealPMTPulse::Integrate(double time1, double time2)
       totalQ=GetPulseCharge();
     }
     else{
-      double currenttime=time1;
-      while (currenttime < time2){
-          totalQ+=GetPulseHeight(currenttime)*fStepTime;
-          currenttime+=fStepTime;
+      //Integrate lognormal
+      double delta_t1 = (time1-fStartTime);
+      double delta_t2 = (time2-fStartTime);
+
+      if (delta_t1 > 0. && delta_t2 > 0.) {
+
+        double xa = log(delta_t1/fPulseMean)/(sqrt(2.)*fPulseWidth);
+        double xb = log(delta_t2/fPulseMean)/(sqrt(2.)*fPulseWidth);
+        totalQ = 1./2.*(TMath::Erf(xb) - TMath::Erf(xa));
+        totalQ *= fPulseCharge;
+
       }
+      else{
+        totalQ = 1.0E-50; //non-zero at start time
+      }
+
+      //      std::cout<<" RealPMTPulse::Integrate: time1 "<<time1<<" time2 "<<time2<<" charge "<<totalQ<<std::endl;
+
     }
-    return totalQ;
+    return (-1.)*totalQ; //Negative pulses
 }
 
 } // namespace RAT

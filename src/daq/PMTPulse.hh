@@ -40,27 +40,6 @@ protected:
 
 };
 
-class SquarePMTPulse : public PMTPulse {
-
-public:
-  SquarePMTPulse(){};
-  virtual ~SquarePMTPulse(){};
-
-  virtual void SetPulseCharge(double _fPulseCharge){fPulseCharge = _fPulseCharge;};
-
-  virtual void SetPulseStartTime(double time);
-  virtual double GetPulseCharge(){return fPulseCharge;};
-  virtual double GetPulseHeight(double time);
-  virtual double GetPulseEndTime(){return fEndTime;};
-  virtual double Integrate(double time1, double time2);
-
-private:
-
-  double fPulseCharge;
-  double fEndTime;
-
-};
-
 class RealPMTPulse : public PMTPulse {
 
 public:

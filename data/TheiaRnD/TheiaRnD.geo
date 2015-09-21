@@ -66,8 +66,23 @@
   type: "box",
   size: [160.0,160.0,0.5],
   position: [0.0,0.0,32.0],
+//  position: [-400.0, -400.0, -180.0],
   material: "mirror",
   color: [0.5, 0.2, 0.1, 0.1],
+}
+
+{
+  name: "GEO",
+  index: "mirror",
+  valid_begin: [0, 0],
+  valid_end: [0, 0],
+  invisible: 0, // omitted for visualization
+  mother: "world", //not used
+  type: "border",
+  volume1: "inner",
+  volume2: "cover",
+  reverse: 1,
+  surface: "mirror",
 }
 
 {
