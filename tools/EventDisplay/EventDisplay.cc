@@ -234,10 +234,11 @@ void EventDisplay::LoadEvent(int ievt){
 
     //Set analogue graphs
     vMCPMTWaveforms[ipmt] = mcpmt->GetWaveform();
-    for(int isample=0; isample<vMCPMTWaveforms[ipmt].size(); isample++){
+    int ipoint = 0;
+    for(double itime=0; itime<vMCPMTWaveforms[ipmt].size()*0.1; itime += 0.1){
       //      std::cout<<"waveform "<<isample<<" "<<vPMTWaveforms[ipmt][isample]<<std::endl;
-      MCPMTWaveforms[ipmt].SetPoint(isample,isample,vMCPMTWaveforms[ipmt][isample]);
-      ymin = TMath::Min(ymin,vMCPMTWaveforms[ipmt][isample]);
+      MCPMTWaveforms[ipmt].SetPoint(++ipoint,itime,vMCPMTWaveforms[ipmt][itime]);
+      ymin = TMath::Min(ymin,vMCPMTWaveforms[ipmt][itime]);
     }
 
     //Set digitized graphs

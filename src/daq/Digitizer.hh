@@ -34,7 +34,7 @@ namespace RAT {
 
     virtual void AddChannel(int,PMTWaveform);
     virtual int GetNSamples(int ich){return fDigitWaveForm[ich].size();};
-    virtual void GenerateElectronicNoise(int,PMTWaveform);
+    // virtual void GenerateElectronicNoise(int,PMTWaveform);
     virtual std::vector<double> GetAnalogueWaveform(int ich){return fAnalogueWaveForm[ich];};
     virtual std::vector<UShort_t> GetDigitizedWaveform(int ich){return fDigitWaveForm[ich];};
     virtual std::vector<UShort_t> SampleWaveform(std::vector<UShort_t>, int);

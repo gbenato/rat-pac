@@ -14,7 +14,7 @@ pulse_width: 0.5, //0.15, 0.22 PMT pulse width in log(ns) for real pulses
 pulse_offset: 0.0, //PMT pulse offset in pA
 pulse_min: -0.00001, //minimum pulse height to consider in mV
 pulse_mean: 5.5, //1.7 PMT pulse mean in ns
-pulse_step_time: 0.001, //time step in ns
+pulse_step_time: 0.1, //time step in ns (0.1ns is reasonable to get a fast simulation)
 
 //Electronic noise
 noise_amplitude: 0.0, //amplitude of high frequency noise in mV

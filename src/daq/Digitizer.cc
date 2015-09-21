@@ -45,89 +45,33 @@ namespace RAT {
   Digitizer::~Digitizer(){}
 
 
-  void Digitizer::GenerateElectronicNoise(int ichannel, PMTWaveform pmtwf) {
-
-    //*** deprecated
-    //Sort pulses in time order
-    //    std::sort(fPulse.begin(),fPulse.end(),Cmp_PMTPulse_TimeAscending);
-    // double starttime = pmtwf.fPulse.front()->GetPulseStartTime();
-    // double endtime = pmtwf.fPulse.back()->GetPulseEndTime();
-    // if(starttime-endtime < fSamplingWindow) endtime = starttime + fSamplingWindow;
-    //    int nsamples = (endtime - starttime)/fStepTime;
-    // double PulseDuty=0.0;
-    // for(int ipulse = 0; ipulse<pmtwf.fPulse.size(); ipulse++)
-    //   PulseDuty +=  pmtwf.fPulse[ipulse]->GetPulseEndTime() - pmtwf.fPulse[ipulse]->GetPulseStartTime();
-    // float NoiseAmpl = fNoiseAmpl/sqrt(PulseDuty/fStepTime);
-    //    std::cout<<starttime<<" "<<endtime<<" "<<nsamples<<" "<<PulseDuty<<" "<<NoiseAmpl<<std::endl;
-    //*********
-
-    //Sort pulses in time order
-    //    std::sort(fPulse.begin(),fPulse.end(),Cmp_PMTPulse_TimeAscending);
-    // double starttime = pmtwf.fPulse.front()->GetPulseStartTime();
-    // double endtime = pmtwf.fPulse.back()->GetPulseEndTime();
-    // if(starttime-endtime < fSamplingWindow) endtime = starttime + fSamplingWindow;
-    int nsamples = fSamplingWindow/fStepTime;
-    fNoise[ichannel].resize(nsamples);
-    for(int istep=0; istep<nsamples ;istep++){
-      //      fNoise[ichannel][istep] = 0.;
-      fNoise[ichannel][istep] = fNoiseAmpl*CLHEP::RandGauss::shoot();
-    }
-
-  }
-
-  //*** deprecated
-  // void Digitizer::DigitizeWaveForm(DS::PMTWaveform pmtwf){
-
-  //   GenerateElectronicNoise(pmtwf); //Fill fNoise vector
-
-  //   double starttime = pmtwf.fPulse.front()->GetPulseStartTime();
-  //   double endtime = pmtwf.fPulse.back()->GetPulseEndTime();
-  //   if(starttime-endtime < fSamplingWindow) endtime = starttime + fSamplingWindow;
-  //   int nsamples = (endtime - starttime)/fStepTime;
-  //   int nADCs = 1 << fNBits; //Calculate the number of adc counts
-  //   double adcpervolt = nADCs/(fVhigh - fVlow);
-  //   double charge = 0.;
-
-  //   //    std::cout<<starttime<<" "<<endtime<<" "<<nsamples<<" "<<nADCs<<" "<<adcpervolt<<std::endl;
-
-  //   double currenttime = starttime;
-  //   double volt = 0.;
-  //   int adcs = 0.;
-  //   for(int isample = 0; isample<nsamples; isample++){
-  //     charge = pmtwf.GetHeight(currenttime)*fStepTime;
-  //     volt = charge*fResistance/fStepTime; //convert to voltage
-  //     volt = volt + fNoise[isample]; //add electronic noise
-  //     adcs = round((volt - fVlow + fOffset)*adcpervolt); //digitize: V->ADC
-  //     //      charge += (pmtwf.GetHeight(currenttime)+fNoise[isample])*fStepTime; //not used, just for sanity check
-
-  //     //Manage voltage saturation
-  //     if(adcs<0) adcs = 0;
-  //     else if(adcs>=nADCs) adcs = nADCs - 1;
-
-  //     //Save sample
-  //     fDigitWaveForm.push_back(adcs);
-  //     //      std::cout<<isample<<" "<<volt<<" "<<adcs<<" "<<pmtwf.GetHeight(currenttime)<<" "<<fNoise[isample]<<std::endl;
-
-  //     //Step on time
-  //     currenttime+=fStepTime;
+  // void Digitizer::GenerateElectronicNoise(int ichannel, PMTWaveform pmtwf) {
+  //
+  //   //*** deprecated
+  //   //Sort pulses in time order
+  //   //    std::sort(fPulse.begin(),fPulse.end(),Cmp_PMTPulse_TimeAscending);
+  //   // double starttime = pmtwf.fPulse.front()->GetPulseStartTime();
+  //   // double endtime = pmtwf.fPulse.back()->GetPulseEndTime();
+  //   // if(starttime-endtime < fSamplingWindow) endtime = starttime + fSamplingWindow;
+  //   //    int nsamples = (endtime - starttime)/fStepTime;
+  //   // double PulseDuty=0.0;
+  //   // for(int ipulse = 0; ipulse<pmtwf.fPulse.size(); ipulse++)
+  //   //   PulseDuty +=  pmtwf.fPulse[ipulse]->GetPulseEndTime() - pmtwf.fPulse[ipulse]->GetPulseStartTime();
+  //   // float NoiseAmpl = fNoiseAmpl/sqrt(PulseDuty/fStepTime);
+  //   //    std::cout<<starttime<<" "<<endtime<<" "<<nsamples<<" "<<PulseDuty<<" "<<NoiseAmpl<<std::endl;
+  //   //*********
+  //
+  //   int nsamples = fSamplingWindow/fStepTime;
+  //   fNoise[ichannel].resize(nsamples);
+  //   for(int istep=0; istep<nsamples ;istep++){
+  //     fNoise[ichannel][istep] = fNoiseAmpl*CLHEP::RandGauss::shoot();
   //   }
-
-  //   //    std::cout<<"Analogue integrated charge "<<charge<<std::endl;
-
-
+  //
   // }
-  //**********
-
-
 
   //Add channel to digitizer and inmdediatly digitize analogue waveform
   void Digitizer::AddChannel(int ichannel, PMTWaveform pmtwf){
 
-    // GenerateElectronicNoise(ichannel,pmtwf); //Fill fNoise vector
-
-    //    double starttime = pmtwf.fPulse.front()->GetPulseStartTime();
-    //    double endtime = pmtwf.fPulse.back()->GetPulseEndTime();
-    //    if(endtime-starttime < fSamplingWindow) endtime = starttime + fSamplingWindow;
     double starttime = -fSampleDelay;
     double endtime = starttime + fSamplingWindow;
     int nsamples = fSamplingWindow/fStepTime;
@@ -143,6 +87,16 @@ namespace RAT {
     double volt = 0.;
     int adcs = 0.;
     double tadcs = 0.;
+
+    //First get analogue waveform for drawing purpose and debugging
+    for(double itime = 0; itime<fSamplingWindow; itime += pmtwf.GetStepTime()){
+
+      charge = pmtwf.GetCharge(itime, itime + pmtwf.GetStepTime());
+      fAnalogueWaveForm[ichannel].push_back(charge);
+
+    }
+
+
     for(int isample = 0; isample<nsamples; isample++){
 
       charge = pmtwf.GetCharge(currenttime-fStepTime, currenttime);
@@ -164,7 +118,7 @@ namespace RAT {
       tadcs += adcs;
 
       //Save sample
-      fAnalogueWaveForm[ichannel].push_back(charge);
+      // fAnalogueWaveForm[ichannel].push_back(charge);
       fDigitWaveForm[ichannel].push_back(adcs);
       // std::cout<<isample<<" "<<volt<<" "<<adcs<<" "<<pmtwf.GetHeight(currenttime)<<" "<<fNoise[ichannel][isample]<<std::endl;
 
