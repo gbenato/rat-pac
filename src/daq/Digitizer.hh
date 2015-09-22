@@ -37,7 +37,8 @@ namespace RAT {
     // virtual void GenerateElectronicNoise(int,PMTWaveform);
     virtual std::vector<double> GetAnalogueWaveform(int ich){return fAnalogueWaveForm[ich];};
     virtual std::vector<UShort_t> GetDigitizedWaveform(int ich){return fDigitWaveForm[ich];};
-    virtual std::vector<UShort_t> SampleWaveform(std::vector<UShort_t>, int);
+    virtual std::vector<UShort_t> SampleWaveform(std::vector<UShort_t>, int );
+    virtual std::vector<UShort_t> SampleWaveform(std::vector<UShort_t>);
     virtual int GoToEndOfSample(int);
     virtual double GetDigitizedThreshold(){return fDigitizedThreshold;};
 

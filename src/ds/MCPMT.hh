@@ -55,9 +55,7 @@ public:
   void PruneMCPhoton() { photon.resize(0); }
 
   /** PMT waveform */
-  //  PMTWaveform* GetWaveform() { return &waveform; };
   std::vector<double> GetWaveform() { return waveform;};
-  //  void SetWaveform(PMTWaveform _waveform) {_waveform.SetGraph(); waveform = _waveform; };
   void SetWaveform(std::vector<double> _waveform) {waveform = _waveform;};
   void SetDigitizedWaveform(std::vector<UShort_t> _digitwaveform) {digitWaveForm = _digitwaveform;};
   std::vector<UShort_t> GetDigitizedWaveform() {return digitWaveForm;};
@@ -77,7 +75,6 @@ protected:
   Float_t time;
   Float_t feTime;
   std::vector<MCPhoton> photon;
-  //  PMTWaveform waveform;
   std::vector<UShort_t> digitWaveForm;
   std::vector<double> waveform;
 

@@ -234,11 +234,11 @@ void EventDisplay::LoadEvent(int ievt){
 
     //Set analogue graphs
     vMCPMTWaveforms[ipmt] = mcpmt->GetWaveform();
-    int ipoint = 0;
-    for(double itime=0; itime<vMCPMTWaveforms[ipmt].size()*0.1; itime += 0.1){
-      //      std::cout<<"waveform "<<isample<<" "<<vPMTWaveforms[ipmt][isample]<<std::endl;
-      MCPMTWaveforms[ipmt].SetPoint(++ipoint,itime,vMCPMTWaveforms[ipmt][itime]);
-      ymin = TMath::Min(ymin,vMCPMTWaveforms[ipmt][itime]);
+    for(int ipoint=0; ipoint<vMCPMTWaveforms[ipmt].size(); ipoint++){
+      //      std::cout<<" EventDisplay::LoadEvent - Waveform "<<itime<<" "<<vPMTWaveforms[ipmt][itime]<<std::endl;
+      double itime = ipoint*0.1;
+      MCPMTWaveforms[ipmt].SetPoint(ipoint,itime,vMCPMTWaveforms[ipmt][ipoint]);
+      ymin = TMath::Min(ymin,vMCPMTWaveforms[ipmt][ipoint]);
     }
 
     //Set digitized graphs
@@ -439,7 +439,7 @@ void EventDisplay::DisplayEvent(int ievt){
   canvas_event->cd(4);
   for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++) {
     if(ipmt==0){
-      MCPMTDigitizedWaveforms[ipmt].SetTitle("Non-triggered event");
+      MCPMTDigitizedWaveforms[ipmt].SetTitle("MC event");
       MCPMTDigitizedWaveforms[ipmt].Draw("AP");
       MCPMTDigitizedWaveforms[ipmt].GetXaxis()->SetTitle("sample");
       MCPMTDigitizedWaveforms[ipmt].GetYaxis()->SetTitle("ADC counts");
@@ -448,7 +448,7 @@ void EventDisplay::DisplayEvent(int ievt){
     MCPMTDigitizedWaveforms[ipmt].Draw("LINE same");
     //      MCPMTDigitizedWaveforms[ipmt].ComputeRange(xmin_temp,xmax_temp,ymin_temp,ymax_temp);
   }
-  if(rds->ExistEV()){
+  if(rds->ExistEV() && event_option == "triggered"){
     for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
       if(ipmt==0){
         PMTDigitizedWaveforms[ipmt].SetTitle("Triggered event");

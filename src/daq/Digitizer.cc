@@ -94,6 +94,8 @@ namespace RAT {
       charge = pmtwf.GetCharge(itime, itime + pmtwf.GetStepTime());
       fAnalogueWaveForm[ichannel].push_back(charge);
 
+//      std::cout<<" Digitizer::AddChannel: time "<<itime<<" step "<<pmtwf.GetStepTime()<<" charge "<<charge<<std::endl;
+
     }
 
 
@@ -102,14 +104,12 @@ namespace RAT {
       charge = pmtwf.GetCharge(currenttime-fStepTime, currenttime);
 
       volt = charge*fResistance/fStepTime; //convert to voltage
-      // volt = volt + fNoise[ichannel][isample]; //add electronic noise
       volt = volt + fNoiseAmpl*CLHEP::RandGauss::shoot(); //add electronic noise
       adcs = round((volt - fVlow + fOffset)*adcpervolt); //digitize: V->ADC
 
-      // std::cout<<" Round "<<(volt - fVlow + fOffset)*adcpervolt<<" "<<adcs<<std::endl;
-
       //adcs = (volt - fVlow + fOffset)*adcpervolt; //digitize: V->ADC
       tcharge += charge; //not used, just for sanity check
+
       //Manage voltage saturation
       if(adcs<0) adcs = 0;
       else if(adcs>=nADCs) adcs = nADCs - 1;
@@ -126,22 +126,6 @@ namespace RAT {
       currenttime+=fStepTime;
     }
 
-    //Ensure we always have enough samples in the pedestal window
-    //Insert samples with pure noise at the begining
-    //(FIXME: might allow to have darks hit)
-    int nsamples_delay = (int)fSampleDelay/fStepTime;
-    for (size_t isample = 0; isample < nsamples_delay; isample++) {
-      volt = fNoiseAmpl*CLHEP::RandGauss::shoot();
-      adcs = round((volt - fVlow + fOffset)*adcpervolt); //digitize: V->ADC
-      //Manage voltage saturation
-      if(adcs<0) adcs = 0;
-      else if(adcs>=nADCs) adcs = nADCs - 1;
-
-      fDigitWaveForm[ichannel].insert(fDigitWaveForm[ichannel].begin(),adcs);
-    }
-
-    std::cout<<" Digit charge in channel "<<ichannel<<": "<<tcharge<<" "<<(tadcs/adcpervolt + fVlow*nsamples - fOffset*nsamples)*fStepTime/fResistance<<std::endl;
-
   }
 
 
@@ -150,34 +134,41 @@ namespace RAT {
   //[init_sample-fSampleDelay, thres_sample+fSamplingWindow]
   std::vector<UShort_t> Digitizer::SampleWaveform(std::vector<UShort_t> completewaveform, int init_sample){
 
-    //FIXME: might ensure we extract always the good number of samples
-    // std::cout<<" 0 - SampleWaveform "<<completewaveform.size()<<std::endl;
-
     int nsamples_delay = (int)fSampleDelay/fStepTime;
     int start_sample = init_sample - nsamples_delay;
-    int current_sample = start_sample;
+    int end_sample = start_sample + (int)fSamplingWindow/fStepTime;
 
-//     //Ensure we always have enough samples in the pedestal window
-//     if(start_sample<0) {
-//       //Insert zeros at the begining
-//       completewaveform.insert(completewaveform.begin(),-start_sample,completewaveform[0]); //FIXME
-//       start_sample=0;
-//     }
-//
-// // std::cout<<" 1 - SampleWaveform "<<completewaveform.size()<<" "<<start_sample<<std::endl;
-//
-    int end_sample = start_sample+(int)fSamplingWindow/fStepTime;
-//     //Ensure we always have maximum number of samples
-//     if(end_sample>completewaveform.size()){
-//       //Insert zeros at the end
-//       completewaveform.insert(completewaveform.end(),end_sample-completewaveform.size(),completewaveform[0]); //FIXME
-//     }
-     std::vector<UShort_t> sampledwaveform;
+    std::cout<<" 0 - SampleWaveform "<<completewaveform.size()<<std::endl;
 
-//    std::cout<<" 2 - SampleWaveform "<<completewaveform.size()<<" "<<end_sample<<std::endl;
+    //Ensure we always have enough samples in the pedestal window
+    while(start_sample!=0) {
+      //Insert noisy samples at the beginning of the window
+      int nADCs = 1 << fNBits; //Calculate the number of adc counts
+      double adcpervolt = nADCs/(fVhigh - fVlow);
+      double volt = fNoiseAmpl*CLHEP::RandGauss::shoot();
+      int adcs = round((volt - fVlow + fOffset)*adcpervolt); //digitize: V->ADC
+      //Manage voltage saturation
+      if(adcs<0) adcs = 0;
+      else if(adcs>=nADCs) adcs = nADCs - 1;
+
+      completewaveform.insert(completewaveform.begin(),adcs);
+      start_sample++;
+    }
+
+    std::cout<<" 1 - SampleWaveform "<<init_sample<<" "<<start_sample<<" "<<end_sample<<std::endl;
+
+    //     //Ensure we always have maximum number of samples
+    //     if(end_sample>completewaveform.size()){
+    //       //Insert zeros at the end
+    //       completewaveform.insert(completewaveform.end(),end_sample-completewaveform.size(),completewaveform[0]); //FIXME
+    //     }
+
+    //    std::cout<<" 2 - SampleWaveform "<<completewaveform.size()<<" "<<end_sample<<std::endl;
 
     // std::cout<<" 1 -  init_sample "<<init_sample<<" start_sample "<<start_sample<<" "<<current_sample<<" "<<end_sample<<" "<<nsamples_delay<<std::endl;
 
+    std::vector<UShort_t> sampledwaveform;
+    int current_sample = start_sample;
     while(current_sample<end_sample){
       sampledwaveform.push_back(completewaveform[current_sample]);
 //      std::cout<<" 3 - SampleWaveform "<<current_sample<<"/"<<end_sample<<" "<<completewaveform[current_sample]<<std::endl;
@@ -189,6 +180,14 @@ namespace RAT {
     return sampledwaveform;
 
   }
+
+
+  std::vector<UShort_t> Digitizer::SampleWaveform(std::vector<UShort_t> completewaveform){
+
+    return SampleWaveform(completewaveform, (int)fSampleDelay/fStepTime);
+
+  }
+
 
   //Moves the sampling point towards the end of the sampling window defined by the
   //user
@@ -208,61 +207,6 @@ namespace RAT {
     //    std::cout<<"SetThreshold "<<fDigitizedThreshold<<std::endl;
 
   }
-
-  // double Digitizer::IntegrateCharge(std::vector<int> digitizedwaveform){
-  //
-  //   int nADCs = 1 << fNBits; //Calculate the number of adc counts
-  //   double voltsperadc = (fVhigh - fVlow)/(double)nADCs;
-  //   double charge = 0.;
-  //   int start_sample = 0;
-  //   while(start_sample<digitizedwaveform.size()){
-  //     charge += ((double)digitizedwaveform[start_sample]*voltsperadc + fVlow)*fStepTime/fResistance; //ADC to charge
-  //     start_sample++;
-  //   }
-  //   //    std::cout<<" Digitized integrated charge "<<charge<<std::endl;
-  //
-  //   charge=std::abs(charge); //pulses are negative so covert to positive charge
-  //   return charge;
-  // }
-
-  // //Calculates the time at which the peak of the digitized waveform occurs
-  // double Digitizer::GetTimeAtPeak(int pmtID, int init_sample){
-  //
-  //   //Retrieve a piece of the waveform within the sampling window
-  //   std::vector<int> sampledwf = this->SampleWaveform(this->GetDigitizedWaveform(pmtID), init_sample);
-  //   //Sample waveform to look for the maximum
-  //   double sampleatpeak = -9999.;
-  //   int voltatstep = 9999.;
-  //   for(int isample=0; isample<sampledwf.size(); isample++){
-  //     if(sampledwf[isample]<voltatstep){
-	// //	std::cout<<"GetTimeAtPeak "<<pmtID<<" "<<isample<<" "<<sampledwf[isample]<<std::endl;
-	// voltatstep = sampledwf[isample];
-	// sampleatpeak = isample;
-  //     }
-  //   }
-  //
-  //   return sampleatpeak*fStepTime;
-  // }
-  //
-  // //Calculates the time at which a digitized waveform crosses threshold with respect
-  // //to init_sample (that ideally is the time at which the trigger PMT crosses threshold)
-  // double Digitizer::GetTimeAtThreshold(int pmtID, int trigger_sample){
-  //
-  //   //Retrieve a piece of the waveform within the sampling window
-  //   std::vector<int> sampledwf = this->SampleWaveform(this->GetDigitizedWaveform(pmtID), trigger_sample);
-  //   //Sample waveform to look for the threshold crossing
-  //   int sampleatthres = 0;
-  //   for(int isample=0; isample<sampledwf.size(); isample++){
-  //     if(sampledwf[isample]<=this->GetDigitizedThreshold()){
-	// std::cout<<"GetTimeAtThreshold "<<pmtID<<" "<<isample<<" "<<sampledwf[isample]<<std::endl;
-	// sampleatthres = isample;
-	// break;
-  //     }
-  //   }
-  //
-  //   return sampleatthres*fStepTime;
-  // }
-
 
   void Digitizer::Clear(){
 

@@ -65,7 +65,7 @@
 
 ##### BEGIN EVENT LOOP ##################
 /rat/proc daq
-/rat/procset trigger "allpmts" #simple, triggerpmt, allpmts
+/rat/procset trigger "external" #simple, triggerpmt, allpmts, external
 /rat/proc analysis
 /rat/proc count
 /rat/procset update 1
@@ -130,4 +130,4 @@
 #######################################
 
 ##### RUN ###########
-/run/beamOn 20
+/run/beamOn 10

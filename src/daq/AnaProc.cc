@@ -104,7 +104,7 @@ namespace RAT {
     }
 
     charge=std::abs(charge); //pulses are negative so covert to positive charge
-    std::cout<<" Integrated charge "<<charge<<" pedestal "<<ped_mean<<" "<<s_int_start<<" "<<s_int_end<<std::endl;
+    // std::cout<<" Integrated charge "<<charge<<" pedestal "<<ped_mean<<" "<<s_int_start<<" "<<s_int_end<<std::endl;
 
     return charge;
   }

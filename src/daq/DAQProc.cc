@@ -58,16 +58,15 @@ namespace RAT {
       if(param=="trigger")
       fTriggerType = value;
 
-      if(fTriggerType!="allpmts" && fTriggerType!="triggerpmt" && fTriggerType!="simple"){
+      if(fTriggerType!="allpmts" && fTriggerType!="triggerpmt" && fTriggerType!="simple" && fTriggerType!="external"){
         std::cerr<<"DAQ: "<<fTriggerType<<" option unknown... EXIT "<<std::endl;
         exit(0);
       }
     }
 
-
     Processor::Result DAQProc::DSEvent(DS::Root *ds) {
-      //This processor build waveforms for each PMT in the MC generated event, sample them and
-      //store each sampled piece as a new event
+      // This processor creates pulses per generated MC PE and store them in waveforms that are digitized
+      // Then, it checks trigger conditions and store digitized samples of the waveforms in EVs
 
       //Set DAQ header in run structure
       DS::DAQHeader *daqHeader = new DS::DAQHeader();
@@ -89,14 +88,14 @@ namespace RAT {
 
       DS::MC *mc = ds->GetMC();
 
+      // Generate pulses per PE in MCPMT
       if(fTriggerType!="simple"){
-
         //Loop through the PMTs in the MC generated event
         for (int imcpmt=0; imcpmt < mc->GetMCPMTCount(); imcpmt++){
 
           DS::MCPMT *mcpmt = mc->GetMCPMT(imcpmt);
 
-          //For each PMT loop over hit photons and create a waveform for each of them
+          //Loop over PEs and create a pulse for each one
           PMTWaveform pmtwf;
           pmtwf.SetStepTime(fPulseStepTimeDB);
           pmtwf.SetSamplingWindow(fSamplingTimeDB);
@@ -120,7 +119,7 @@ namespace RAT {
             pmtwf.fPulse.push_back(pmtpulse);
             //	PulseDuty += pmtpulse->GetPulseEndTime() - pmtpulse->GetPulseStartTime();
 
-          } // end mcphotoelectron loop: all pulses produced for this PMT
+          } // end PE loop
 
           //Sort pulses in time order
           std::sort(pmtwf.fPulse.begin(),pmtwf.fPulse.end(),Cmp_PMTPulse_TimeAscending);
@@ -128,8 +127,7 @@ namespace RAT {
           //Digitize waveform -- electronic noise is added by the digitizer. Save analogue
           //waveform in MCPMT object only for drawing purpose and save the digitized one
           //for posterior analysis
-
-          std::cout<<" CHARGE "<<mcpmt->GetCharge()<<" "<<-pmtwf.GetCharge(0.,200.)<<std::endl;
+          //          std::cout<<" CHARGE "<<mcpmt->GetCharge()<<" "<<-pmtwf.GetCharge(0.,200.)<<std::endl;
           mcpmt->SetWFCharge(pmtwf.GetCharge(0.,200.));//for debugging
           fDigitizer->AddChannel(mcpmt->GetID(),pmtwf);
           mcpmt->SetWaveform(fDigitizer->GetAnalogueWaveform(mcpmt->GetID()));
@@ -138,13 +136,12 @@ namespace RAT {
         } //end pmt loop
       }
 
-
       //////////////////////////////////////////////////////////
       //FROM HERE THE TRIGGER PROCESSOR SHOULD TAKE OVER!
       //////////////////////////////////////////////////////////
 
-      //Switch among triggers
-      //simple trigger like simpledaq but triggering off one user-defined trigger PMT
+      // Simple trigger: like simpledaq but triggering off one user-defined trigger PMT
+      // identified by type==0
       if(fTriggerType=="simple"){
 
         DS::EV *ev; //will add a new event if trigger PMT fires
@@ -195,7 +192,8 @@ namespace RAT {
         } //end look for the trigger PMT
 
       }
-      //First trigger type: store all PMTs crossing threshold
+      // Fire all PMTs: if a PMT crosses threshold, its trace is recorded. It doesn't provide global
+      // timing as the reference time is the time at which a given PMT crosses threshold
       else if(fTriggerType=="allpmts"){
 
         bool eventAdded = false;
@@ -227,8 +225,32 @@ namespace RAT {
         fDigitizer->Clear();
 
       }
-      //Second trigger type: when trigger PMT detects a hit above threshold store
-      //hits in ALL the PMTs
+      // External trigger: triggers all the channel at a time provided a condition. Like 'allpmts'
+      // but with a common global timing
+      // Used for cosmic triggers
+      else if(fTriggerType=="external"){
+
+        DS::EV *ev = ds->AddNewEV();
+        ev->SetID(fEventCounter);
+
+        for (int imcpmt=0; imcpmt < mc->GetMCPMTCount(); imcpmt++){
+
+          int pmtID = mc->GetMCPMT(imcpmt)->GetID();
+          std::vector<UShort_t> DigitizedWaveform = fDigitizer->GetDigitizedWaveform(pmtID);
+          DS::PMT* pmt = ev->AddNewPMT();
+          pmt->SetID(pmtID);
+          pmt->SetWaveform(fDigitizer->SampleWaveform(DigitizedWaveform)); //sample from the beggining of the signal window
+
+          DigitizedWaveform.clear(); //prune for next round of PMTs
+
+        }//end PMT loop
+        fDigitizer->Clear();
+        fEventCounter++;
+
+      }
+      // Trigger PMT: checks if special 'trigger' PMT (tagged as type==0) goes above threshold.
+      // If so, records the traces of every channel
+      // Used for source triggers
       else if(fTriggerType=="triggerpmt"){
         //Identify the trigger PMT
         int triggerID=-1;
@@ -243,7 +265,7 @@ namespace RAT {
           //Sample the digitized waveform to look for triggers
           for(int isample=0; isample<DigitizedTriggerWaveform.size(); isample++){
 
-//            std::cout<<" SAMPLE "<<isample<<"/"<<DigitizedTriggerWaveform.size()<<" "<<DigitizedTriggerWaveform[isample]<<" "<<fDigitizer->GetDigitizedThreshold()<<std::endl;
+            //            std::cout<<" SAMPLE "<<isample<<"/"<<DigitizedTriggerWaveform.size()<<" "<<DigitizedTriggerWaveform[isample]<<" "<<fDigitizer->GetDigitizedThreshold()<<std::endl;
 
             if (DigitizedTriggerWaveform[isample]<=fDigitizer->GetDigitizedThreshold()){ //hit above threshold! (remember the pulses are negative)
 
@@ -273,171 +295,8 @@ namespace RAT {
         fDigitizer->Clear();
       } //end if second type of trigger
 
-      // //If got at least one PMT above threshold move forward one event so it is not
-      // //overwritten by the next one
-      // if(ev->GetPMTCount()>0){
-      //   fEventCounter++;
-      // }
+      return Processor::OK;
 
+    } //DAQProc::DSEvent
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      //FIXME
-      // else{
-      //   std::cout<<"Prune event"<<fEventCounter<<" "<<ds->GetEVCount()<<std::endl;
-      //   ds->PruneEV(fEventCounter);
-      // }
-
-      /*
-      //Sample the PMT waveform to look for photoelectron hits and create a new MCPMTSample
-      //for every one of them, regarless they cross threshold. A flag is raised if the threshold
-      //is crossed
-      double TimeNow = 0.;
-      for(int isample=0; isample<digitizer->GetNSamples(); isample++){
-
-      TimeNow = digitizer->GetTimeForSample(isample);
-      if (digitizer->GetHeightForSample()>fTriggerThresholdDB){ //hit above threshold!
-
-      bool IsAboveThreshold = true;
-      double HitStartTime = TimeNow;
-
-      int lsample = isample + (int)fSamplingTimeDB/fSampleStep; //Last sample in the sampling window
-
-      //Set PMT observables and save it as a new PMT object in the event
-      DS::PMT* mcpmtsample = mc->AddNewMCPMTSampled();
-      mcpmtsample->SetID(mcpmt->GetID());
-      mcpmtsample->SetCharge(IntegratedCharge);
-      mcpmtsample->SetTime(HitStartTime);
-      mcpmtsample->SetAboveThreshold(IsAboveThreshold);
-      mcpmtsample->SetDigitizedWaveForm(digitizer->GetDigitizedChunk(isample,lsample));
-
-      //Continue until de last sample in the sampling window to start over
-      isample = lsample;
-
-    } //end if above threshold
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  while (pmtwf.fPulse.size()>0){
-
-  double TimeNow = pmtwf.fPulse[0]->GetPulseStartTime();
-  double LastPulseTime = pmtwf.fPulse[pmtwf.fPulse.size()-1]->GetPulseEndTime();
-  int NextPulse=0;
-  double wfheight = 0.0;
-  //	float NoiseAmpl = fNoiseAmplDB/sqrt(PulseDuty/fStepTimeDB);
-  //	float qfuzz=0.0;
-
-  //Check if the waveform crosses the threshold
-  while( wfheight < fTriggerThresholdDB && TimeNow < LastPulseTime){
-  wfheight =  pmtwf.GetHeight(TimeNow); //height of the waveform at this step
-  TimeNow += fStepTimeDB;
-
-  //	  qfuzz = wfheight+NoiseAmpl*CLHEP::RandGauss::shoot();
-  // move forward in time by step or if we're at baseline move ahead to next pulse
-  // if (wfheight==0.0){
-  //   NextPulse = pmtwf.GetNext(TimeNow);
-  //   if (NextPulse>0)
-  //     {TimeNow = pmtwf.fPulse[NextPulse]->GetPulseStartTime();}
-  //   else
-  //     {TimeNow= LastPulseTime+1.;}
-  // }
-  // else{
-  //   TimeNow += fStepTimeDB;
-  // }
-}
-
-//If this PMT crosses the threshold set the hit time as the time when it crosses the
-//threshold and set the flag to true. If doesn't, set the hit time to the starting time
-//of the pulse.
-double HitStartTime = pmtwf.fPulse[0]->GetPulseStartTime();
-bool IsAboveThreshold = false;
-if (TimeNow < LastPulseTime){ //means that we have crossed threshold in the time window
-IsAboveThreshold = true;
-HitStartTime = TimeNow;
-}
-
-//Integrate charge and create a new PMT in the event
-double IntegratedCharge = 0.;
-double TimeStartSample = HitStartTime - fGDelayDB; //start before several steps before thresholds
-double TimeEndSample = TimeStartSample+fSamplingTimeDB;
-double TimeEndIntegration = TimeStartSample+fIntTimeDB;
-
-unsigned int ipulse=0;
-while (ipulse < pmtwf.fPulse.size() && pmtwf.fPulse[ipulse]->GetPulseStartTime()<TimeEndSample){
-IntegratedCharge+=pmtwf.fPulse[ipulse]->Integrate(TimeStartSample,TimeEndIntegration); //Fixme: create a function in PMTWaveForm that performs the integration
-ipulse++;
-}
-
-//Go until the last pulse in the sampling window to start over again
-while (ipulse < pmtwf.fPulse.size() && pmtwf.fPulse[ipulse]->GetPulseStartTime()<TimeEndSample ) {
-ipulse++;
-}
-
-//Set PMT observables and save it as a new PMT object in the event
-DS::PMT* mcpmtsample = mc->AddNewMCPMTSampled();
-mcpmtsample->SetID(mcpmt->GetID());
-mcpmtsample->SetCharge(IntegratedCharge);
-mcpmtsample->SetTime(HitStartTime);
-mcpmtsample->SetAboveThreshold(IsAboveThreshold);
-
-//Remove all the pulses whithin the sampling window
-pmtwf.fPulse.erase(pmtwf.fPulse.begin(),pmtwf.fPulse.begin()+ipulse);
-
-} //end pulse sampling
-
-//clean up just in case
-for (unsigned int i = 0; i<pmtwf.fPulse.size();i++){
-delete pmtwf.fPulse[i];
-}
-
-} //end PMT loop
-
-
-*/
-
-
-return Processor::OK;
-
-} //DAQProc::DSEvent
-
-} // namespace RAT
+  } // namespace RAT
