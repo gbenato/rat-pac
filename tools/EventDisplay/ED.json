@@ -17,7 +17,7 @@
     "final_track": -1,      // Last track to be drawn: Negative -> Set to max
     "draw_geo": 1,          // 1 -> Draw Detector geometry
     "draw_pmts": 1,         // 1 -> Draw PMTs stored in PMTINFO
-    "event_option": "triggered",     // Drawing options: "pe" -> only events with at least one PE,
+    "event_option": "",     // Drawing options: "pe" -> only events with at least one PE,
                                      //                  "cherenkov" -> only events with a cherenkov process
                                      //                  "triggered" -> only events triggered by the DAQ
     "intersection_zplane": [-600.0,0.0,-232.5], // Photon-plane intersection dimensions and Z position [SIDE_MIN, SIDE_MAX, ZPOS]

@@ -217,7 +217,8 @@ public:
   void BuildPMTMap();
   void HitPMT(int,int);
   void DrawGeometry();
-  void DrawPMTMap();
+  void DrawPMTMap(std::map<int,int>);
+  void DrawPMTMap(std::map<int,double>);
 
   std::vector<double> GetAbsolutePositionFor(std::string);
 

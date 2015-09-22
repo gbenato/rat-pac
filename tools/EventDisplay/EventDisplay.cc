@@ -108,6 +108,9 @@ void EventDisplay::LoadEvent(int ievt){
   else if(debugLevel > 0) std::cout<<"EventDisplay::LoadEvent -- EV do not exist! "<<std::endl;
 
 
+  /////////////////////////////////////
+  // MC TRUTH
+  /////////////////////////////////////
 
   //Event features
   elength=0.; //e- lenght
@@ -194,8 +197,6 @@ void EventDisplay::LoadEvent(int ievt){
   } //end track loop
 
   //Load photoelectrons
-  //  for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++){
-
   for (int ipmt = 0; ipmt < EDGeo->GetPMTCount(); ipmt++){
     npe[ipmt]=0;
   }
@@ -213,9 +214,7 @@ void EventDisplay::LoadEvent(int ievt){
 
 
 #ifdef __WAVEFORMS_IN_DS__
-  ////////////
-  // PMT waveforms
-  ////////////
+
   MCPMTWaveforms.resize(mc->GetMCPMTCount());
   MCPMTDigitizedWaveforms.resize(mc->GetMCPMTCount());
   double ymin=9999999.; //yaxis min limit analogue
@@ -259,10 +258,25 @@ void EventDisplay::LoadEvent(int ievt){
 
   if(debugLevel > 1) std::cout<<" EventDisplay::LoadEvent - GetPMTCount "<<ev->GetPMTCount()<<std::endl;
 
+#endif
+
+  /////////////////////////////////////
+  // DAQ EVENT
+  /////////////////////////////////////
+
   if(!rds->ExistEV()) {
     if(debugLevel > 0) std::cout<<" EventDisplay::LoadEvent - DONE (EV do not exist) "<<std::endl;
     return;
   }
+
+  for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
+    int pmtID = ev->GetPMT(ipmt)->GetID();
+    pmtCharge[pmtID] = ev->GetPMT(ipmt)->GetCharge();
+    pmtTime[pmtID] = ev->GetPMT(ipmt)->GetTime();
+  }
+
+
+#ifdef __WAVEFORMS_IN_DS__
 
   PMTDigitizedWaveforms.resize(ev->GetPMTCount());
   for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
@@ -414,7 +428,12 @@ void EventDisplay::DisplayEvent(int ievt){
   for (std::map<std::string,TH2F*>::iterator it=hxyplane.begin();it!=hxyplane.end();it++){
     it->second->Draw("box same");
   }
-  if(drawPMTs) EDGeo->DrawPMTMap();
+  if(drawPMTs) {
+    if(event_option == "triggered") EDGeo->DrawPMTMap(pmtCharge);
+    else{
+      EDGeo->DrawPMTMap(npe);
+    }
+  }
 
 #ifdef __WAVEFORMS_IN_DS__
   //Waveforms

@@ -59,6 +59,12 @@ protected:
 
   TApplication *dummyApp;
 
+  //Reader stuff
+  RAT::DSReader *dsreader;
+  RAT::DS::Root *rds;
+  RAT::DS::MC *mc;
+  RAT::DS::EV *ev;
+
   //Maps
   std::map<std::string,int> FirstProcessCounter; //Process name - Counter
   std::map<std::string,int> LastProcessCounter; //Process name - Counter
@@ -66,10 +72,6 @@ protected:
   std::map<std::string,int> ParticleCounter; //PDG code - Counter
   std::map<int,Color_t> ParticleColor;
   std::map<int,int> ParticleWidth;
-  RAT::DSReader *dsreader;
-  RAT::DS::Root *rds;
-  RAT::DS::MC *mc;
-  RAT::DS::EV *ev;
   int nevents;
   std::map<int,bool> hitpmts;
   std::vector<TPolyLine3D> pl_tracks;
@@ -81,9 +83,10 @@ protected:
   std::map< int, std::vector<UShort_t> > vPMTDigitizedWaveforms;
   std::map<std::string,TH2F*> hxyplane;
   TCanvas *canvas_event;
-
   double elength;
   std::map<int, int> npe; //number of photoelectrons per PMT
+  std::map<int, double> pmtCharge; //measured PMT charge
+  std::map<int, double> pmtTime; //measured PMT time
 
   //Geometry
   EventGeometry *EDGeo;

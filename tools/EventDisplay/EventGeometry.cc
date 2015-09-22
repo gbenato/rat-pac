@@ -193,7 +193,19 @@ void EventGeometry::BuildPMTMap(){
 }
 
 
-void EventGeometry::DrawPMTMap(){
+void EventGeometry::DrawPMTMap(std::map<int,int> labels){
+
+  for(int ipmt=0;ipmt<vpmtbox.size();ipmt++){
+    vpmtbox[ipmt].Clear();
+    vpmtbox[ipmt].AddText(Form("%d",labels[ipmt]));
+  }
+
+  for(int ipmt=0; ipmt<vpmtbox.size();ipmt++)
+    vpmtbox[ipmt].Draw("LINE same");
+
+}
+
+void EventGeometry::DrawPMTMap(std::map<int,double> labels){
 
   //Draw grid
   // int nlines = 2*XP_XSIDE/pmtwidth;
@@ -212,14 +224,13 @@ void EventGeometry::DrawPMTMap(){
   //   yline->Draw("same");
   // }
 
-  //Set PEs
   for(int ipmt=0;ipmt<vpmtbox.size();ipmt++){
     vpmtbox[ipmt].Clear();
-    vpmtbox[ipmt].AddText(Form("%d",pmts[ipmt]->GetNPE()));
+    vpmtbox[ipmt].AddText(Form("%.1f",labels[ipmt]));
   }
 
   for(int ipmt=0; ipmt<vpmtbox.size();ipmt++)
-  vpmtbox[ipmt].Draw("LINE same");
+    vpmtbox[ipmt].Draw("LINE same");
 
 }
 
