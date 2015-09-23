@@ -138,7 +138,7 @@ namespace RAT {
     int start_sample = init_sample - nsamples_delay;
     int end_sample = start_sample + (int)fSamplingWindow/fStepTime;
 
-    std::cout<<" 0 - SampleWaveform "<<completewaveform.size()<<std::endl;
+    // std::cout<<" 0 - SampleWaveform "<<completewaveform.size()<<std::endl;
 
     //Ensure we always have enough samples in the pedestal window
     while(start_sample!=0) {
@@ -155,7 +155,7 @@ namespace RAT {
       start_sample++;
     }
 
-    std::cout<<" 1 - SampleWaveform "<<init_sample<<" "<<start_sample<<" "<<end_sample<<std::endl;
+    // std::cout<<" 1 - SampleWaveform "<<init_sample<<" "<<start_sample<<" "<<end_sample<<std::endl;
 
     //     //Ensure we always have maximum number of samples
     //     if(end_sample>completewaveform.size()){

@@ -45,6 +45,7 @@ protected:
 
   //Parameters
   RAT::DBLinkPtr dbED;
+  RAT::DBLinkPtr dbCorr;
   int debugLevel;
   bool drawGeometry;
   bool drawPMTs;
@@ -87,6 +88,7 @@ protected:
   std::map<int, int> npe; //number of photoelectrons per PMT
   std::map<int, double> pmtCharge; //measured PMT charge
   std::map<int, double> pmtTime; //measured PMT time
+  TH2F *chargeVsPos;
 
   //Geometry
   EventGeometry *EDGeo;
@@ -94,6 +96,10 @@ protected:
   std::map<int, TGeoBBox* > bpmt;
   std::map<int, TGeoVolume* > vpmt;
   std::vector<TPaveText> vpmtbox;
+
+  //Geometry correction
+  std::vector<double> pmtGeoCorr;
+  std::vector<double> pmtGeoCorrErr;
 
 };
 

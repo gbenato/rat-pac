@@ -1,3 +1,4 @@
+//ROOT stuff
 #include<TH2F.h>
 #include<TCanvas.h>
 #include<TPolyLine3D.h>
@@ -11,7 +12,9 @@
 #include<TLine.h>
 #include<TPaveText.h>
 #include<TStyle.h>
+#include<TColor.h>
 
+//RAT Stuff
 #include<RAT/DS/MC.hh>
 #include<RAT/DS/MCTrack.hh>
 #include<RAT/DS/MCTrackStep.hh>
@@ -19,6 +22,7 @@
 #include<RAT/DSReader.hh>
 #include<RAT/DS/Root.hh>
 #include<RAT/DB.hh>
+#include<RAT/DS/Run.hh>
 
 #include "EventDisplay.hh"
 
@@ -40,12 +44,14 @@ EventDisplay::EventDisplay(std::string _inputFileName){
 
   //Set canvas
   gStyle->SetGridWidth(1);
-  canvas_event = new TCanvas("canvas_event", "Event", 1200, 800);
-  canvas_event->Divide(2,2);
-  canvas_event->cd(1)->SetPad(0., .33, .5, 1.);
-  canvas_event->cd(2)->SetPad(.5, .33, 1., 1.);
-  canvas_event->cd(3)->SetPad(.0, 0., .5, .33);
-  canvas_event->cd(4)->SetPad(.5, 0., 1., .33);
+  canvas_event = new TCanvas("canvas_event", "Event", 1200, 1000);
+  canvas_event->Divide(2,3);
+  canvas_event->cd(1)->SetPad(0., .5, .5, 1.);
+  canvas_event->cd(2)->SetPad(.5, .5, 1., 1.);
+  canvas_event->cd(3)->SetPad(.0, .25, .5, .5);
+  canvas_event->cd(4)->SetPad(.0, .0, .5, .25);
+  canvas_event->cd(5)->SetPad(.5, 0., 1., .5);
+  canvas_event->cd(6)->SetPad(.99, 0., 1., .01);
 
   //Particle maps
   ParticleColor[11]=kGreen;   ParticleWidth[11]=1;   ParticleName[11]="Electron";
@@ -60,6 +66,10 @@ EventDisplay::EventDisplay(std::string _inputFileName){
   hxyplane["start"] = new TH2F("hxyplane_cher","Track intersections with XY plane: Cherenkov",1000,intersection_zplane[0],intersection_zplane[1],1000,intersection_zplane[0],intersection_zplane[1]);
   hxyplane["Cerenkov"] = new TH2F("hxyplane_cher","Track intersections with XY plane: Cherenkov",1000,intersection_zplane[0],intersection_zplane[1],1000,intersection_zplane[0],intersection_zplane[1]);
   hxyplane["Scintillation"] = new TH2F("hxyplane_scint","Track intersections with XY plane: Scintillation",1000,intersection_zplane[0],intersection_zplane[1],1000,intersection_zplane[0],intersection_zplane[1]);
+
+  //Ring reconstruction
+  chargeVsPos = new TH2F("chargeVsPos", "chargeVsPos", 1., 0., 1., 1., 0., 1.);
+  chargeVsPos->SetStats(0);
 
   SetGeometry();
 
@@ -122,8 +132,7 @@ void EventDisplay::LoadEvent(int ievt){
   MCPMTWaveforms.clear();
   MCPMTDigitizedWaveforms.clear();
   PMTDigitizedWaveforms.clear();
-  for (std::map<std::string,TH2F*>::iterator it=hxyplane.begin();it!=hxyplane.end();it++)
-  it->second->Reset();
+  for (std::map<std::string,TH2F*>::iterator it=hxyplane.begin();it!=hxyplane.end();it++) it->second->Reset();
   npe.clear();
   if (finalTrack<=0 || finalTrack > mc->GetMCTrackCount()) finalTrack = mc->GetMCTrackCount();
   //Load tracks
@@ -269,10 +278,54 @@ void EventDisplay::LoadEvent(int ievt){
     return;
   }
 
+  TTree *runT = dsreader->GetRunT();
+  RAT::DS::Run *run = 0;
+  runT->SetBranchAddress("run",&run);
+  runT->GetEntry(0);
+  RAT::DS::PMTInfo *pmtInfo = run->GetPMTInfo();
+  chargeVsPos->Reset();
+
+  //Get center of the samll PMT array and locate
+  TVector3 centerpos(0,0,0);
+  int pmtTypeCount = 0;
+  for (int ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
+    TVector3 pmtpos = pmtInfo->GetPosition(ipmt);
+    if(pmtInfo->GetType(ipmt) == 1) {
+      centerpos = centerpos + pmtpos;
+      pmtTypeCount++;
+    }
+  }
+  centerpos = centerpos*(1./pmtTypeCount);
+  chargeVsPos->SetBins(21, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 21, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
+
+  //Fill with zeroes
+  for (int ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
+    TVector3 pmtpos = pmtInfo->GetPosition(ipmt);
+    chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), 0.);
+    pmtCharge[ipmt] = 0.;
+  }
+
+  //Collect charges and times
   for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
     int pmtID = ev->GetPMT(ipmt)->GetID();
     pmtCharge[pmtID] = ev->GetPMT(ipmt)->GetCharge();
     pmtTime[pmtID] = ev->GetPMT(ipmt)->GetTime();
+  }
+
+  //Fill 2D plot
+  for (int ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
+    TVector3 pmtpos = pmtInfo->GetPosition(ipmt);
+
+    // PMT distance
+    // double dist = pow( (pmtpos.X()-centerpos.X()),2 ) + pow( (pmtpos.Y()-centerpos.Y()),2 );
+    // dist = sqrt(dist);
+    // dist = pow(70.,2) + pow(dist,2);
+    // dist = sqrt(dist);
+
+    // Geometry PMT charge correction
+    // chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtCharge[pmtID]*pow(dist,2) );
+    chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), (pmtCharge[ipmt] - pmtGeoCorr[ipmt])/pmtGeoCorr[ipmt] );
+
   }
 
 
@@ -313,6 +366,7 @@ void EventDisplay::SetParameters(){
   //Get link to ratdb file
   RAT::DB* db = RAT::DB::Get();
   db->Load("ED.json");
+  db->Load("../../data/TheiaRnD/SCINTCORR.ratdb");
   dbED = db->GetLink("EVENTDISPLAY");
 
   //Flags
@@ -340,7 +394,10 @@ void EventDisplay::SetParameters(){
   if(drawPMTs) std::cout<<" EventDisplay >>> Draw PMTs from the PMTInfo header "<<std::endl;
   else std::cout<<" EventDisplay >>> Draw PMTs disabled "<<std::endl;
 
-
+  //Geometry PMT correction
+  dbCorr = db->GetLink("SCINTCORR","WBLS1pct"); //WBLS1pct, LAB
+  pmtGeoCorr = dbCorr->GetDArray("corr");
+  pmtGeoCorrErr = dbCorr->GetDArray("corr");
 
 }
 
@@ -392,6 +449,15 @@ void EventDisplay::DumpEventInfo(int ievt){
 
 
 void EventDisplay::DisplayEvent(int ievt){
+
+  //Custom palette
+  Double_t r[]    = {1.0, 1.0, 0.0};
+  Double_t g[]    = {0.0, 1.0, 0.0};
+  Double_t b[]    = {0.0, 1.0, 1.0};
+  Double_t stop[] = {0.0, .55, 1.0};
+  Int_t FI = TColor::CreateGradientColorTable(3, stop, r, g, b, 100);
+
+  //  gStyle->SetPalette(55);
 
   this->LoadEvent(ievt);
   if(event_option == "cherenkov" && !this->IsCerenkov()) return;
@@ -481,6 +547,12 @@ void EventDisplay::DisplayEvent(int ievt){
     }
   }
 #endif
+
+  if(debugLevel > 0) std::cout<<"Display canvas 5 "<<std::endl;
+  //Ring reconstruction
+  canvas_event->cd(5);
+  chargeVsPos->GetZaxis()->SetRangeUser(-5.,5.);
+  chargeVsPos->Draw("colz");
 
   //Wait for user action
   canvas_event->Modified();

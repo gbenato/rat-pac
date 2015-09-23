@@ -8,8 +8,8 @@
 
 /run/initialize
 #/process/inactivate Cerenkov
-/glg4scint/off
-/glg4scint/reemission off
+#/glg4scint/off
+#/glg4scint/reemission off
 /tracking/storeTrajectory 1
 
 ##### Visualization ##########################
@@ -68,11 +68,11 @@
 /rat/procset trigger "external" #simple, triggerpmt, allpmts, external
 /rat/proc analysis
 /rat/proc count
-/rat/procset update 1
+/rat/procset update 50
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "../results/TheiaRnD_cosmics_daq_cher_LAB.root"
+/rat/procset file "../results/TheiaRnD_cosmics_daq_all_WBLS1pct.root"
 #########################################
 
 ##### GENERATORS #################
@@ -130,4 +130,4 @@
 #######################################
 
 ##### RUN ###########
-/run/beamOn 10
+/run/beamOn 100
