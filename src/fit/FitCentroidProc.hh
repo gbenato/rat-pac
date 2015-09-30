@@ -10,24 +10,25 @@ namespace DS {
   class Root;
   class EV;
 }
-  
+
 class FitCentroidProc : public Processor {
 public:
   FitCentroidProc();
   virtual ~FitCentroidProc() {}
-  
+
   /** param = "power", value = exponent to raise charge to when averaging
-   *  default is 2.0 */
+  *  default is 2.0 */
   virtual void SetD(std::string param, double value);
+  virtual void SetI(std::string param, int value);
 
   virtual Processor::Result Event(DS::Root* ds, DS::EV* ev);
 
 protected:
   double fPower;
   double fRescale;
+  int fPMTType;
 };
 
 } // namespace RAT
 
 #endif  // __RAT_FitCentroidProc__
-
