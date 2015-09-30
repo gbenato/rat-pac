@@ -13,6 +13,7 @@
 #include<TPaveText.h>
 #include<TStyle.h>
 #include<TColor.h>
+#include<TMarker.h>
 
 //RAT Stuff
 #include<RAT/DS/MC.hh>
@@ -51,7 +52,7 @@ EventDisplay::EventDisplay(std::string _inputFileName){
   canvas_event->cd(3)->SetPad(.0, .25, .5, .5);
   canvas_event->cd(4)->SetPad(.0, .0, .5, .25);
   canvas_event->cd(5)->SetPad(.5, 0., 1., .5);
-  canvas_event->cd(6)->SetPad(.99, 0., 1., .01);
+  canvas_event->cd(6)->SetPad(.55, .27, .73, .45);
 
   //Particle maps
   ParticleColor[11]=kGreen;   ParticleWidth[11]=1;   ParticleName[11]="Electron";
@@ -68,8 +69,10 @@ EventDisplay::EventDisplay(std::string _inputFileName){
   hxyplane["Scintillation"] = new TH2F("hxyplane_scint","Track intersections with XY plane: Scintillation",1000,intersection_zplane[0],intersection_zplane[1],1000,intersection_zplane[0],intersection_zplane[1]);
 
   //Ring reconstruction
-  chargeVsPos = new TH2F("chargeVsPos", "chargeVsPos", 1., 0., 1., 1., 0., 1.);
-  chargeVsPos->SetStats(0);
+//  chargeVsPos = new TH2F("chargeVsPos", "chargeVsPos", 1, 0., 1., 1, 0., 1.);
+//  chargeVsPos->SetStats(0);
+  chargeVsR = new TH1F("chargeVsR", "chargeVsR", 3, 0., 100.);
+  chargeVsR->GetYaxis()->SetLabelSize(.06);
 
   SetGeometry();
 
@@ -132,6 +135,7 @@ void EventDisplay::LoadEvent(int ievt){
   MCPMTWaveforms.clear();
   MCPMTDigitizedWaveforms.clear();
   PMTDigitizedWaveforms.clear();
+  PMTTimes.clear();
   for (std::map<std::string,TH2F*>::iterator it=hxyplane.begin();it!=hxyplane.end();it++) it->second->Reset();
   npe.clear();
   if (finalTrack<=0 || finalTrack > mc->GetMCTrackCount()) finalTrack = mc->GetMCTrackCount();
@@ -283,7 +287,12 @@ void EventDisplay::LoadEvent(int ievt){
   runT->SetBranchAddress("run",&run);
   runT->GetEntry(0);
   RAT::DS::PMTInfo *pmtInfo = run->GetPMTInfo();
-  chargeVsPos->Reset();
+  RAT::DS::DAQHeader *daqHeader = run->GetDAQHeader();
+
+  chargeVsPos = new TH2F("chargeVsPos", "chargeVsPos", 1, 0., 1., 1, 0., 1.);
+  chargeVsPos->SetStats(0);
+  //  chargeVsPos->Reset();
+  chargeVsR->Reset();
 
   //Get center of the samll PMT array and locate
   TVector3 centerpos(0,0,0);
@@ -312,34 +321,42 @@ void EventDisplay::LoadEvent(int ievt){
     pmtTime[pmtID] = ev->GetPMT(ipmt)->GetTime();
   }
 
+  //Centroid
+  centroid = ev->GetCentroid()->GetPosition();
+
   //Fill 2D plot
   for (int ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
     TVector3 pmtpos = pmtInfo->GetPosition(ipmt);
 
     // PMT distance
-    // double dist = pow( (pmtpos.X()-centerpos.X()),2 ) + pow( (pmtpos.Y()-centerpos.Y()),2 );
-    // dist = sqrt(dist);
-    // dist = pow(70.,2) + pow(dist,2);
+    double XYdist = pow( (pmtpos.X()-centerpos.X()),2 ) + pow( (pmtpos.Y()-centerpos.Y()),2 );
+    XYdist = sqrt(XYdist);
+    // double dist = pow(70.,2) + pow(XYdist,2);
     // dist = sqrt(dist);
 
     // Geometry PMT charge correction
     // chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtCharge[pmtID]*pow(dist,2) );
-    chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), (pmtCharge[ipmt] - pmtGeoCorr[ipmt])/pmtGeoCorr[ipmt] );
+    chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), (pmtCharge[ipmt] - pmtGeoCorr[ipmt])/pmtGeoCorrErr[ipmt] );
+    chargeVsR->Fill(XYdist, (pmtCharge[ipmt] - pmtGeoCorr[ipmt])/pmtGeoCorrErr[ipmt] );
 
   }
+  chargeVsR->Scale(1./4.); //PMT average
 
 
 #ifdef __WAVEFORMS_IN_DS__
+
+  double fStepTime = daqHeader->GetDoubleAttribute("TIME_RES");
 
   PMTDigitizedWaveforms.resize(ev->GetPMTCount());
   for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
 
     RAT::DS::PMT *pmt = ev->GetPMT(ipmt);
     vPMTDigitizedWaveforms[ipmt] = pmt->GetWaveform();
+    PMTTimes.push_back(pmt->GetTime());
     if(debugLevel > 1) std::cout<<" EventDisplay::LoadEvent - DigitWF: nsamples "<<vPMTDigitizedWaveforms[ipmt].size()<<std::endl;
 
     for(int isample=0; isample<vPMTDigitizedWaveforms[ipmt].size(); isample++){
-      PMTDigitizedWaveforms[ipmt].SetPoint(isample,isample,vPMTDigitizedWaveforms[ipmt][isample]);
+      PMTDigitizedWaveforms[ipmt].SetPoint(isample,isample*fStepTime,vPMTDigitizedWaveforms[ipmt][isample]);
 
       if(debugLevel > 1) std::cout<<" EventDisplay::LoadEvent - Digit WF: "
       <<"sample "<<isample<<" "<<vPMTDigitizedWaveforms[ipmt][isample]<<std::endl;
@@ -351,7 +368,7 @@ void EventDisplay::LoadEvent(int ievt){
 
   //Set correct limits for drawing purposes
   for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
-    PMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.99*ymin_d,1.01*ymax_d);
+    PMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.9*ymin_d,1.1*ymax_d);
   }
 
 #endif
@@ -366,7 +383,6 @@ void EventDisplay::SetParameters(){
   //Get link to ratdb file
   RAT::DB* db = RAT::DB::Get();
   db->Load("ED.json");
-  db->Load("../../data/TheiaRnD/SCINTCORR.ratdb");
   dbED = db->GetLink("EVENTDISPLAY");
 
   //Flags
@@ -385,6 +401,11 @@ void EventDisplay::SetParameters(){
   //Geometry files
   geoFileName = dbED->GetS("geo_file");
 
+  //Geometry correction
+  corrFileName = dbED->GetS("corr_file");
+  targetMaterial = dbED->GetS("material");
+  db->Load(corrFileName);
+
   //Validate parameters
   if(event_number<-1) std::cout<<" EventDisplay >>> Event by event mode (Event navigation disabled) "<<std::endl;
   if(!fexists(geoFileName.c_str())) {std::cout<<" EventDisplay >>> "<<geoFileName<<" doesn't exist. Exit now!"<<std::endl; exit(0);}
@@ -395,7 +416,7 @@ void EventDisplay::SetParameters(){
   else std::cout<<" EventDisplay >>> Draw PMTs disabled "<<std::endl;
 
   //Geometry PMT correction
-  dbCorr = db->GetLink("SCINTCORR","WBLS1pct"); //WBLS1pct, LAB
+  dbCorr = db->GetLink("SCINTCORR",targetMaterial);
   pmtGeoCorr = dbCorr->GetDArray("corr");
   pmtGeoCorrErr = dbCorr->GetDArray("corr");
 
@@ -543,6 +564,12 @@ void EventDisplay::DisplayEvent(int ievt){
       }
       PMTDigitizedWaveforms[ipmt].SetLineColor(ipmt+1);
       PMTDigitizedWaveforms[ipmt].Draw("LINE same");
+      TMarker timeMarker;
+      timeMarker.SetMarkerSize(1.);
+      timeMarker.SetMarkerColor(ipmt+1);
+      timeMarker.SetMarkerStyle(23);
+      timeMarker.DrawMarker(PMTTimes[ipmt], PMTDigitizedWaveforms[ipmt].GetYaxis()->GetXmax());
+
       //      PMTDigitizedWaveforms[ipmt].ComputeRange(xmin_temp,xmax_temp,ymin_temp,ymax_temp);
     }
   }
@@ -551,8 +578,18 @@ void EventDisplay::DisplayEvent(int ievt){
   if(debugLevel > 0) std::cout<<"Display canvas 5 "<<std::endl;
   //Ring reconstruction
   canvas_event->cd(5);
-  chargeVsPos->GetZaxis()->SetRangeUser(-5.,5.);
+  chargeVsPos->GetZaxis()->SetRangeUser(-chargeVsPos->GetMaximum(), chargeVsPos->GetMaximum());
   chargeVsPos->Draw("colz");
+  TMarker marker;
+  marker.SetMarkerSize(3.);
+  marker.SetMarkerColor(kRed);
+  marker.SetMarkerStyle(30);
+  marker.DrawMarker(centroid.X(),centroid.Y());
+
+  canvas_event->cd(6);
+  chargeVsR->SetLineWidth(3);
+  chargeVsR->Draw("");
+
 
   //Wait for user action
   canvas_event->Modified();

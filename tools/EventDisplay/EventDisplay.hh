@@ -52,6 +52,8 @@ protected:
   std::string geoFileName;
   std::string pmtInfoFileName;
   std::string inputFileName;
+  std::string corrFileName;
+  std::string targetMaterial;
   int initialTrack;
   int finalTrack;
   std::string event_option;
@@ -82,6 +84,7 @@ protected:
   std::map< int, std::vector<double> > vMCPMTWaveforms;
   std::map< int, std::vector<UShort_t> > vMCPMTDigitizedWaveforms;
   std::map< int, std::vector<UShort_t> > vPMTDigitizedWaveforms;
+  std::vector<double> PMTTimes;
   std::map<std::string,TH2F*> hxyplane;
   TCanvas *canvas_event;
   double elength;
@@ -89,6 +92,7 @@ protected:
   std::map<int, double> pmtCharge; //measured PMT charge
   std::map<int, double> pmtTime; //measured PMT time
   TH2F *chargeVsPos;
+  TH1F *chargeVsR;
 
   //Geometry
   EventGeometry *EDGeo;
@@ -97,9 +101,10 @@ protected:
   std::map<int, TGeoVolume* > vpmt;
   std::vector<TPaveText> vpmtbox;
 
-  //Geometry correction
-  std::vector<double> pmtGeoCorr;
-  std::vector<double> pmtGeoCorrErr;
+  //Ring reconstruction
+  std::vector<double> pmtGeoCorr; // Geometry correction
+  std::vector<double> pmtGeoCorrErr; //Error
+  TVector3 centroid;
 
 };
 

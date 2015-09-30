@@ -31,6 +31,9 @@ protected:
   double max_spread;
   double int_start;
   double int_end;
+  double peak_window;
+  double peak_qthres;
+  double ped_max_fluc;
 
 };
 

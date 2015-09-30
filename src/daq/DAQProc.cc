@@ -83,7 +83,7 @@ namespace RAT {
       run->SetType(0x00001111);
       run->SetStartTime(1440638077);
       run->SetDAQHeader(daqHeader);
-      RAT::DS::PMTInfo *pmtInfo = run->GetPMTInfo();
+//      RAT::DS::PMTInfo *pmtInfo = run->GetPMTInfo();
 
 
       DS::MC *mc = ds->GetMC();
@@ -166,6 +166,7 @@ namespace RAT {
 
             DS::PMT* pmt = ev->AddNewPMT();
             pmt->SetID(pmtID);
+            pmt->SetType(mcpmt->GetType());
 
             double time = mcpmt->GetMCPhoton(0)->GetFrontEndTime();
             double charge = 0;
@@ -216,6 +217,7 @@ namespace RAT {
 
               DS::PMT* pmt = ev->AddNewPMT();
               pmt->SetID(pmtID);
+              pmt->SetType(mc->GetMCPMT(imcpmt)->GetType());
               pmt->SetWaveform(fDigitizer->SampleWaveform(DigitizedWaveform,isample)); //it is defined by the sample that crosses threshold
               isample = fDigitizer->GoToEndOfSample(isample); //go forward towards the end of the sampling window
             }//end if above trigger
@@ -239,6 +241,7 @@ namespace RAT {
           std::vector<UShort_t> DigitizedWaveform = fDigitizer->GetDigitizedWaveform(pmtID);
           DS::PMT* pmt = ev->AddNewPMT();
           pmt->SetID(pmtID);
+          pmt->SetType(mc->GetMCPMT(imcpmt)->GetType());
           pmt->SetWaveform(fDigitizer->SampleWaveform(DigitizedWaveform)); //sample from the beggining of the signal window
 
           DigitizedWaveform.clear(); //prune for next round of PMTs
@@ -281,6 +284,7 @@ namespace RAT {
                 int pmtID = mc->GetMCPMT(imcpmt)->GetID();
                 DS::PMT* pmt = ev->AddNewPMT();
                 pmt->SetID(pmtID);
+                pmt->SetType(mc->GetMCPMT(imcpmt)->GetType());
                 pmt->SetWaveform(fDigitizer->SampleWaveform(fDigitizer->GetDigitizedWaveform(pmtID), isample));
               } //end reading PMTs
 
