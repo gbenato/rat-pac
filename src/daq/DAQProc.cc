@@ -28,26 +28,26 @@ namespace RAT {
 
       //Pulses and waveforms features
       //sampling time in ns --- this is the size of a PMT time window
-      fSamplingTimeDB = fLdaq->GetD("sampling_time");
+      fSamplingTime = fLdaq->GetD("sampling_time");
       //width of a PMT pulse in ns
-      fPulseWidthDB = fLdaq->GetD("pulse_width");
+      fPulseWidth = fLdaq->GetD("pulse_width");
       //offset of a PMT pulse in mV
-      fPulseOffsetDB = fLdaq->GetD("pulse_offset");
+      fPulseOffset = fLdaq->GetD("pulse_offset");
       //Minimum pulse height to consider
-      fPulseMinDB = fLdaq->GetD("pulse_min");
+      fPulseMin = fLdaq->GetD("pulse_min");
       //Pulse type: 0=square pulses, 1=real pulses
-      fPulseTypeDB = fLdaq->GetI("pulse_type");
+      fPulseType = fLdaq->GetI("pulse_type");
       //mean of a PMT pulse in ns
-      fPulseMeanDB = fLdaq->GetD("pulse_mean");
+      fPulseMean = fLdaq->GetD("pulse_mean");
       //pulse step time
-      fPulseStepTimeDB = fLdaq->GetD("pulse_step_time");
+      fPulseTimeStep = fLdaq->GetD("pulse_time_step");
 
       detail << "DAQProc: DAQ constants loaded" << newline;
-      detail << "  PMT Pulse type: " << (fPulseTypeDB==0 ? "square" : "realistic") << newline;
-      detail << dformat("  PMT Pulse Mean: ........................ %5.1f\n", fPulseMeanDB);
-      detail << dformat("  PMT Pulse Width: ....................... %5.1f ns\n", fPulseWidthDB);
-      detail << dformat("  PMT Pulse Offset: ...................... %5.1f ADC Counts\n", fPulseOffsetDB);
-      detail << dformat("  Min PMT Pulse Height: .................. %5.1f mV\n", fPulseMinDB);
+      detail << "  PMT Pulse type: " << (fPulseType==0 ? "square" : "realistic") << newline;
+      detail << dformat("  PMT Pulse Mean: ........................ %5.1f\n", fPulseMean);
+      detail << dformat("  PMT Pulse Width: ....................... %5.1f ns\n", fPulseWidth);
+      detail << dformat("  PMT Pulse Offset: ...................... %5.1f ADC Counts\n", fPulseOffset);
+      detail << dformat("  Min PMT Pulse Height: .................. %5.1f mV\n", fPulseMin);
 
       fEventCounter = 0;
     }
@@ -72,7 +72,7 @@ namespace RAT {
       DS::DAQHeader *daqHeader = new DS::DAQHeader();
       daqHeader->SetAttribute("DAQ_NAME","VIRTUAL_DIGITIZER");
       daqHeader->SetAttribute("NBITS",fDigitizer->GetNBits());
-      daqHeader->SetAttribute("TIME_RES",fDigitizer->GetStepTime());
+      daqHeader->SetAttribute("TIME_RES",fDigitizer->GetTimeStep());
       daqHeader->SetAttribute("V_OFFSET",fDigitizer->GetVOffSet());
       daqHeader->SetAttribute("V_HIGH",fDigitizer->GetVHigh());
       daqHeader->SetAttribute("V_LOW",fDigitizer->GetVLow());
@@ -97,8 +97,8 @@ namespace RAT {
 
           //Loop over PEs and create a pulse for each one
           PMTWaveform pmtwf;
-          pmtwf.SetStepTime(fPulseStepTimeDB);
-          pmtwf.SetSamplingWindow(fSamplingTimeDB);
+          pmtwf.SetStepTime(fPulseTimeStep);
+          pmtwf.SetSamplingWindow(fSamplingTime);
           //      double PulseDuty=0.0;
 
           for (int iph=0; iph < mcpmt->GetMCPhotonCount(); iph++) {
@@ -109,12 +109,12 @@ namespace RAT {
             PMTPulse *pmtpulse;
             pmtpulse = new RealPMTPulse; //real PMT pulses shape
 
-            pmtpulse->SetPulseMean(fPulseMeanDB);
-            pmtpulse->SetStepTime(fPulseStepTimeDB);
-            pmtpulse->SetPulseMin(fPulseMinDB);
+            pmtpulse->SetPulseMean(fPulseMean);
+            pmtpulse->SetStepTime(fPulseTimeStep);
+            pmtpulse->SetPulseMin(fPulseMin);
             pmtpulse->SetPulseCharge(mcphotoelectron->GetCharge());
-            pmtpulse->SetPulseWidth(fPulseWidthDB);
-            pmtpulse->SetPulseOffset(fPulseOffsetDB);
+            pmtpulse->SetPulseWidth(fPulseWidth);
+            pmtpulse->SetPulseOffset(fPulseOffset);
             pmtpulse->SetPulseStartTime(TimePhoton); //also sets end time according to the pulse width and the pulse mean
             pmtwf.fPulse.push_back(pmtpulse);
             //	PulseDuty += pmtpulse->GetPulseEndTime() - pmtpulse->GetPulseStartTime();
