@@ -84,15 +84,17 @@ protected:
   std::map< int, std::vector<double> > vMCPMTWaveforms;
   std::map< int, std::vector<UShort_t> > vMCPMTDigitizedWaveforms;
   std::map< int, std::vector<UShort_t> > vPMTDigitizedWaveforms;
-  std::vector<double> PMTTimes;
   std::map<std::string,TH2F*> hxyplane;
   TCanvas *canvas_event;
   double elength;
   std::map<int, int> npe; //number of photoelectrons per PMT
   std::map<int, double> pmtCharge; //measured PMT charge
   std::map<int, double> pmtTime; //measured PMT time
+  TH2F *timeVsPos;
   TH2F *chargeVsPos;
+  TH2F *chargeVsPosCorr;
   TH1F *chargeVsR;
+  TH1F *chargeVsRCorr;
 
   //Geometry
   EventGeometry *EDGeo;
