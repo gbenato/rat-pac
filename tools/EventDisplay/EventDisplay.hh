@@ -103,7 +103,11 @@ protected:
   std::map<int, TGeoVolume* > vpmt;
   std::vector<TPaveText> vpmtbox;
 
-  //Ring reconstruction
+  //MC event
+  TH1F * hMCPeTime;
+
+  //DAQ event
+  TH1F * hPmtTime;
   std::vector<double> pmtGeoCorr; // Geometry correction
   std::vector<double> pmtGeoCorrErr; //Error
   TVector3 centroid;

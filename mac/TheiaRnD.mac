@@ -10,7 +10,7 @@
 #/process/inactivate Cerenkov
 /glg4scint/off
 /glg4scint/reemission off
-/tracking/storeTrajectory 1
+/tracking/storeTrajectory 0
 
 ##### Visualization ##########################
 
@@ -74,7 +74,7 @@
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "../results/TheiaRnD_cosmics_daq_cher_WBLS10pct_test.root"
+/rat/procset file "../results/TheiaRnD_cosmics_daq_all_cher_test.root"
 #########################################
 
 ##### GENERATORS #################
@@ -132,4 +132,4 @@
 #######################################
 
 ##### RUN ###########
-/run/beamOn 100
+/run/beamOn 1000

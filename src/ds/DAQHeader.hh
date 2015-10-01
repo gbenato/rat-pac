@@ -2,11 +2,13 @@
  * @class DS::DAQHeader
  * Data Structure: DAQ attributes
  *
- * Information about the DAQ system. To be kept as flexible as possible.
+ * std::coutrmation about the DAQ system. To be kept as flexible as possible.
  */
 
 #ifndef __RAT_DS_DAQHeader__
 #define __RAT_DS_DAQHeader__
+
+#include <iostream>
 
 #include <RAT/Log.hh>
 
@@ -34,17 +36,17 @@ public:
   virtual void SetAttribute(std::string attr, double val) { double_attr[attr] = val; }
   virtual void SetAttribute(std::string attr, std::string val) { string_attr[attr] = val; }
   virtual void PrintAttributes() {
-    info<<" Int attributes "<<"\n";
+    std::cout<<" Int attributes "<<"\n";
     for (std::map<std::string,int>::iterator attr = int_attr.begin(); attr != int_attr.end(); attr++) {
-      info<<"  |->"<<attr->first<<" = "<<attr->second<<"\n";
+      std::cout<<"  |->"<<attr->first<<" = "<<attr->second<<"\n";
     }
-    info<<" Double attributes "<<"\n";
+    std::cout<<" Double attributes "<<"\n";
         for (std::map<std::string,double>::iterator attr = double_attr.begin(); attr != double_attr.end(); attr++) {
-      info<<"  |->"<<attr->first<<" = "<<attr->second<<"\n";
+      std::cout<<"  |->"<<attr->first<<" = "<<attr->second<<"\n";
     }
-    info<<" String attributes "<<"\n";
+    std::cout<<" String attributes "<<"\n";
     for (std::map<std::string,std::string>::iterator attr = string_attr.begin(); attr != string_attr.end(); attr++) {
-      info<<"  |->"<<attr->first<<" = "<<attr->second<<"\n";
+      std::cout<<"  |->"<<attr->first<<" = "<<attr->second<<"\n";
     }
   }
 

@@ -46,16 +46,18 @@ EventDisplay::EventDisplay(std::string _inputFileName){
   //Set canvas
   gStyle->SetGridWidth(1);
   canvas_event = new TCanvas("canvas_event", "Event", 1600, 1000);
-  canvas_event->Divide(2,4);
+  canvas_event->Divide(2,5);
   canvas_event->cd(1)->SetPad(.0, .5, .33, 1.);
   canvas_event->cd(2)->SetPad(.33, .5, .66, 1.);
-  canvas_event->cd(3)->SetPad(.66, .5, .99, 1.);
-  canvas_event->cd(4)->SetPad(.0, .0, .33, .5);
-  canvas_event->cd(5)->SetPad(.05, .27, .15, .45);
-  canvas_event->cd(6)->SetPad(.33, .0, .66, .5);
-//  canvas_event->cd(7)->SetPad(.38, .27, .48, .45);
-  canvas_event->cd(7)->SetPad(.99, .99, 1., 1.);
-  canvas_event->cd(8)->SetPad(.66, .0, .99, .5);
+  canvas_event->cd(3)->SetPad(.66, .75, .99, 1.);
+  canvas_event->cd(4)->SetPad(.66, .5, .99, .75);
+  canvas_event->cd(5)->SetPad(.0, .0, .33, .5);
+  canvas_event->cd(6)->SetPad(.05, .27, .15, .45);
+  canvas_event->cd(7)->SetPad(.33, .0, .66, .5);
+  canvas_event->cd(8)->SetPad(.99, .99, 1., 1.);
+  //  canvas_event->cd(8)->SetPad(.38, .27, .48, .45);
+  canvas_event->cd(9)->SetPad(.66, .25, .99, .5);
+  canvas_event->cd(10)->SetPad(.66, .0, .99, .25);
 
   //Particle maps
   ParticleColor[11]=kGreen;   ParticleWidth[11]=1;   ParticleName[11]="Electron";
@@ -71,11 +73,17 @@ EventDisplay::EventDisplay(std::string _inputFileName){
   hxyplane["Cerenkov"] = new TH2F("hxyplane_cher","Track intersections with XY plane: Cherenkov",1000,intersection_zplane[0],intersection_zplane[1],1000,intersection_zplane[0],intersection_zplane[1]);
   hxyplane["Scintillation"] = new TH2F("hxyplane_scint","Track intersections with XY plane: Scintillation",1000,intersection_zplane[0],intersection_zplane[1],1000,intersection_zplane[0],intersection_zplane[1]);
 
-  //Ring reconstruction
+  //MC event
+  hMCPeTime = new TH1F("hMCPeTime", "hMCPeTime", 500, 0., 50.);
+
+  //DAQ event
+  hPmtTime = new TH1F("hPmtTime", "hPmtTime", 500, -500., 500.);
   chargeVsR = new TH1F("chargeVsR", "chargeVsR", 3, 0., 100.);
   chargeVsRCorr = new TH1F("chargeVsRCorr", "chargeVsRCorr", 3, 0., 100.);
   chargeVsR->GetYaxis()->SetLabelSize(.06);
   chargeVsRCorr->GetYaxis()->SetLabelSize(.06);
+
+
 
   SetGeometry();
 
@@ -216,8 +224,14 @@ void EventDisplay::LoadEvent(int ievt){
     npe[ipmt]=0;
   }
   for(int ipmt=0; ipmt<mc->GetMCPMTCount(); ipmt++){
-    int pmtID = mc->GetMCPMT(ipmt)->GetID();
-    npe[pmtID] = mc->GetMCPMT(ipmt)->GetMCPhotonCount();
+    RAT::DS::MCPMT *mcpmt = mc->GetMCPMT(ipmt);
+    int pmtID = mcpmt->GetID();
+    npe[pmtID] = mcpmt->GetMCPhotonCount();
+    for(int ipe = 0; ipe<npe[pmtID]; ipe++){
+      RAT::DS::MCPhoton *mcpe = mcpmt->GetMCPhoton(ipe);
+      if(mcpmt->GetType()==1) hMCPeTime->Fill(mcpe->GetHitTime());
+//      hMCPeTime->Fill(mcpe->GetFrontEndTime());
+    }
   }
 
   if(drawPMTs){
@@ -330,7 +344,8 @@ void EventDisplay::LoadEvent(int ievt){
     int pmtID = ev->GetPMT(ipmt)->GetID();
     pmtCharge[pmtID] = ev->GetPMT(ipmt)->GetCharge();
     pmtTime[pmtID] = ev->GetPMT(ipmt)->GetTime();
-    if(pmtTime[pmtID]<0) pmtTime[pmtID] = 0;
+    if(pmtTime[pmtID]<0) pmtTime[pmtID] = -400.;
+    hPmtTime->Fill(pmtTime[pmtID]);
   }
 
   //Centroid
@@ -361,7 +376,11 @@ void EventDisplay::LoadEvent(int ievt){
 
 #ifdef __WAVEFORMS_IN_DS__
 
-  double fStepTime = daqHeader->GetDoubleAttribute("TIME_RES");
+  double timeStep = daqHeader->GetDoubleAttribute("TIME_RES");
+  double timeDelay = daqHeader->GetDoubleAttribute("TIME_DELAY");
+  daqHeader->PrintAttributes();
+
+//  std::cout<<" me cago en sus muertos "<<timeStep<<" "<<timeDelay<<std::endl;
 
   PMTDigitizedWaveforms.resize(ev->GetPMTCount());
   for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
@@ -371,7 +390,7 @@ void EventDisplay::LoadEvent(int ievt){
     if(debugLevel > 1) std::cout<<" EventDisplay::LoadEvent - DigitWF: nsamples "<<vPMTDigitizedWaveforms[ipmt].size()<<std::endl;
 
     for(int isample=0; isample<vPMTDigitizedWaveforms[ipmt].size(); isample++){
-      PMTDigitizedWaveforms[ipmt].SetPoint(isample,isample*fStepTime,vPMTDigitizedWaveforms[ipmt][isample]);
+      PMTDigitizedWaveforms[ipmt].SetPoint(isample,isample*timeStep-timeDelay,vPMTDigitizedWaveforms[ipmt][isample]);
 
       if(debugLevel > 1) std::cout<<" EventDisplay::LoadEvent - Digit WF: "
       <<"sample "<<isample<<" "<<vPMTDigitizedWaveforms[ipmt][isample]<<std::endl;
@@ -533,11 +552,16 @@ void EventDisplay::DisplayEvent(int ievt){
 //    EDGeo->DrawPMTMap(pmtCharge);
   }
 
+  if(debugLevel > 0) std::cout<<"Display canvas 3 "<<std::endl;
+  //Digitized waveforms
+  canvas_event->cd(3);
+  hMCPeTime->Draw();
+
 #ifdef __WAVEFORMS_IN_DS__
   //MC Analogue Waveforms
-  if(debugLevel > 0) std::cout<<"Display canvas 3 "<<std::endl;
+  if(debugLevel > 0) std::cout<<"Display canvas 4 "<<std::endl;
 
-  canvas_event->cd(3);
+  canvas_event->cd(4);
   //Analogue waveforms
   for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++) {
     if(ipmt==0){
@@ -553,9 +577,9 @@ void EventDisplay::DisplayEvent(int ievt){
 
 #endif
 
-  if(debugLevel > 0) std::cout<<"Display canvas 4 and 5 "<<std::endl;
+  if(debugLevel > 0) std::cout<<"Display canvas 5 and 6 "<<std::endl;
   //Ring reconstruction
-  canvas_event->cd(4);
+  canvas_event->cd(5);
   chargeVsPosCorr->GetZaxis()->SetRangeUser(-chargeVsPos->GetMaximum(), chargeVsPos->GetMaximum());
   chargeVsPosCorr->Draw("colz");
   TMarker marker;
@@ -564,15 +588,15 @@ void EventDisplay::DisplayEvent(int ievt){
   marker.SetMarkerStyle(30);
   marker.DrawMarker(centroid.X(),centroid.Y());
 
-  canvas_event->cd(5);
+  canvas_event->cd(6);
   chargeVsRCorr->SetLineWidth(3);
   chargeVsRCorr->Draw("");
 
-//  gStyle->SetPalette(55);
+  //  gStyle->SetPalette(55);
 
-  if(debugLevel > 0) std::cout<<"Display canvas 6 and 7 "<<std::endl;
+  if(debugLevel > 0) std::cout<<"Display canvas 7 and 8"<<std::endl;
   //Charge and time
-  canvas_event->cd(6);
+  canvas_event->cd(7);
   double rightmax = 1.1*timeVsPos->GetMaximum();
   double scale = gPad->GetUymax()/rightmax;
   if(scale > 0.) {
@@ -584,13 +608,13 @@ void EventDisplay::DisplayEvent(int ievt){
   chargeVsPos->Draw("lego2Z");
   timeVsPos->Draw("lego same");
 
-  canvas_event->cd(7);
+  canvas_event->cd(8);
   chargeVsR->SetLineWidth(3);
   chargeVsR->Draw("");
 
-  if(debugLevel > 0) std::cout<<"Display canvas 8 "<<std::endl;
+  if(debugLevel > 0) std::cout<<"Display canvas 9 "<<std::endl;
   //Digitized waveforms
-  canvas_event->cd(8);
+  canvas_event->cd(9);
   // for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++) {
   //   if(ipmt==0){
   //     MCPMTDigitizedWaveforms[ipmt].SetTitle("MC event");
@@ -608,7 +632,7 @@ void EventDisplay::DisplayEvent(int ievt){
       if(ipmt==0){
         PMTDigitizedWaveforms[ipmt].SetTitle("Triggered event");
         PMTDigitizedWaveforms[ipmt].Draw("AP");
-        PMTDigitizedWaveforms[ipmt].GetXaxis()->SetTitle("sample");
+        PMTDigitizedWaveforms[ipmt].GetXaxis()->SetTitle("t(ns)");
         PMTDigitizedWaveforms[ipmt].GetYaxis()->SetTitle("ADC counts");
       }
       PMTDigitizedWaveforms[ipmt].SetLineColor(ipmt+1);
@@ -622,6 +646,11 @@ void EventDisplay::DisplayEvent(int ievt){
       //      PMTDigitizedWaveforms[ipmt].ComputeRange(xmin_temp,xmax_temp,ymin_temp,ymax_temp);
     }
   }
+
+  if(debugLevel > 0) std::cout<<"Display canvas 10 "<<std::endl;
+  //Digitized waveforms
+  canvas_event->cd(10);
+  hPmtTime->Draw();
 
   //Wait for user action
   canvas_event->Modified();

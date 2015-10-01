@@ -10,7 +10,7 @@ namespace RAT {
     fLdaq = DB::Get()->GetLink("DAQ");
     //time resolution
     fTimeStep = fLdaq->GetD("time_res");
-    //Offset
+    //OffsetfSampleDelay
     fOffset = fLdaq->GetD("offset");
     //High voltage
     fVhigh = fLdaq->GetD("volt_high");

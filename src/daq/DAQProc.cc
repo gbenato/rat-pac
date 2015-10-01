@@ -73,6 +73,7 @@ namespace RAT {
       daqHeader->SetAttribute("DAQ_NAME","VIRTUAL_DIGITIZER");
       daqHeader->SetAttribute("NBITS",fDigitizer->GetNBits());
       daqHeader->SetAttribute("TIME_RES",fDigitizer->GetTimeStep());
+      daqHeader->SetAttribute("TIME_DELAY",fDigitizer->GetSampleDelay());
       daqHeader->SetAttribute("V_OFFSET",fDigitizer->GetVOffSet());
       daqHeader->SetAttribute("V_HIGH",fDigitizer->GetVHigh());
       daqHeader->SetAttribute("V_LOW",fDigitizer->GetVLow());
