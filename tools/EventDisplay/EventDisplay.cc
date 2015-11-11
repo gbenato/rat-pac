@@ -79,8 +79,10 @@ EventDisplay::EventDisplay(std::string _inputFileName){
   //DAQ event
   hPmtTime = new TH1F("hPmtTime", "hPmtTime", 500, -500., 500.);
   chargeVsR = new TH1F("chargeVsR", "chargeVsR", 3, 0., 100.);
+  chargeVsRScint = new TH1F("chargeVsRScint", "chargeVsRScint", 3, 0., 100.);
   chargeVsRCorr = new TH1F("chargeVsRCorr", "chargeVsRCorr", 3, 0., 100.);
   chargeVsR->GetYaxis()->SetLabelSize(.06);
+  chargeVsRScint->GetYaxis()->SetLabelSize(.06);
   chargeVsRCorr->GetYaxis()->SetLabelSize(.06);
 
 
@@ -152,7 +154,7 @@ void EventDisplay::LoadEvent(int ievt){
   //Load tracks
   for (int itr = initialTrack; itr < finalTrack; itr++) {
 
-    if(debugLevel > 0) std::cout<<"  Track "<<itr<<"/"<<finalTrack-1<<std::endl;
+    if(debugLevel > 1) std::cout<<"  Track "<<itr<<"/"<<finalTrack-1<<std::endl;
 
     RAT::DS::MCTrack *mctrack = mc->GetMCTrack(itr);
     //Create new track
@@ -178,29 +180,29 @@ void EventDisplay::LoadEvent(int ievt){
     TVector3 int_pos(9999.,9999.,9999.);//intersection point
     for (int istep = 0; istep < nsteps; istep++) {
 
-      if(debugLevel > 0) std::cout<<"  |->Step "<<istep<<"/"<<nsteps-1<<" ";
+      if(debugLevel > 1) std::cout<<"  |->Step "<<istep<<"/"<<nsteps-1<<" ";
 
       RAT::DS::MCTrackStep *step = mctrack->GetMCTrackStep(istep);
       const TVector3 endpointstep = step->GetEndpoint();
       pl_tracks.back().SetPoint(istep,endpointstep.X(),endpointstep.Y(),endpointstep.Z());
 
-      if(debugLevel > 0) std::cout<<" -- DONE "<<std::endl;
+      if(debugLevel > 1) std::cout<<" -- DONE "<<std::endl;
 
       //Calculate intersection with XY plane
       // std::cout<<"step "<<istep<<" "<<top_pos.X()<<" "<<top_pos.Y()<<" "<<top_pos.Z()<<std::endl;
       // std::cout<<"step "<<istep<<" "<<bottom_pos.X()<<" "<<bottom_pos.Y()<<" "<<bottom_pos.Z()<<std::endl;
       if(mctrack->GetPDGCode()!=0 && mctrack->GetPDGCode()!=9999) continue; //only for OPTICAL photons
 
-      if(debugLevel > 0) std::cout<<"    Intersectng Optical Photon "<<std::endl;
+      if(debugLevel > 1) std::cout<<"    Intersectng Optical Photon "<<std::endl;
 
       if(bottom_pos.Z()!=-9999.){ //we haven't found the point yet
         if(endpointstep.Z()>intersection_zplane[2]){
-          if(debugLevel > 0) std::cout<<"      Case 1: "<<std::endl;
+          if(debugLevel > 1) std::cout<<"      Case 1: "<<std::endl;
           top_pos = endpointstep;
         }
         else if(top_pos.Z()!=-9999.){ //this is our guy
 
-          if(debugLevel > 0) std::cout<<"      Case 2: "<<firststep->GetProcess()<<std::endl;
+          if(debugLevel > 1) std::cout<<"      Case 2: "<<firststep->GetProcess()<<std::endl;
 
           bottom_pos = endpointstep;
           //Intersect!
@@ -214,7 +216,7 @@ void EventDisplay::LoadEvent(int ievt){
         }
       }
 
-      if(debugLevel > 0) std::cout<<"   EventDisplay::LoadEvent (Passed intersection) "<<std::endl;
+      if(debugLevel > 1) std::cout<<"   EventDisplay::LoadEvent (Passed intersection) "<<std::endl;
 
     } //end step loop
   } //end track loop
@@ -254,8 +256,6 @@ void EventDisplay::LoadEvent(int ievt){
   double xmax_temp=0.;//dummy
   double xmin_temp=0.;//dummy
 
-  if(debugLevel > 1) std::cout<<" EventDisplay::LoadEvent - GetMCPMTCount "<<mc->GetMCPMTCount()<<std::endl;
-
   for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++) {
 
     RAT::DS::MCPMT *mcpmt = mc->GetMCPMT(ipmt);
@@ -285,8 +285,6 @@ void EventDisplay::LoadEvent(int ievt){
     MCPMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.99*ymin_d,1.01*ymax_d);
   }
 
-  if(debugLevel > 1) std::cout<<" EventDisplay::LoadEvent - GetPMTCount "<<ev->GetPMTCount()<<std::endl;
-
 #endif
 
   /////////////////////////////////////
@@ -309,9 +307,12 @@ void EventDisplay::LoadEvent(int ievt){
   timeVsPos->SetStats(0);
   chargeVsPos = new TH2F("chargeVsPos", "chargeVsPos", 1, 0., 1., 1, 0., 1.);
   chargeVsPos->SetStats(0);
+  chargeVsPosScint = new TH2F("chargeVsPosScint", "chargeVsPosScint", 1, 0., 1., 1, 0., 1.);
+  chargeVsPosScint->SetStats(0);
   chargeVsPosCorr = new TH2F("chargeVsPosCorr", "chargeVsPosCorr", 1, 0., 1., 1, 0., 1.);
   chargeVsPosCorr->SetStats(0);
   chargeVsR->Reset();
+  chargeVsRScint->Reset();
   chargeVsRCorr->Reset();
 
   //Get center of the samll PMT array and locate
@@ -327,6 +328,7 @@ void EventDisplay::LoadEvent(int ievt){
   centerpos = centerpos*(1./pmtTypeCount);
   timeVsPos->SetBins(21, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 21, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
   chargeVsPos->SetBins(21, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 21, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
+  chargeVsPosScint->SetBins(21, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 21, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
   chargeVsPosCorr->SetBins(21, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 21, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
 
   //Fill with zeroes
@@ -351,6 +353,8 @@ void EventDisplay::LoadEvent(int ievt){
   //Centroid
   centroid = ev->GetCentroid()->GetPosition();
 
+  std::cout<<" pmtcount "<<pmtInfo->GetPMTCount()<<std::endl;
+
   //Fill 2D plot
   for (int ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
     TVector3 pmtpos = pmtInfo->GetPosition(ipmt);
@@ -365,13 +369,34 @@ void EventDisplay::LoadEvent(int ievt){
     // chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtCharge[pmtID]*pow(dist,2) );
     timeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtTime[ipmt]);
     chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtCharge[ipmt]);
+    chargeVsPosScint->Fill(pmtpos.X(), pmtpos.Y(), pmtGeoCorr[ipmt]);
+
     chargeVsPosCorr->Fill(pmtpos.X(), pmtpos.Y(), (pmtCharge[ipmt] - pmtGeoCorr[ipmt])/pmtGeoCorrErr[ipmt] );
     chargeVsR->Fill(XYdist, pmtCharge[ipmt]);
+    chargeVsRScint->Fill(XYdist, pmtGeoCorr[ipmt]);
     chargeVsRCorr->Fill(XYdist, (pmtCharge[ipmt] - pmtGeoCorr[ipmt])/pmtGeoCorrErr[ipmt] );
 
   }
-  chargeVsR->Scale(1./4.); //PMT average
-  chargeVsRCorr->Scale(1./4.); //PMT average
+
+  // chargeVsR->Scale(1./4.); //PMT average
+  // chargeVsRScint->Scale(1./4.); //PMT average
+  // chargeVsRCorr->Scale(1./4.); //PMT average
+
+  // chargeVsR->Scale(1./chargeVsR->Integral()); //Area norm
+  // chargeVsRScint->Scale(1./chargeVsRScint->Integral()); //Area norm
+  // chargeVsRCorr->Scale(1./chargeVsRCorr->Integral()); //Area norm
+
+  //Perform KS test against scintillation light only
+  double ks = chargeVsPos->KolmogorovTest(chargeVsPosScint);
+  std::cout<<" KS 1 "<<ks<<std::endl;
+  ks = chargeVsR->KolmogorovTest(chargeVsRScint);
+  std::cout<<" KS 2 "<<ks<<std::endl;
+  double chi2 = 0;
+  for(int ibin=1; ibin<4; ibin++){
+    //    chi2 += pow(chargeVsR->GetBinContent(ibin) - chargeVsRScint->GetBinContent(ibin),2)/chargeVsRScint->GetBinContent(ibin);
+    chi2 += pow(chargeVsRCorr->GetBinContent(ibin),2);
+  }
+  std::cout<<" CHI2 "<<chi2<<std::endl;
 
 
 #ifdef __WAVEFORMS_IN_DS__
@@ -379,8 +404,6 @@ void EventDisplay::LoadEvent(int ievt){
   double timeStep = daqHeader->GetDoubleAttribute("TIME_RES");
   double timeDelay = daqHeader->GetDoubleAttribute("TIME_DELAY");
   daqHeader->PrintAttributes();
-
-//  std::cout<<" me cago en sus muertos "<<timeStep<<" "<<timeDelay<<std::endl;
 
   PMTDigitizedWaveforms.resize(ev->GetPMTCount());
   for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
@@ -407,7 +430,7 @@ void EventDisplay::LoadEvent(int ievt){
 
 #endif
 
-  if(debugLevel > 0) std::cout<<" EventDisplay::LoadEvent - DONE "<<std::endl;
+if(debugLevel > 0) std::cout<<" EventDisplay::LoadEvent - DONE "<<std::endl;
 
 }
 
@@ -452,7 +475,7 @@ void EventDisplay::SetParameters(){
   //Geometry PMT correction
   dbCorr = db->GetLink("SCINTCORR",targetMaterial);
   pmtGeoCorr = dbCorr->GetDArray("corr");
-  pmtGeoCorrErr = dbCorr->GetDArray("corr");
+  pmtGeoCorrErr = dbCorr->GetDArray("corr_err");
 
 }
 
@@ -513,11 +536,11 @@ void EventDisplay::DisplayEvent(int ievt){
   Int_t FI = TColor::CreateGradientColorTable(3, stop, r, g, b, 100);
 
   this->LoadEvent(ievt);
+  if(debugLevel > 0) std::cout<<"Starting canvases "<<std::endl;
   if(event_option == "cherenkov" && !this->IsCerenkov()) return;
   if(event_option == "pe" && !this->IsPE()) return;
   this->DumpEventInfo(ievt);
   if(event_number>=0) this->DumpDisplayInfo();
-
 
   if(debugLevel > 0) std::cout<<"Display canvas 1 "<<std::endl;
 
@@ -579,38 +602,46 @@ void EventDisplay::DisplayEvent(int ievt){
 
   if(debugLevel > 0) std::cout<<"Display canvas 5 and 6 "<<std::endl;
   //Ring reconstruction
-  canvas_event->cd(5);
-  chargeVsPosCorr->GetZaxis()->SetRangeUser(-chargeVsPos->GetMaximum(), chargeVsPos->GetMaximum());
-  chargeVsPosCorr->Draw("colz");
-  TMarker marker;
-  marker.SetMarkerSize(3.);
-  marker.SetMarkerColor(kRed);
-  marker.SetMarkerStyle(30);
-  marker.DrawMarker(centroid.X(),centroid.Y());
+  if(rds->ExistEV()){
+    canvas_event->cd(5);
+    chargeVsPosCorr->GetZaxis()->SetRangeUser(-chargeVsPos->GetMaximum(), chargeVsPos->GetMaximum());
+    chargeVsPosCorr->Draw("colz");
+    TMarker marker;
+    marker.SetMarkerSize(3.);
+    marker.SetMarkerColor(kRed);
+    marker.SetMarkerStyle(30);
+    marker.DrawMarker(centroid.X(),centroid.Y());
 
-  canvas_event->cd(6);
-  chargeVsRCorr->SetLineWidth(3);
-  chargeVsRCorr->Draw("");
+    canvas_event->cd(6);
+    chargeVsR->SetLineWidth(3);
+    chargeVsRScint->SetLineColor(kRed);
+    chargeVsRScint->SetLineWidth(2);
+    chargeVsRScint->SetMinimum(0);
+    chargeVsRScint->SetMaximum(chargeVsRScint->GetMaximum()*1.5);
+    chargeVsRScint->Draw("");
+    chargeVsR->Draw("same");
+    // chargeVsRCorr->SetLineWidth(3);
+    // chargeVsRCorr->Draw("");
 
-  //  gStyle->SetPalette(55);
+    //  gStyle->SetPalette(55);
+    if(debugLevel > 0) std::cout<<"Display canvas 7 and 8"<<std::endl;
+    //Charge and time
+    canvas_event->cd(7);
+    double rightmax = 1.1*timeVsPos->GetMaximum();
+    double scale = gPad->GetUymax()/rightmax;
+    if(scale > 0.) {
+      timeVsPos->Scale(scale);
+    }
+    chargeVsPos->SetLineColor(kBlack);
+    chargeVsPos->SetFillColor(kBlack);
+    // chargeVsPos->SetFillStyle(3002);
+    chargeVsPos->Draw("lego2Z");
+    timeVsPos->Draw("lego same");
 
-  if(debugLevel > 0) std::cout<<"Display canvas 7 and 8"<<std::endl;
-  //Charge and time
-  canvas_event->cd(7);
-  double rightmax = 1.1*timeVsPos->GetMaximum();
-  double scale = gPad->GetUymax()/rightmax;
-  if(scale > 0.) {
-    timeVsPos->Scale(scale);
+    canvas_event->cd(8);
+    chargeVsR->SetLineWidth(3);
+    chargeVsR->Draw("");
   }
-  chargeVsPos->SetLineColor(kBlack);
-  chargeVsPos->SetFillColor(kBlack);
-  // chargeVsPos->SetFillStyle(3002);
-  chargeVsPos->Draw("lego2Z");
-  timeVsPos->Draw("lego same");
-
-  canvas_event->cd(8);
-  chargeVsR->SetLineWidth(3);
-  chargeVsR->Draw("");
 
   if(debugLevel > 0) std::cout<<"Display canvas 9 "<<std::endl;
   //Digitized waveforms
@@ -651,6 +682,7 @@ void EventDisplay::DisplayEvent(int ievt){
   //Digitized waveforms
   canvas_event->cd(10);
   hPmtTime->Draw();
+  ////////////////////
 
   //Wait for user action
   canvas_event->Modified();

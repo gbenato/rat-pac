@@ -7,10 +7,10 @@
 /rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD.geo"
 
 /run/initialize
-#/process/inactivate Cerenkov
-/glg4scint/off
-/glg4scint/reemission off
-/tracking/storeTrajectory 0
+/process/inactivate Cerenkov
+#/glg4scint/off
+#/glg4scint/reemission off
+#/tracking/storeTrajectory 1
 
 ##### Visualization ##########################
 
@@ -67,14 +67,14 @@
 /rat/proc daq
 /rat/procset trigger "external" #simple, triggerpmt, allpmts, external
 /rat/proc fitcentroid
-/rat/procset pmttype 1
+/rat/procset pmttype 1 //use only this type to fit centroid
 /rat/proc analysis
 /rat/proc count
-/rat/procset update 50
+/rat/procset update 10
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "../results/TheiaRnD_cosmics_daq_all_cher_test.root"
+/rat/procset file "../results/TheiaRnD_cosmics_scint_LAB.root"
 #########################################
 
 ##### GENERATORS #################
@@ -132,4 +132,4 @@
 #######################################
 
 ##### RUN ###########
-/run/beamOn 1000
+/run/beamOn 500

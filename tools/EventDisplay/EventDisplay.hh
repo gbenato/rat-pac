@@ -92,8 +92,10 @@ protected:
   std::map<int, double> pmtTime; //measured PMT time
   TH2F *timeVsPos;
   TH2F *chargeVsPos;
+  TH2F *chargeVsPosScint;
   TH2F *chargeVsPosCorr;
   TH1F *chargeVsR;
+  TH1F *chargeVsRScint;
   TH1F *chargeVsRCorr;
 
   //Geometry

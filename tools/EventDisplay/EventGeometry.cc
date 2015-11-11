@@ -155,13 +155,13 @@ void EventGeometry::BuildGeometry(){
 
     for(int ipmt=0; ipmt<pmts.size(); ipmt++){
       if(pmts[ipmt]->GetName() == geoOrder[ivol]){
-        std::vector<double> trans(3,0);
-        pmts[ipmt]->AddVolume(geoVolumes["world"],trans);
-        geoVolumes[pmts[ipmt]->GetName()] = pmts[ipmt]->GetVolume();
+	std::vector<double> trans(3,0);
+	pmts[ipmt]->AddVolume(geoVolumes["world"],trans);
+	geoVolumes[pmts[ipmt]->GetName()] = pmts[ipmt]->GetVolume();
         break;
       }
     }
-
+    
   }
 
   tgeoman->CloseGeometry();
