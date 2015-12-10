@@ -215,6 +215,7 @@ public:
 
   void BuildGeometry();
   void BuildPMTMap();
+  void ResetHitPMTs();
   void HitPMT(int,int);
   void DrawGeometry();
   void DrawPMTMap(std::map<int,int>);

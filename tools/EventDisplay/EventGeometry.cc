@@ -239,14 +239,17 @@ void EventGeometry::DrawGeometry(){
 
   std::cout<<" EventGeometry::DrawGeometry "<<pmts.size()<<std::endl;
 
-  //Reset PMT colors
-  for(int ipmt = 0; ipmt<pmts.size(); ipmt++){
-    pmts[ipmt]->GetVolume()->SetLineColor(1);
-  }
-
   tgeoman->GetMasterVolume()->Draw();
   //tgeoman->GetMasterVolume()->Draw("ogle");
 
+}
+
+void EventGeometry::ResetHitPMTs(){
+
+  //Reset PMT colors
+  for(int ipmt = 0; ipmt<pmts.size(); ipmt++){
+      pmts[ipmt]->GetVolume()->SetLineColor(1);
+  }
 }
 
 
@@ -254,7 +257,7 @@ void EventGeometry::HitPMT(int id, int npe){
 
   //Find PMT
   TGeoVolume* hitpmt = pmts[id]->GetVolume();
-  hitpmt->SetLineColor(kRed);
+  if(npe>0) hitpmt->SetLineColor(kRed);
   pmts[id]->SetNPE(npe);
 
 }

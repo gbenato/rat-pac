@@ -237,6 +237,7 @@ void EventDisplay::LoadEvent(int ievt){
   }
 
   if(drawPMTs){
+    EDGeo->ResetHitPMTs();
     //Highlight PMT if was hit
     for(std::map<int, int>::iterator itpmt=npe.begin(); itpmt!=npe.end(); itpmt++){
       EDGeo->HitPMT(itpmt->first,itpmt->second);
