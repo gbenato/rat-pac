@@ -16,6 +16,7 @@ public:
   virtual ~AnaProc() { };
   virtual Processor::Result DSEvent(DS::Root *ds);
   virtual double GetTimeAtPeak(std::vector<UShort_t>);
+  virtual double GetTimeAtThreshold(std::vector<UShort_t>);
   virtual double IntegrateCharge(std::vector<UShort_t>);
 
 protected:
@@ -24,7 +25,7 @@ protected:
   DS::DAQHeader *daqHeader;
   bool gotDAQHeader;
 
-  DBLinkPtr fLdaq;
+  DBLinkPtr fLAnalysis;
 
   double ped_start;
   double ped_end;

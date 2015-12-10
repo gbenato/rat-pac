@@ -1,5 +1,6 @@
 #include <vector>
 #include <RAT/AnaProc.hh>
+#include <RAT/Digitizer.hh>
 #include <RAT/DS/PMT.hh>
 
 using namespace std;
@@ -8,15 +9,15 @@ namespace RAT {
 
   AnaProc::AnaProc() : Processor("analysis") {
 
-    fLdaq = DB::Get()->GetLink("DAQ");
-    ped_start = fLdaq->GetD("ped_start");
-    ped_end = fLdaq->GetD("ped_end");
-    max_spread = fLdaq->GetD("max_spread");
-    int_start = fLdaq->GetD("int_start");
-    int_end = fLdaq->GetD("int_end");
-    peak_window = fLdaq->GetD("peak_window");
-    peak_qthres = fLdaq->GetD("peak_qthres");
-    ped_max_fluc = fLdaq->GetD("ped_max_fluc");
+    fLAnalysis = DB::Get()->GetLink("ANALYSIS");
+    ped_start = fLAnalysis->GetD("ped_start");
+    ped_end = fLAnalysis->GetD("ped_end");
+    max_spread = fLAnalysis->GetD("max_spread");
+    int_start = fLAnalysis->GetD("int_start");
+    int_end = fLAnalysis->GetD("int_end");
+    peak_window = fLAnalysis->GetD("peak_window");
+    peak_qthres = fLAnalysis->GetD("peak_qthres");
+    ped_max_fluc = fLAnalysis->GetD("ped_max_fluc");
 
     gotDAQHeader = false;
 
@@ -41,7 +42,8 @@ namespace RAT {
       for (int ipmt=0; ipmt < ev->GetPMTCount(); ipmt++){
         DS::PMT* pmt = ev->GetPMT(ipmt);
         std::vector<UShort_t> dWaveform = pmt->GetWaveform();
-        pmt->SetTime(GetTimeAtPeak(dWaveform));
+        pmt->SetTime(GetTimeAtThreshold(dWaveform));
+        //        pmt->SetTime(GetTimeAtPeak(dWaveform));
         pmt->SetCharge(IntegrateCharge(dWaveform));
       }//end PMT loop
     }
@@ -50,6 +52,62 @@ namespace RAT {
 
   } //AnaProc::DSEvent
 
+  //Calculates the time at which the waveform crosses threshold
+  double AnaProc::GetTimeAtThreshold(std::vector<UShort_t> dWaveform){
+
+    double fTimeStep = daqHeader->GetDoubleAttribute("TIME_RES");
+    double fTimeDelay = daqHeader->GetDoubleAttribute("TIME_DELAY");
+    double fVHigh = daqHeader->GetDoubleAttribute("V_HIGH");
+    double fVLow = daqHeader->GetDoubleAttribute("V_LOW");
+    double fVOffSet = daqHeader->GetDoubleAttribute("V_OFFSET");
+    double fResistance = daqHeader->GetDoubleAttribute("RESISTANCE");
+    int fNBits = daqHeader->GetIntAttribute("NBITS");
+
+    int nADCs = 1 << fNBits; //Calculate the number of adc counts
+    double voltsperadc = (fVHigh - fVLow)/(double)nADCs;
+
+    //Compute pedestal charge
+    int s_ped_start = floor(ped_start/fTimeStep);
+    int s_ped_end = floor(ped_end/fTimeStep);
+    double ped_min,ped_max,ped_mean;
+    ped_min = ped_max = ped_mean = dWaveform[s_ped_start]*voltsperadc + fVLow - fVOffSet;
+    for (size_t isample = s_ped_start+1; isample < s_ped_end; isample++) {
+      double voltage = dWaveform[isample]*voltsperadc + fVLow - fVOffSet;
+      if (ped_min > voltage) ped_min = voltage;
+      if (ped_max < voltage) ped_max = voltage;
+      ped_mean += voltage;
+    }
+    ped_mean /= (double)(s_ped_end-s_ped_start);
+    if (ped_max - ped_min > ped_max_fluc) return -9999.;
+
+    //Correct by pedestals
+    int s_int_start = floor(int_start/fTimeStep);
+    int s_int_end = floor(int_end/fTimeStep);
+    vector<double> values;
+    values.resize(s_int_end-s_int_start);
+    for (size_t isample = s_int_start; isample < s_int_end; isample++) {
+      values[isample-s_int_start] = dWaveform[isample]*voltsperadc + fVLow - fVOffSet - ped_mean;
+    }
+
+    Digitizer *digitizer = new Digitizer();
+    double Vthres = digitizer->GetDigitizedThreshold();
+    int sthres = 0;
+    for(UShort_t isample=0; isample<values.size(); isample++){
+//      std::cout<<" AnaProc::GetTimeAtThreshold: "<<isample<<" "<<values[isample]<<" "<<Vthres<<std::endl;
+      if(values[isample]<Vthres) {
+        sthres = isample;
+        break;
+      }
+    }
+    if(sthres == 0) {
+      std::cout<<" AnaProc::GetTimeAtThreshold: waveform did not cross threshold "<<std::endl;
+      return -9999;
+    }
+    else{
+      return sthres*fTimeStep - fTimeDelay;
+    }
+
+  }
 
   //Calculates the time at which the peak of the digitized waveform occurs
   double AnaProc::GetTimeAtPeak(std::vector<UShort_t> dWaveform){

@@ -50,7 +50,7 @@
   "dir_x": [0.0, 0.0, 0.0, 0.0],
   "dir_y": [0.0, 0.0, 0.0, 0.0],
   "dir_z": [0.0, 0.0, 0.0, 0.0],
-  "type": [1, 1, 1, 1],
+  "type": [2, 2, 2, 2],
 }
 
 //6 PMTs facing a corner and near the target
