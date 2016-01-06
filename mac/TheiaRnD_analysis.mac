@@ -1,0 +1,21 @@
+/glg4debug/glg4param omit_muon_processes  1.0
+/glg4debug/glg4param omit_hadronic_processes  1.0
+
+/rat/db/set DETECTOR experiment "TheiaRnD"
+/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD.geo"
+
+/run/initialize
+
+##### BEGIN EVENT LOOP ##################
+/rat/proc analysis
+#/rat/proc fitcentroid
+#/rat/procset pmttype 1 //use only this type to fit centroid
+/rat/proc count
+/rat/procset update 1
+
+#Output file
+/rat/proclast outroot
+/rat/procset file "../results/TheiaRnD_analysis_spe.root"
+#########################################
+
+/rat/inhdf5/read ../results/spe-12-15.0.h5
