@@ -13,7 +13,7 @@ namespace RAT {
 class AnaProc : public Processor {
 public:
   AnaProc();
-  virtual ~AnaProc() { };
+  virtual ~AnaProc();
   virtual Processor::Result DSEvent(DS::Root *ds);
   virtual double GetTimeAtPeak(std::vector<UShort_t>);
   virtual double GetTimeAtThreshold(std::vector<UShort_t>);

@@ -98,20 +98,191 @@ namespace RAT {
       return 0;
     }
 
+    std::map<int,int> FastChtoID;
+    std::map<int,int> SlowChtoID;
+    FastChtoID[0]=6;
+    FastChtoID[1]=999;
+    FastChtoID[2]=7;
+    FastChtoID[3]=999;
+    FastChtoID[4]=8;
+    FastChtoID[5]=999;
+    FastChtoID[6]=9;
+    FastChtoID[7]=999;
+    FastChtoID[8]=10;
+    FastChtoID[9]=999;
+    FastChtoID[10]=11;
+    FastChtoID[11]=999;
+    FastChtoID[12]=12;
+    FastChtoID[13]=999;
+    FastChtoID[14]=13;
+    FastChtoID[15]=999;
+    FastChtoID[16]=14;
+    FastChtoID[17]=999;
+    FastChtoID[18]=15;
+    FastChtoID[19]=999;
+    FastChtoID[20]=16;
+    FastChtoID[21]=999;
+    FastChtoID[22]=17;
+    FastChtoID[23]=999;
+    FastChtoID[24]=999;
+    FastChtoID[25]=999;
+    FastChtoID[26]=999;
+    FastChtoID[27]=999;
+    FastChtoID[28]=999;
+    FastChtoID[29]=999;
+    FastChtoID[30]=999;
+    FastChtoID[31]=999;
+    SlowChtoID[0]=999;
+    SlowChtoID[1]=0;
+    SlowChtoID[2]=1;
+    SlowChtoID[3]=2;
+    SlowChtoID[4]=3;
+    SlowChtoID[5]=4;
+    SlowChtoID[6]=5;
+    SlowChtoID[7]=999;
+    SlowChtoID[8]=999;
+    SlowChtoID[9]=999;
+    SlowChtoID[10]=999;
+    SlowChtoID[11]=999;
+    SlowChtoID[12]=999;
+    SlowChtoID[13]=999;
+    SlowChtoID[14]=999;
+    SlowChtoID[15]=999;
+
+    info<<"Opening FAST group..... \n";
+
+    //Get waveforms from FAST group
     H5::H5File *h5file = new H5::H5File(filename, H5F_ACC_RDONLY);
-    H5::Group *h5rootgrp = new H5::Group(h5file->openGroup("/"));
+    H5::Group *h5fastgr;
+    try{
+      h5fastgr = new H5::Group(h5file->openGroup("/fast"));
+    }
+    catch(...){
+      Log::Die("Group name fast or master do not exist");
+    }
     //Loop over groups (each group should be a different channel)
     //and fill the waveforms in event order and the DAQHeader.
     mw_t waveforms;
     bool daqHeader_filled = false;
     DS::DAQHeader *daqHeader = new DS::DAQHeader();
-    int ngroups = h5rootgrp->getNumObjs();
+    int ngroups = h5fastgr->getNumObjs();
+    //DAQ groups loop
     for (int i = 0; i < ngroups; i++){
-      H5std_string grpname = h5rootgrp->getObjnameByIdx(i);
+      H5std_string grpname = h5fastgr->getObjnameByIdx(i);
+      std::cout<<" |-> Group name "<<i<<" "<<grpname<<std::endl;
+      int grnumber = -9999;
+      if ( std::regex_match (grpname, std::regex("(gr)(.*)")) ){
+        std::size_t pos = grpname.find("gr") + 2;
+        std::string sgrnumber = grpname.substr(pos);
+        try{
+          grnumber = std::stoi(sgrnumber);
+        }
+        catch (...){
+          Log::Die("Group number " + sgrnumber + "is neither a positive integer nor zero");
+        }
+      }
+      else{
+        std::cout<<"Group name "+ grpname +" different from \"gr*\""<<std::endl;
+      }
+
+      H5::Group *daqgroup = new H5::Group(h5file->openGroup("/fast/"+grpname));
+      int nch = daqgroup->getNumObjs();
+      //Channels groups loop
+      for (int i = 0; i < nch; i++){
+        H5std_string chname = daqgroup->getObjnameByIdx(i);
+        std::cout<<"   |-> Group name "<<i<<" "<<chname<<std::endl;
+        int chnumber = -9999;
+        if ( std::regex_match (chname, std::regex("(ch)(.*)")) ){
+          std::size_t pos = chname.find("ch") + 2;
+          std::string schnumber = chname.substr (pos);
+          try{
+            chnumber = std::stoi(schnumber);
+            chnumber = chnumber + grnumber*8; //8 channels per group
+          }
+          catch (...){
+            Log::Die("Channel number " + schnumber + " is neither a positive integer nor zero");
+          }
+        }
+        else{
+          std::cout<<"    Channel name "+ chname +" different from \"ch*\""<<std::endl;
+          continue;
+        }
+
+        H5::Group *channel = new H5::Group(h5file->openGroup("/fast/"+grpname+"/"+chname));
+        //Get DAQ attributes from first channel
+        if(!daqHeader_filled){
+          uint32_t bits,voffset,ns_sample;
+          H5::Attribute bits_attr = h5fastgr->openAttribute("bits");
+          bits_attr.read(H5::PredType::NATIVE_UINT32, &bits);
+          H5::Attribute voffset_attr = channel->openAttribute("offset");
+          voffset_attr.read(H5::PredType::NATIVE_UINT32, &voffset);
+          H5::Attribute ns_sample_attr = h5fastgr->openAttribute("ns_sample");
+          ns_sample_attr.read(H5::PredType::NATIVE_UINT32, &ns_sample);
+
+          daqHeader->SetAttribute("DAQ_NAME","DIGITIZER_V16");
+          daqHeader->SetAttribute("NBITS",(int)bits);
+          daqHeader->SetAttribute("TIME_RES",(int)ns_sample);
+          daqHeader->SetAttribute("V_OFFSET",(int)voffset);
+          daqHeader->SetAttribute("V_HIGH",1000);
+          daqHeader->SetAttribute("V_LOW",-1000);
+          daqHeader->SetAttribute("RESISTANCE",50);
+          daqHeader_filled = true;
+        }
+        //Now retrieve the samples
+        info<<"    Getting samples from channel " + chname + "\n";
+        H5::DataSet *dataset;
+        try{
+          dataset = new H5::DataSet(channel->openDataSet("samples"));
+        }
+        catch(...){
+          Log::Die("Data set \"samples\" not found in channel " + chname);
+        }
+
+        //Get dimensions of the dataset
+        H5::DataSpace dataspace = dataset->getSpace();
+        int rank = dataspace.getSimpleExtentNdims();
+        hsize_t *dims = new hsize_t[rank];
+        dataspace.getSimpleExtentDims(dims);
+
+        //Get traces
+        const int nevents = dims[0], nsamples = dims[1];
+        UShort_t *data = new UShort_t[nevents*nsamples];
+        dataset->read(data,H5::PredType::NATIVE_UINT16,dataspace);
+        info<<"    Fast channel "<<chnumber<<" corresponding to "<<FastChtoID[chnumber]<<" nevents "<<nevents<<" nsamples "<<nsamples<<"\n";
+        for(int iev=0; iev<nevents; iev++){
+          std::vector<UShort_t> waveform;
+          for(int isample=0; isample<nsamples; isample++){
+            waveform.push_back(data[iev*nsamples + isample]);
+          }
+          waveforms[FastChtoID[chnumber]].push_back( (std::vector<UShort_t>) waveform);
+        }
+      }//end channels loop
+    }//end groups loop
+
+
+    info<<"Opening MASTER group..... \n";
+
+    //Get waveforms from MASTER group
+    H5::Group *h5mastergr;
+    try{
+      h5mastergr = new H5::Group(h5file->openGroup("/master"));
+    }
+    catch(...){
+      Log::Die("Group name fast or master do not exist");
+    }
+    //Loop over groups (each group should be a different channel)
+    //and fill the waveforms in event order and the DAQHeader.
+    bool daqSlowHeader_filled = false;
+    DS::DAQHeader *daqSlowHeader = new DS::DAQHeader();
+    int nch = h5mastergr->getNumObjs();
+    //Channels groups loop
+    for (int i = 0; i < nch; i++){
+      H5std_string chname = h5mastergr->getObjnameByIdx(i);
+      std::cout<<" |-> Group name "<<i<<" "<<chname<<std::endl;
       int chnumber = -9999;
-      if ( std::regex_match (grpname, std::regex("(ch)(.*)")) ){
-        std::size_t pos = grpname.find("ch") + 2;
-        std::string schnumber = grpname.substr (pos);
+      if ( std::regex_match (chname, std::regex("(ch)(.*)")) ){
+        std::size_t pos = chname.find("ch") + 2;
+        std::string schnumber = chname.substr (pos);
         try{
           chnumber = std::stoi(schnumber);
         }
@@ -120,37 +291,38 @@ namespace RAT {
         }
       }
       else{
-        Log::Die("Group name "+ grpname +" different from \"ch*\"");
+        std::cout<<"   Group name "+ chname +" different from \"ch*\""<<std::endl;
+        continue;
       }
 
-      H5::Group *group = new H5::Group(h5file->openGroup("/"+grpname));
+      H5::Group *channel = new H5::Group(h5file->openGroup("/master/"+chname));
       //Get DAQ attributes from first channel
-      if(!daqHeader_filled){
+      if(!daqSlowHeader_filled){
         uint32_t bits,voffset,ns_sample;
-        H5::Attribute bits_attr = group->openAttribute("bits");
+        H5::Attribute bits_attr = h5mastergr->openAttribute("bits");
         bits_attr.read(H5::PredType::NATIVE_UINT32, &bits);
-        H5::Attribute voffset_attr = group->openAttribute("offset");
+        H5::Attribute voffset_attr = channel->openAttribute("offset");
         voffset_attr.read(H5::PredType::NATIVE_UINT32, &voffset);
-        H5::Attribute ns_sample_attr = group->openAttribute("ns_sample");
+        H5::Attribute ns_sample_attr = h5mastergr->openAttribute("ns_sample");
         ns_sample_attr.read(H5::PredType::NATIVE_UINT32, &ns_sample);
 
-        daqHeader->SetAttribute("DAQ_NAME","DIGITIZER_V16");
-        daqHeader->SetAttribute("NBITS",(int)bits);
-        daqHeader->SetAttribute("TIME_RES",(int)ns_sample);
-        daqHeader->SetAttribute("V_OFFSET",(int)voffset);
-        daqHeader->SetAttribute("V_HIGH",1000);
-        daqHeader->SetAttribute("V_LOW",-1000);
-        daqHeader->SetAttribute("RESISTANCE",50);
-        daqHeader_filled = true;
+        daqSlowHeader->SetAttribute("DAQ_NAME","DIGITIZER_V16");
+        daqSlowHeader->SetAttribute("NBITS",(int)bits);
+        daqSlowHeader->SetAttribute("TIME_RES",(double)ns_sample);
+        daqSlowHeader->SetAttribute("V_OFFSET",(double)voffset);
+        daqSlowHeader->SetAttribute("V_HIGH",1000.);
+        daqSlowHeader->SetAttribute("V_LOW",-1000.);
+        daqSlowHeader->SetAttribute("RESISTANCE",50.);
+        daqSlowHeader_filled = true;
       }
       //Now retrieve the samples
-      info<<"Getting samples from group " + grpname + "\n";
+      info<<"    Getting samples from channel " + chname + "\n";
       H5::DataSet *dataset;
       try{
-        dataset = new H5::DataSet(group->openDataSet("samples"));
+        dataset = new H5::DataSet(channel->openDataSet("samples"));
       }
       catch(...){
-        Log::Die("Data set \"samples\" not found in group " + grpname);
+        Log::Die("Data set \"samples\" not found in channel " + chname);
       }
 
       //Get dimensions of the dataset
@@ -163,21 +335,31 @@ namespace RAT {
       const int nevents = dims[0], nsamples = dims[1];
       UShort_t *data = new UShort_t[nevents*nsamples];
       dataset->read(data,H5::PredType::NATIVE_UINT16,dataspace);
+      info<<"Master channel "<<chnumber<<" corresponding to "<<SlowChtoID[chnumber]<<" nevents "<<nevents<<" nsamples "<<nsamples<<"\n";
       for(int iev=0; iev<nevents; iev++){
         std::vector<UShort_t> waveform;
         for(int isample=0; isample<nsamples; isample++){
           waveform.push_back(data[iev*nsamples + isample]);
         }
-        waveforms[chnumber].push_back( (std::vector<UShort_t>) waveform);
+        waveforms[SlowChtoID[chnumber]].push_back( (std::vector<UShort_t>) waveform);
       }
-    }
+    }//end channels loop
+
+    int nevents = waveforms.begin()->second.size(); //FIXME: deal with different number of events...
+    info<<"Filling the DS with "<<nevents<<" events \n";
 
     //Loop over events and waveforms and fill the DS
-    int nevents = waveforms.begin()->second.size();
     for(int iev=0; iev<nevents; iev++){
+
+      info<<iev<<"/"<<nevents<<"\n";
+
       DS::Root* ds = new DS::Root();
+      ds->SetRunID(1);
       RAT::DS::EV *ev = ds->AddNewEV();
       for(mw_t::iterator iwaveform = waveforms.begin(); iwaveform != waveforms.end(); iwaveform++){
+        std::cout<<" Events for CH"<<iwaveform->first<<" "<<iwaveform->second.size()<<std::endl;
+        if(iwaveform->first == 999) continue;
+        if(iwaveform->second.size()-1 < iev) continue; //FIXME: deal with different number of events...
         RAT::DS::PMT *pmt = ev->AddNewPMT();
         pmt->SetID(iwaveform->first);
         pmt->SetWaveform(iwaveform->second.at(iev));
@@ -192,16 +374,33 @@ namespace RAT {
       run->SetID(1);
       run->SetType(0x00001111);
       run->SetStartTime(1440638077);
-      run->SetDAQHeader(daqHeader);
-
+      run->SetDAQHeader(daqSlowHeader);
       DS::RunStore::AddNewRun(run);
 
+      info<<"Added new run \n";
 
+      DS::Run *run2 = DS::RunStore::GetRun(ds);
+
+      if(run == NULL) {
+        std::cout<<" InHD5F: Run not Found "<<std::endl;
+        exit(0);
+      }
+
+      if(run2 == NULL) {
+        std::cout<<" InHD5F: Run2 not Found "<<std::endl;
+        exit(0);
+      }
 
       mainBlock->DSEvent(ds);
-    }
+
+      info<<"mainBlock DONE \n";
+
+    } //end event loop
+
+    info<<"DONE \n";
 
     return true;
-  }
+
+  } //end ReadEvents
 
 } // namespace RAT

@@ -23,30 +23,57 @@ namespace RAT {
 
   }
 
+  AnaProc::~AnaProc()
+  {
+    /* Do nothing */
+  }
+
   Processor::Result AnaProc::DSEvent(DS::Root *ds) {
     //This processor retrieves the digitized waveforms of the triggered events EV
     //and performs some calculations to get the charge and time
 
+    std::cout<<" Reading "<<ds->GetEVCount()<<" events"<<std::endl;
+    std::cout<<" With "<<ds->GetEV(0)->GetPMTCount()<<" PMTs "<<std::endl;
+
     //Get DAQHeader (only first event)
     if(!gotDAQHeader){
       run = DS::RunStore::GetRun(ds);
+      if(run == NULL) {
+        std::cout<<" Run not Found "<<std::endl;
+        exit(0);
+      }
+      std::cout<<" Got run "<<run->GetID()<<std::endl;
       daqHeader = run->GetDAQHeader();
       //daqHeader->PrintAttributes();
       gotDAQHeader = true;
     }
 
+    std::cout<<" Got DAQHeader "<<std::endl;
+
     //Event loop: each MCEvent may have several real events
     for(int iev=0; iev<ds->GetEVCount(); iev++){
       DS::EV *ev = ds->GetEV(iev);
 
+      std::cout<<" Event "<<iev<<"/"<<ds->GetEVCount()<<std::endl;
+
       for (int ipmt=0; ipmt < ev->GetPMTCount(); ipmt++){
+
+        std::cout<<"   PMT "<<ipmt<<"/"<<ev->GetPMTCount()<<std::endl;
+
         DS::PMT* pmt = ev->GetPMT(ipmt);
+        std::cout<<" Got PMT "<<std::endl;
         std::vector<UShort_t> dWaveform = pmt->GetWaveform();
+        std::cout<<" Got WF "<<std::endl;
         pmt->SetTime(GetTimeAtThreshold(dWaveform));
+        std::cout<<" Set time "<<std::endl;
         //        pmt->SetTime(GetTimeAtPeak(dWaveform));
         pmt->SetCharge(IntegrateCharge(dWaveform));
+        std::cout<<" Set charge "<<std::endl;
       }//end PMT loop
+
     }
+
+    std::cout<<" DONE "<<std::endl;
 
     return Processor::OK;
 
@@ -63,15 +90,28 @@ namespace RAT {
     double fResistance = daqHeader->GetDoubleAttribute("RESISTANCE");
     int fNBits = daqHeader->GetIntAttribute("NBITS");
 
+    std::cout<<" Got var from DAQHeader "<<std::endl;
+
     int nADCs = 1 << fNBits; //Calculate the number of adc counts
     double voltsperadc = (fVHigh - fVLow)/(double)nADCs;
 
+    std::cout<<" nADCs "<<nADCs<<" voltsperadc "<<voltsperadc<<" fVHigh "<<fVHigh<<" fVLow "<<fVLow<<std::endl;
+
     //Compute pedestal charge
     int s_ped_start = floor(ped_start/fTimeStep);
+    std::cout<<" fTimeStep "<<fTimeStep<<std::endl;
+    std::cout<<" s_ped_start "<<s_ped_start<<std::endl;
     int s_ped_end = floor(ped_end/fTimeStep);
+    std::cout<<" s_ped_end "<<s_ped_end<<std::endl;
     double ped_min,ped_max,ped_mean;
     ped_min = ped_max = ped_mean = dWaveform[s_ped_start]*voltsperadc + fVLow - fVOffSet;
+
+    std::cout<<" fTimeStep "<<fTimeStep<<" s_ped_start "<<s_ped_start<<" s_ped_end "<<s_ped_end<<" fVOffSet "<<fVOffSet<<std::endl;
+
     for (size_t isample = s_ped_start+1; isample < s_ped_end; isample++) {
+
+      // std::cout<<" sample "<<isample<<"/"<<s_ped_end<<std::endl;
+
       double voltage = dWaveform[isample]*voltsperadc + fVLow - fVOffSet;
       if (ped_min > voltage) ped_min = voltage;
       if (ped_max < voltage) ped_max = voltage;
@@ -79,6 +119,8 @@ namespace RAT {
     }
     ped_mean /= (double)(s_ped_end-s_ped_start);
     if (ped_max - ped_min > ped_max_fluc) return -9999.;
+
+    std::cout<<" Computed peds "<<std::endl;
 
     //Correct by pedestals
     int s_int_start = floor(int_start/fTimeStep);
@@ -89,13 +131,18 @@ namespace RAT {
       values[isample-s_int_start] = dWaveform[isample]*voltsperadc + fVLow - fVOffSet - ped_mean;
     }
 
+    std::cout<<" Corrected peds "<<std::endl;
+
     Digitizer *digitizer = new Digitizer();
-    double Vthres = digitizer->GetDigitizedThreshold();
+    double Vthres = digitizer->GetThreshold();
+
+    std::cout<<" Got digit "<<std::endl;
+
     int sthres = 0;
     for(UShort_t isample=0; isample<values.size(); isample++){
-//      std::cout<<" AnaProc::GetTimeAtThreshold: "<<isample<<" "<<values[isample]<<" "<<Vthres<<std::endl;
+      //      std::cout<<" AnaProc::GetTimeAtThreshold: "<<isample<<" "<<values[isample]<<" "<<Vthres<<std::endl;
       if(values[isample]<Vthres) {
-        sthres = isample;
+        sthres = isample + s_int_start;
         break;
       }
     }
