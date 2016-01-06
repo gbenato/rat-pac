@@ -40,9 +40,10 @@ namespace RAT {
     virtual std::vector<UShort_t> SampleWaveform(std::vector<UShort_t>, int );
     virtual std::vector<UShort_t> SampleWaveform(std::vector<UShort_t>);
     virtual int GoToEndOfSample(int);
-    virtual double GetDigitizedThreshold(){return fDigitizedThreshold;};
 
     //Getters
+    virtual double GetThreshold(){return fThreshold;};
+    virtual int GetDigitizedThreshold(){return fDigitizedThreshold;};
     virtual double GetTimeStep(){return fTimeStep;};
     virtual int GetNBits(){return fNBits;};
     virtual double GetVHigh(){return fVhigh;};
@@ -65,7 +66,8 @@ namespace RAT {
     double fOffset; //Digitizer offset
     double fResistance; //Circuit resistance
     double fNoiseAmpl; //Electronic noise amplitud
-    double fDigitizedThreshold; //Trigger threshold in ADC counts
+    double fThreshold; //Threshold in volts
+    int fDigitizedThreshold; //Trigger threshold in ADC counts
     int fSamplingWindow; //Width of the sampling windows in ns
     double fSampleDelay; //Time delay before threshold for the sampling window
     std::map< int, std::vector<double> > fNoise; //Channel:Electronic noise non-digitized

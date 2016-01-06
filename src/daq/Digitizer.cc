@@ -23,7 +23,7 @@ namespace RAT {
     //width of noise in adc counts
     fNoiseAmpl = fLdaq->GetD("noise_amplitude");
     //PMT trigger thresholds
-    this->SetThreshold(fLdaq->GetD("trigger_threshold"));
+    SetThreshold(fLdaq->GetD("trigger_threshold"));
     //sampling time in ns
     fSamplingWindow = fLdaq->GetD("sampling_time");
     //time before discriminator fires that sampling gate opens
@@ -198,6 +198,7 @@ namespace RAT {
   //Parse threshold in volts and store it in ADC counts
   void Digitizer::SetThreshold(double threhold_volts){
 
+    fThreshold = threhold_volts;
     int nADCs = 1 << fNBits; //Calculate the number of adc counts
     double adcpervolt = nADCs/(fVhigh - fVlow);
     fDigitizedThreshold = round((threhold_volts - fVlow + fOffset)*adcpervolt); //digitize: V->ADC
