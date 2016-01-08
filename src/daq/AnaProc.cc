@@ -9,15 +9,25 @@ namespace RAT {
 
   AnaProc::AnaProc() : Processor("analysis") {
 
-    fLAnalysis = DB::Get()->GetLink("ANALYSIS");
-    ped_start = fLAnalysis->GetD("ped_start");
-    ped_end = fLAnalysis->GetD("ped_end");
-    max_spread = fLAnalysis->GetD("max_spread");
-    int_start = fLAnalysis->GetD("int_start");
-    int_end = fLAnalysis->GetD("int_end");
-    peak_window = fLAnalysis->GetD("peak_window");
-    peak_qthres = fLAnalysis->GetD("peak_qthres");
-    ped_max_fluc = fLAnalysis->GetD("ped_max_fluc");
+    fLAnalysis = DB::Get()->GetLink("ANALYSIS","V1730");
+    anaV1730.ped_start = fLAnalysis->GetD("ped_start");
+    anaV1730.ped_end = fLAnalysis->GetD("ped_end");
+    anaV1730.max_spread = fLAnalysis->GetD("max_spread");
+    anaV1730.int_start = fLAnalysis->GetD("int_start");
+    anaV1730.int_end = fLAnalysis->GetD("int_end");
+    anaV1730.peak_window = fLAnalysis->GetD("peak_window");
+    anaV1730.peak_qthres = fLAnalysis->GetD("peak_qthres");
+    anaV1730.ped_max_fluc = fLAnalysis->GetD("ped_max_fluc");
+
+    fLAnalysis = DB::Get()->GetLink("ANALYSIS","V1742");
+    anaV1742.ped_start = fLAnalysis->GetD("ped_start");
+    anaV1742.ped_end = fLAnalysis->GetD("ped_end");
+    anaV1742.max_spread = fLAnalysis->GetD("max_spread");
+    anaV1742.int_start = fLAnalysis->GetD("int_start");
+    anaV1742.int_end = fLAnalysis->GetD("int_end");
+    anaV1742.peak_window = fLAnalysis->GetD("peak_window");
+    anaV1742.peak_qthres = fLAnalysis->GetD("peak_qthres");
+    anaV1742.ped_max_fluc = fLAnalysis->GetD("ped_max_fluc");
 
     gotDAQHeader = false;
 
@@ -49,8 +59,6 @@ namespace RAT {
       gotDAQHeader = true;
     }
 
-    std::cout<<" Got DAQHeader "<<std::endl;
-
     //Event loop: each MCEvent may have several real events
     for(int iev=0; iev<ds->GetEVCount(); iev++){
       DS::EV *ev = ds->GetEV(iev);
@@ -63,35 +71,26 @@ namespace RAT {
 
         DS::PMT* pmt = ev->GetPMT(ipmt);
         int pmtType = pmt->GetType();
-        std::cout<<" Got PMT "<<std::endl;
         std::vector<UShort_t> dWaveform = pmt->GetWaveform();
-        std::cout<<" Got WF "<<std::endl;
-        std::cout<<" PMT type "<<pmtType<<std::endl;
         if(pmtType==1){
           //        pmt->SetTime(GetTimeAtPeak(dWaveform), daqHeaderV1742 );
-          pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1742) );
-          std::cout<<" Set time "<<std::endl;
-          pmt->SetCharge(IntegrateCharge(dWaveform, daqHeaderV1742) );
-          std::cout<<" Set charge "<<std::endl;
+          pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1742, anaV1742) );
+          pmt->SetCharge(IntegrateCharge(dWaveform, daqHeaderV1742, anaV1742) );
         }else if(pmtType==2){
           //        pmt->SetTime(GetTimeAtPeak(dWaveform), daqHeaderV1730 );
-          pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1730) );
-          std::cout<<" Set time "<<std::endl;
-          pmt->SetCharge(IntegrateCharge(dWaveform, daqHeaderV1730) );
-          std::cout<<" Set charge "<<std::endl;
+          pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1730, anaV1730) );
+          pmt->SetCharge(IntegrateCharge(dWaveform, daqHeaderV1730, anaV1730) );
         }
       }//end PMT loop
 
     }
-
-    std::cout<<" DONE "<<std::endl;
 
     return Processor::OK;
 
   } //AnaProc::DSEvent
 
   //Calculates the time at which the waveform crosses threshold
-  double AnaProc::GetTimeAtThreshold(std::vector<UShort_t> dWaveform, RAT::DS::DAQHeader *daqHeader){
+  double AnaProc::GetTimeAtThreshold(std::vector<UShort_t> dWaveform, RAT::DS::DAQHeader *daqHeader, AnaParams anaParams){
 
     std::string daqName = daqHeader->GetStringAttribute("DAQ_NAME");
     double fTimeStep = daqHeader->GetDoubleAttribute("TIME_RES");
@@ -102,23 +101,15 @@ namespace RAT {
     double fResistance = daqHeader->GetDoubleAttribute("RESISTANCE");
     int fNBits = daqHeader->GetIntAttribute("NBITS");
 
-    std::cout<<" Got var from DAQHeader "<<std::endl;
-
     int nADCs = 1 << fNBits; //Calculate the number of adc counts
     double voltsperadc = (fVHigh - fVLow)/(double)nADCs;
 
-    std::cout<<daqName<<" nADCs "<<nADCs<<" voltsperadc "<<voltsperadc<<" fVHigh "<<fVHigh<<" fVLow "<<fVLow<<std::endl;
-
     //Compute pedestal charge
-    int s_ped_start = floor(ped_start/fTimeStep);
-    std::cout<<" fTimeStep "<<fTimeStep<<std::endl;
-    std::cout<<" s_ped_start "<<s_ped_start<<std::endl;
-    int s_ped_end = floor(ped_end/fTimeStep);
-    std::cout<<" s_ped_end "<<s_ped_end<<std::endl;
+    int s_ped_start = floor(anaParams.ped_start/fTimeStep);
+    int s_ped_end = floor(anaParams.ped_end/fTimeStep);
+
     double ped_min,ped_max,ped_mean;
     ped_min = ped_max = ped_mean = dWaveform[s_ped_start]*voltsperadc + fVLow - fVOffSet;
-
-    std::cout<<" fTimeStep "<<fTimeStep<<" s_ped_start "<<s_ped_start<<" s_ped_end "<<s_ped_end<<" fVOffSet "<<fVOffSet<<std::endl;
 
     for (size_t isample = s_ped_start+1; isample < s_ped_end; isample++) {
 
@@ -130,27 +121,20 @@ namespace RAT {
       ped_mean += voltage;
     }
     ped_mean /= (double)(s_ped_end-s_ped_start);
-    if (ped_max - ped_min > ped_max_fluc) return -9999.;
-
-    std::cout<<" Computed peds "<<std::endl;
+    if (ped_max - ped_min > anaParams.ped_max_fluc) return -9999.;
 
     //Correct by pedestals
-    int s_int_start = floor(int_start/fTimeStep);
-    int s_int_end = floor(int_end/fTimeStep);
+    int s_int_start = floor(anaParams.int_start/fTimeStep);
+    int s_int_end = floor(anaParams.int_end/fTimeStep);
     vector<double> values;
     values.resize(s_int_end-s_int_start);
     for (size_t isample = s_int_start; isample < s_int_end; isample++) {
       values[isample-s_int_start] = dWaveform[isample]*voltsperadc + fVLow - fVOffSet - ped_mean;
     }
 
-    std::cout<<" Corrected peds "<<std::endl;
-
     Digitizer *digitizer = new Digitizer(daqName);
 
     double Vthres = digitizer->GetThreshold();
-
-    std::cout<<" Got digit "<<std::endl;
-
     int sthres = 0;
     for(UShort_t isample=0; isample<values.size(); isample++){
       //      std::cout<<" AnaProc::GetTimeAtThreshold: "<<isample<<" "<<values[isample]<<" "<<Vthres<<std::endl;
@@ -170,7 +154,7 @@ namespace RAT {
   }
 
   //Calculates the time at which the peak of the digitized waveform occurs
-  double AnaProc::GetTimeAtPeak(std::vector<UShort_t> dWaveform, RAT::DS::DAQHeader *daqHeader){
+  double AnaProc::GetTimeAtPeak(std::vector<UShort_t> dWaveform, RAT::DS::DAQHeader *daqHeader, AnaParams anaParams){
 
     double fTimeStep = daqHeader->GetDoubleAttribute("TIME_RES");
     double timeDelay = daqHeader->GetDoubleAttribute("TIME_DELAY");
@@ -184,8 +168,8 @@ namespace RAT {
     double voltsperadc = (fVHigh - fVLow)/(double)nADCs;
 
     //Compute pedestal charge
-    int s_ped_start = floor(ped_start/fTimeStep);
-    int s_ped_end = floor(ped_end/fTimeStep);
+    int s_ped_start = floor(anaParams.ped_start/fTimeStep);
+    int s_ped_end = floor(anaParams.ped_end/fTimeStep);
     double ped_min,ped_max,ped_mean;
     ped_min = ped_max = ped_mean = dWaveform[s_ped_start]*voltsperadc + fVLow - fVOffSet;
     for (size_t isample = s_ped_start+1; isample < s_ped_end; isample++) {
@@ -195,13 +179,13 @@ namespace RAT {
       ped_mean += voltage;
     }
     ped_mean /= (double)(s_ped_end-s_ped_start);
-    if (ped_max - ped_min > ped_max_fluc) return -9999.;
+    if (ped_max - ped_min > anaParams.ped_max_fluc) return -9999.;
 
     //Integrate in a given window to compare vs threshold
-    const size_t halfwindow = floor(peak_window/fTimeStep/2.0);
+    const size_t halfwindow = floor(anaParams.peak_window/fTimeStep/2.0);
     double vsum = 0.0;
-    int s_int_start = floor(int_start/fTimeStep);
-    int s_int_end = floor(int_end/fTimeStep);
+    int s_int_start = floor(anaParams.int_start/fTimeStep);
+    int s_int_end = floor(anaParams.int_end/fTimeStep);
     vector<double> values,integral;
     values.resize(s_int_end-s_int_start);
     integral.resize(s_int_end-s_int_start);
@@ -216,7 +200,7 @@ namespace RAT {
     double acc_offset = 0.0;
     for (size_t i = 0; i < s_int_end-s_int_start; i++) {
 //      std::cout<<"Integral: "<<i<<" "<<integral[i]<<" "<<acc_offset<<" "<<peak_qthres<<std::endl;
-      if (integral[i] - acc_offset >= peak_qthres) { //crossed threshold, search in +- halfwindow
+      if (integral[i] - acc_offset >= anaParams.peak_qthres) { //crossed threshold, search in +- halfwindow
         const size_t find_start = i-halfwindow >= 0 ? i-halfwindow : 0;
         const size_t find_end = i+halfwindow < s_int_end-s_int_start ? i+halfwindow : s_int_end-s_int_start;
         double peak = values[find_start];
@@ -259,7 +243,7 @@ namespace RAT {
   }
 
 
-  double AnaProc::IntegrateCharge(std::vector<UShort_t> dWaveform, RAT::DS::DAQHeader *daqHeader){
+  double AnaProc::IntegrateCharge(std::vector<UShort_t> dWaveform, RAT::DS::DAQHeader *daqHeader, AnaParams anaParams){
 
     double fTimeStep = daqHeader->GetDoubleAttribute("TIME_RES");
     double fVHigh = daqHeader->GetDoubleAttribute("V_HIGH");
@@ -272,8 +256,9 @@ namespace RAT {
     double voltsperadc = (fVHigh - fVLow)/(double)nADCs;
 
     //Compute pedestal charge
-    int s_ped_start = floor(ped_start/fTimeStep);
-    int s_ped_end = floor(ped_end/fTimeStep);
+    int s_ped_start = floor(anaParams.ped_start/fTimeStep);
+    int s_ped_end = floor(anaParams.ped_end/fTimeStep);
+
     double ped_min,ped_max,ped_mean;
     ped_min = ped_max = ped_mean = dWaveform[s_ped_start]*voltsperadc + fVLow - fVOffSet;
     for (size_t isample = s_ped_start+1; isample < s_ped_end; isample++) {
@@ -283,11 +268,11 @@ namespace RAT {
       ped_mean += voltage;
     }
     ped_mean /= (double)(s_ped_end-s_ped_start);
-    if (ped_max - ped_min > ped_max_fluc) return -9999.;
+    if (ped_max - ped_min > anaParams.ped_max_fluc) return -9999.;
 
     //Integrate charge and sustract pedestal
-    int s_int_start = floor(int_start/fTimeStep);
-    int s_int_end = floor(int_end/fTimeStep);
+    int s_int_start = floor(anaParams.int_start/fTimeStep);
+    int s_int_end = floor(anaParams.int_end/fTimeStep);
     double charge = 0.;
     for (size_t isample = s_int_start; isample < s_int_end; isample++) {
       charge += ((double)dWaveform[isample]*voltsperadc + fVLow - fVOffSet - ped_mean)*fTimeStep/fResistance; //ADC to charge
