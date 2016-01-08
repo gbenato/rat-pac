@@ -51,17 +51,11 @@ public:
   virtual void PrunePMTInfo() { pmtinfo.resize(0); }
 
   /** DAQ header */
-  virtual DAQHeader* GetDAQHeader() {
-    if (daqHeader.empty()) {
-      daqHeader.resize(1);
-    }
-    return &daqHeader[0];
+  virtual DAQHeader* GetDAQHeader(std::string DAQName) {
+    return daqHeader[DAQName];
   }
-  virtual void SetDAQHeader(const DAQHeader *_daqHeader) {
-    if (daqHeader.empty()) {
-      daqHeader.resize(1);
-    }
-    daqHeader[0] = *_daqHeader;
+  virtual void SetDAQHeader(DAQHeader *_daqHeader, std::string DAQName) {
+    daqHeader[DAQName] = _daqHeader;
   }
 
   ClassDef(Run, 1)
@@ -71,7 +65,7 @@ protected:
   ULong64_t type;
   time_t startTime;
   std::vector<PMTInfo> pmtinfo;
-  std::vector<DAQHeader> daqHeader;
+  std::map<std::string,DAQHeader*> daqHeader;
 };
 
   } // namespace DS

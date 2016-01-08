@@ -84,7 +84,7 @@
   "dir_x": [-1.0],
   "dir_y": [0.0],
   "dir_z": [0.0],
-  "type": [1],
+  "type": [0],
 }
 
 // Trigger on the side

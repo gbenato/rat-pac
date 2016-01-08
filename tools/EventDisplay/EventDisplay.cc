@@ -302,7 +302,8 @@ void EventDisplay::LoadEvent(int ievt){
   runT->SetBranchAddress("run",&run);
   runT->GetEntry(0);
   RAT::DS::PMTInfo *pmtInfo = run->GetPMTInfo();
-  RAT::DS::DAQHeader *daqHeader = run->GetDAQHeader();
+  RAT::DS::DAQHeader *daqHeaderV1730 = run->GetDAQHeader("V1730");
+  RAT::DS::DAQHeader *daqHeaderV1742 = run->GetDAQHeader("V1742");
 
   timeVsPos = new TH2F("timeVsPos", "timeVsPos", 1, 0., 1., 1, 0., 1.);
   timeVsPos->SetStats(0);
@@ -402,14 +403,23 @@ void EventDisplay::LoadEvent(int ievt){
 
 #ifdef __WAVEFORMS_IN_DS__
 
-  double timeStep = daqHeader->GetDoubleAttribute("TIME_RES");
-  double timeDelay = daqHeader->GetDoubleAttribute("TIME_DELAY");
-  daqHeader->PrintAttributes();
-
   PMTDigitizedWaveforms.resize(ev->GetPMTCount());
   for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
 
     RAT::DS::PMT *pmt = ev->GetPMT(ipmt);
+    int pmtType = pmt->GetType();
+
+    double timeStep = 0;
+    double timeDelay = 0;
+
+    if(pmtType==2){
+      timeStep = daqHeaderV1730->GetDoubleAttribute("TIME_RES");
+      timeDelay = daqHeaderV1730->GetDoubleAttribute("TIME_DELAY");
+    } else if(pmtType==1){
+      timeStep = daqHeaderV1742->GetDoubleAttribute("TIME_RES");
+      timeDelay = daqHeaderV1742->GetDoubleAttribute("TIME_DELAY");
+    }
+
     vPMTDigitizedWaveforms[ipmt] = pmt->GetWaveform();
     if(debugLevel > 1) std::cout<<" EventDisplay::LoadEvent - DigitWF: nsamples "<<vPMTDigitizedWaveforms[ipmt].size()<<std::endl;
 

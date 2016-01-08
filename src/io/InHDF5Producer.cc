@@ -163,8 +163,8 @@ namespace RAT {
     //Loop over groups (each group should be a different channel)
     //and fill the waveforms in event order and the DAQHeader.
     mw_t waveforms;
-    bool daqHeader_filled = false;
-    DS::DAQHeader *daqHeader = new DS::DAQHeader();
+    bool daqHeaderV1742_filled = false;
+    DS::DAQHeader *daqHeaderV1742 = new DS::DAQHeader();
     int ngroups = h5fastgr->getNumObjs();
     //DAQ groups loop
     for (int i = 0; i < ngroups; i++){
@@ -210,23 +210,26 @@ namespace RAT {
 
         H5::Group *channel = new H5::Group(h5file->openGroup("/fast/"+grpname+"/"+chname));
         //Get DAQ attributes from first channel
-        if(!daqHeader_filled){
-          uint32_t bits,voffset,ns_sample;
+        if(!daqHeaderV1742_filled){
+          uint32_t bits;
+          double voffset,ns_sample;
           H5::Attribute bits_attr = h5fastgr->openAttribute("bits");
           bits_attr.read(H5::PredType::NATIVE_UINT32, &bits);
           H5::Attribute voffset_attr = channel->openAttribute("offset");
-          voffset_attr.read(H5::PredType::NATIVE_UINT32, &voffset);
+          voffset_attr.read(H5::PredType::NATIVE_DOUBLE, &voffset);
           H5::Attribute ns_sample_attr = h5fastgr->openAttribute("ns_sample");
-          ns_sample_attr.read(H5::PredType::NATIVE_UINT32, &ns_sample);
+          ns_sample_attr.read(H5::PredType::NATIVE_DOUBLE, &ns_sample);
 
-          daqHeader->SetAttribute("DAQ_NAME","DIGITIZER_V16");
-          daqHeader->SetAttribute("NBITS",(int)bits);
-          daqHeader->SetAttribute("TIME_RES",(int)ns_sample);
-          daqHeader->SetAttribute("V_OFFSET",(int)voffset);
-          daqHeader->SetAttribute("V_HIGH",1000);
-          daqHeader->SetAttribute("V_LOW",-1000);
-          daqHeader->SetAttribute("RESISTANCE",50);
-          daqHeader_filled = true;
+          std::cout<<"ns_sample "<<ns_sample<<std::endl;
+
+          daqHeaderV1742->SetAttribute("DAQ_NAME","V1742");
+          daqHeaderV1742->SetAttribute("NBITS",(int)bits);
+          daqHeaderV1742->SetAttribute("TIME_RES",(double)ns_sample);
+          daqHeaderV1742->SetAttribute("V_OFFSET",(double)voffset);
+          daqHeaderV1742->SetAttribute("V_HIGH",1000.);
+          daqHeaderV1742->SetAttribute("V_LOW",-1000.);
+          daqHeaderV1742->SetAttribute("RESISTANCE",50.);
+          daqHeaderV1742_filled = true;
         }
         //Now retrieve the samples
         info<<"    Getting samples from channel " + chname + "\n";
@@ -272,8 +275,8 @@ namespace RAT {
     }
     //Loop over groups (each group should be a different channel)
     //and fill the waveforms in event order and the DAQHeader.
-    bool daqSlowHeader_filled = false;
-    DS::DAQHeader *daqSlowHeader = new DS::DAQHeader();
+    bool daqHeaderV1730_filled = false;
+    DS::DAQHeader *daqHeaderV1730 = new DS::DAQHeader();
     int nch = h5mastergr->getNumObjs();
     //Channels groups loop
     for (int i = 0; i < nch; i++){
@@ -297,23 +300,24 @@ namespace RAT {
 
       H5::Group *channel = new H5::Group(h5file->openGroup("/master/"+chname));
       //Get DAQ attributes from first channel
-      if(!daqSlowHeader_filled){
-        uint32_t bits,voffset,ns_sample;
+      if(!daqHeaderV1730_filled){
+        uint32_t bits;
+        double voffset,ns_sample;
         H5::Attribute bits_attr = h5mastergr->openAttribute("bits");
         bits_attr.read(H5::PredType::NATIVE_UINT32, &bits);
         H5::Attribute voffset_attr = channel->openAttribute("offset");
-        voffset_attr.read(H5::PredType::NATIVE_UINT32, &voffset);
+        voffset_attr.read(H5::PredType::NATIVE_DOUBLE, &voffset);
         H5::Attribute ns_sample_attr = h5mastergr->openAttribute("ns_sample");
-        ns_sample_attr.read(H5::PredType::NATIVE_UINT32, &ns_sample);
+        ns_sample_attr.read(H5::PredType::NATIVE_DOUBLE, &ns_sample);
 
-        daqSlowHeader->SetAttribute("DAQ_NAME","DIGITIZER_V16");
-        daqSlowHeader->SetAttribute("NBITS",(int)bits);
-        daqSlowHeader->SetAttribute("TIME_RES",(double)ns_sample);
-        daqSlowHeader->SetAttribute("V_OFFSET",(double)voffset);
-        daqSlowHeader->SetAttribute("V_HIGH",1000.);
-        daqSlowHeader->SetAttribute("V_LOW",-1000.);
-        daqSlowHeader->SetAttribute("RESISTANCE",50.);
-        daqSlowHeader_filled = true;
+        daqHeaderV1730->SetAttribute("DAQ_NAME","V1730");
+        daqHeaderV1730->SetAttribute("NBITS",(int)bits);
+        daqHeaderV1730->SetAttribute("TIME_RES",(double)ns_sample);
+        daqHeaderV1730->SetAttribute("V_OFFSET",(double)voffset);
+        daqHeaderV1730->SetAttribute("V_HIGH",1000.);
+        daqHeaderV1730->SetAttribute("V_LOW",-1000.);
+        daqHeaderV1730->SetAttribute("RESISTANCE",50.);
+        daqHeaderV1730_filled = true;
       }
       //Now retrieve the samples
       info<<"    Getting samples from channel " + chname + "\n";
@@ -362,6 +366,8 @@ namespace RAT {
         if(iwaveform->second.size()-1 < iev) continue; //FIXME: deal with different number of events...
         RAT::DS::PMT *pmt = ev->AddNewPMT();
         pmt->SetID(iwaveform->first);
+        if(pmt->GetID() >= 6) pmt->SetType(1);
+        else if(pmt->GetID() < 6) pmt->SetType(2);
         pmt->SetWaveform(iwaveform->second.at(iev));
         // info<<"Waveforms "<<pmt->GetWaveform().size()<<"\n";
         // for(int isample=0; isample<iwaveform->second.at(iev).size();isample++){
@@ -374,7 +380,8 @@ namespace RAT {
       run->SetID(1);
       run->SetType(0x00001111);
       run->SetStartTime(1440638077);
-      run->SetDAQHeader(daqSlowHeader);
+      run->SetDAQHeader(daqHeaderV1730,"V1730");
+      run->SetDAQHeader(daqHeaderV1742,"V1742");
       DS::RunStore::AddNewRun(run);
 
       info<<"Added new run \n";
