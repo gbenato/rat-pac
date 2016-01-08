@@ -4,10 +4,14 @@
 
 namespace RAT {
 
-  Digitizer::Digitizer(){
+  Digitizer::Digitizer(std::string digitName){
+    SetDigitizerType(digitName);
+  }
 
+  void Digitizer::SetDigitizerType(std::string digitName){
     //Set configuration according to DAQ.ratdb
-    fLdaq = DB::Get()->GetLink("DAQ");
+    fDigitName = digitName;
+    fLdaq = DB::Get()->GetLink("DIGITIZER",fDigitName);
     //time resolution
     fTimeStep = fLdaq->GetD("time_res");
     //OffsetfSampleDelay
@@ -41,33 +45,6 @@ namespace RAT {
     detail << dformat("  Digitizer: Resistance: ............................ %6.2f mV\n", fResistance);
 
   }
-
-  Digitizer::~Digitizer(){}
-
-
-  // void Digitizer::GenerateElectronicNoise(int ichannel, PMTWaveform pmtwf) {
-  //
-  //   //*** deprecated
-  //   //Sort pulses in time order
-  //   //    std::sort(fPulse.begin(),fPulse.end(),Cmp_PMTPulse_TimeAscending);
-  //   // double starttime = pmtwf.fPulse.front()->GetPulseStartTime();
-  //   // double endtime = pmtwf.fPulse.back()->GetPulseEndTime();
-  //   // if(starttime-endtime < fSamplingWindow) endtime = starttime + fSamplingWindow;
-  //   //    int nsamples = (endtime - starttime)/fTimeStep;
-  //   // double PulseDuty=0.0;
-  //   // for(int ipulse = 0; ipulse<pmtwf.fPulse.size(); ipulse++)
-  //   //   PulseDuty +=  pmtwf.fPulse[ipulse]->GetPulseEndTime() - pmtwf.fPulse[ipulse]->GetPulseStartTime();
-  //   // float NoiseAmpl = fNoiseAmpl/sqrt(PulseDuty/fTimeStep);
-  //   //    std::cout<<starttime<<" "<<endtime<<" "<<nsamples<<" "<<PulseDuty<<" "<<NoiseAmpl<<std::endl;
-  //   //*********
-  //
-  //   int nsamples = fSamplingWindow/fTimeStep;
-  //   fNoise[ichannel].resize(nsamples);
-  //   for(int istep=0; istep<nsamples ;istep++){
-  //     fNoise[ichannel][istep] = fNoiseAmpl*CLHEP::RandGauss::shoot();
-  //   }
-  //
-  // }
 
   //Add channel to digitizer and inmdediatly digitize analogue waveform
   void Digitizer::AddChannel(int ichannel, PMTWaveform pmtwf){

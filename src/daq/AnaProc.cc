@@ -43,7 +43,8 @@ namespace RAT {
         exit(0);
       }
       std::cout<<" Got run "<<run->GetID()<<std::endl;
-      daqHeader = run->GetDAQHeader();
+      daqHeaderV1730 = run->GetDAQHeader("V1730");
+      daqHeaderV1742 = run->GetDAQHeader("V1742");
       //daqHeader->PrintAttributes();
       gotDAQHeader = true;
     }
@@ -61,14 +62,24 @@ namespace RAT {
         std::cout<<"   PMT "<<ipmt<<"/"<<ev->GetPMTCount()<<std::endl;
 
         DS::PMT* pmt = ev->GetPMT(ipmt);
+        int pmtType = pmt->GetType();
         std::cout<<" Got PMT "<<std::endl;
         std::vector<UShort_t> dWaveform = pmt->GetWaveform();
         std::cout<<" Got WF "<<std::endl;
-        pmt->SetTime(GetTimeAtThreshold(dWaveform));
-        std::cout<<" Set time "<<std::endl;
-        //        pmt->SetTime(GetTimeAtPeak(dWaveform));
-        pmt->SetCharge(IntegrateCharge(dWaveform));
-        std::cout<<" Set charge "<<std::endl;
+        std::cout<<" PMT type "<<pmtType<<std::endl;
+        if(pmtType==1){
+          //        pmt->SetTime(GetTimeAtPeak(dWaveform), daqHeaderV1742 );
+          pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1742) );
+          std::cout<<" Set time "<<std::endl;
+          pmt->SetCharge(IntegrateCharge(dWaveform, daqHeaderV1742) );
+          std::cout<<" Set charge "<<std::endl;
+        }else if(pmtType==2){
+          //        pmt->SetTime(GetTimeAtPeak(dWaveform), daqHeaderV1730 );
+          pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1730) );
+          std::cout<<" Set time "<<std::endl;
+          pmt->SetCharge(IntegrateCharge(dWaveform, daqHeaderV1730) );
+          std::cout<<" Set charge "<<std::endl;
+        }
       }//end PMT loop
 
     }
@@ -80,8 +91,9 @@ namespace RAT {
   } //AnaProc::DSEvent
 
   //Calculates the time at which the waveform crosses threshold
-  double AnaProc::GetTimeAtThreshold(std::vector<UShort_t> dWaveform){
+  double AnaProc::GetTimeAtThreshold(std::vector<UShort_t> dWaveform, RAT::DS::DAQHeader *daqHeader){
 
+    std::string daqName = daqHeader->GetStringAttribute("DAQ_NAME");
     double fTimeStep = daqHeader->GetDoubleAttribute("TIME_RES");
     double fTimeDelay = daqHeader->GetDoubleAttribute("TIME_DELAY");
     double fVHigh = daqHeader->GetDoubleAttribute("V_HIGH");
@@ -95,7 +107,7 @@ namespace RAT {
     int nADCs = 1 << fNBits; //Calculate the number of adc counts
     double voltsperadc = (fVHigh - fVLow)/(double)nADCs;
 
-    std::cout<<" nADCs "<<nADCs<<" voltsperadc "<<voltsperadc<<" fVHigh "<<fVHigh<<" fVLow "<<fVLow<<std::endl;
+    std::cout<<daqName<<" nADCs "<<nADCs<<" voltsperadc "<<voltsperadc<<" fVHigh "<<fVHigh<<" fVLow "<<fVLow<<std::endl;
 
     //Compute pedestal charge
     int s_ped_start = floor(ped_start/fTimeStep);
@@ -133,7 +145,8 @@ namespace RAT {
 
     std::cout<<" Corrected peds "<<std::endl;
 
-    Digitizer *digitizer = new Digitizer();
+    Digitizer *digitizer = new Digitizer(daqName);
+
     double Vthres = digitizer->GetThreshold();
 
     std::cout<<" Got digit "<<std::endl;
@@ -157,7 +170,7 @@ namespace RAT {
   }
 
   //Calculates the time at which the peak of the digitized waveform occurs
-  double AnaProc::GetTimeAtPeak(std::vector<UShort_t> dWaveform){
+  double AnaProc::GetTimeAtPeak(std::vector<UShort_t> dWaveform, RAT::DS::DAQHeader *daqHeader){
 
     double fTimeStep = daqHeader->GetDoubleAttribute("TIME_RES");
     double timeDelay = daqHeader->GetDoubleAttribute("TIME_DELAY");
@@ -246,7 +259,7 @@ namespace RAT {
   }
 
 
-  double AnaProc::IntegrateCharge(std::vector<UShort_t> dWaveform){
+  double AnaProc::IntegrateCharge(std::vector<UShort_t> dWaveform, RAT::DS::DAQHeader *daqHeader){
 
     double fTimeStep = daqHeader->GetDoubleAttribute("TIME_RES");
     double fVHigh = daqHeader->GetDoubleAttribute("V_HIGH");
@@ -281,7 +294,7 @@ namespace RAT {
     //  std::cout<<" charge "<<isample<<"/"<<dWaveform.size()<<" "<<charge<<std::endl;
     }
 
-    charge=std::abs(charge); //pulses are negative so covert to positive charge
+    charge *= -1; //pulses are negative so covert to positive charge
     // std::cout<<" Integrated charge "<<charge<<" pedestal "<<ped_mean<<" "<<s_int_start<<" "<<s_int_end<<std::endl;
 
     return charge;

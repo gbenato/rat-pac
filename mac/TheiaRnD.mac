@@ -9,8 +9,8 @@
 /run/initialize
 /process/inactivate Cerenkov
 #/glg4scint/off
-/glg4scint/reemission off
-#/tracking/storeTrajectory 1
+#/glg4scint/reemission off
+/tracking/storeTrajectory 1
 
 ##### Visualization ##########################
 
@@ -74,7 +74,7 @@
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "../results/TheiaRnD_cosmics_scint_labppo_time.root"
+/rat/procset file "../results/TheiaRnD_cosmics_scint_labppo_time_tracks.root"
 #########################################
 
 ##### GENERATORS #################
@@ -132,4 +132,4 @@
 #######################################
 
 ##### RUN ###########
-/run/beamOn 100
+/run/beamOn 20

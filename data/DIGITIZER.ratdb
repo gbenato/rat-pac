@@ -1,0 +1,39 @@
+{
+name: "DIGITIZER",
+index: "V1730",
+valid_begin: [0, 0],
+valid_end: [0, 0],
+
+noise_amplitude: 1.0, //amplitude of high frequency noise in mV
+
+nbits: 14, //number of bits
+time_res: 2.0, //time resolution in ns
+volt_high: 1000.0, //upper voltage limit in mV
+volt_low: -1000.0, //lower voltage limit in mV
+offset: -500.0, //voltage offset in mV
+resistance: 50.0, //resistance of the output circuit in Ohms
+sampling_time: 1000.0, //full gate for grouping hits in a single integration in ns
+trigger_threshold: -5.0, //PMT threshold to issue a trigger mV
+gate_delay: 400.0, //time before discriminator fires that sampling gate opens (in ns)
+
+}
+
+{
+name: "DIGITIZER",
+index: "V1742",
+valid_begin: [0, 0],
+valid_end: [0, 0],
+
+noise_amplitude: 1.0, //amplitude of high frequency noise in mV
+
+nbits: 12, //number of bits
+time_res: 0.2, //time resolution in ns
+volt_high: 1000.0, //upper voltage limit in mV
+volt_low: -1000.0, //lower voltage limit in mV
+offset: -500.0, //voltage offset in mV
+resistance: 50.0, //resistance of the output circuit in Ohms
+sampling_time: 1000.0, //full gate for grouping hits in a single integration in ns
+trigger_threshold: -5.0, //PMT threshold to issue a trigger mV
+gate_delay: 400.0, //time before discriminator fires that sampling gate opens (in ns)
+
+}

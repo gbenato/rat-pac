@@ -26,9 +26,11 @@ namespace RAT {
   class Digitizer {
   public:
 
-    Digitizer();
-    virtual ~Digitizer();
+    Digitizer(){};
+    virtual ~Digitizer(){};
+    Digitizer(std::string);
 
+    virtual void SetDigitizerType(std::string);
     virtual void SetThreshold(double);
     virtual void Clear();
 
@@ -59,6 +61,7 @@ namespace RAT {
 
     DBLinkPtr fLdaq;
 
+    std::string fDigitName; //Digitizer type
     double fTimeStep; //Time resolution in ns
     int fNBits; //N bits of the digitizer
     double fVhigh; //Higher voltage

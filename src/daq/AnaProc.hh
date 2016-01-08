@@ -15,14 +15,15 @@ public:
   AnaProc();
   virtual ~AnaProc();
   virtual Processor::Result DSEvent(DS::Root *ds);
-  virtual double GetTimeAtPeak(std::vector<UShort_t>);
-  virtual double GetTimeAtThreshold(std::vector<UShort_t>);
-  virtual double IntegrateCharge(std::vector<UShort_t>);
+  virtual double GetTimeAtPeak(std::vector<UShort_t>, RAT::DS::DAQHeader *daqHeader);
+  virtual double GetTimeAtThreshold(std::vector<UShort_t>, RAT::DS::DAQHeader *daqHeader);
+  virtual double IntegrateCharge(std::vector<UShort_t>, RAT::DS::DAQHeader *daqHeader);
 
 protected:
 
   DS::Run *run;
-  DS::DAQHeader *daqHeader;
+  DS::DAQHeader *daqHeaderV1730;
+  DS::DAQHeader *daqHeaderV1742;
   bool gotDAQHeader;
 
   DBLinkPtr fLAnalysis;
