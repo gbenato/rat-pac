@@ -7,6 +7,7 @@
 #include <RAT/Log.hh>
 #include <RAT/DB.hh>
 #include <RAT/DS/DAQHeader.hh>
+#include <RAT/PMTFactoryBase.hh>
 
 #include <G4UIdirectory.hh>
 #include <G4UIcmdWithAString.hh>
@@ -382,6 +383,7 @@ namespace RAT {
       run->SetStartTime(1440638077);
       run->SetDAQHeader(daqHeaderV1730,"V1730");
       run->SetDAQHeader(daqHeaderV1742,"V1742");
+      run->SetPMTInfo(&PMTFactoryBase::GetPMTInfo());
       DS::RunStore::AddNewRun(run);
 
       info<<"Added new run \n";
