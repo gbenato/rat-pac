@@ -9,15 +9,27 @@
 
 namespace RAT {
 
+struct AnaParams {
+
+  double ped_start;
+  double ped_end;
+  double max_spread;
+  double int_start;
+  double int_end;
+  double peak_window;
+  double peak_qthres;
+  double ped_max_fluc;
+
+};
 
 class AnaProc : public Processor {
 public:
   AnaProc();
   virtual ~AnaProc();
   virtual Processor::Result DSEvent(DS::Root *ds);
-  virtual double GetTimeAtPeak(std::vector<UShort_t>, RAT::DS::DAQHeader *daqHeader);
-  virtual double GetTimeAtThreshold(std::vector<UShort_t>, RAT::DS::DAQHeader *daqHeader);
-  virtual double IntegrateCharge(std::vector<UShort_t>, RAT::DS::DAQHeader *daqHeader);
+  virtual double GetTimeAtPeak(std::vector<UShort_t>, RAT::DS::DAQHeader*, AnaParams);
+  virtual double GetTimeAtThreshold(std::vector<UShort_t>, RAT::DS::DAQHeader*, AnaParams);
+  virtual double IntegrateCharge(std::vector<UShort_t>, RAT::DS::DAQHeader*, AnaParams);
 
 protected:
 
@@ -28,14 +40,7 @@ protected:
 
   DBLinkPtr fLAnalysis;
 
-  double ped_start;
-  double ped_end;
-  double max_spread;
-  double int_start;
-  double int_end;
-  double peak_window;
-  double peak_qthres;
-  double ped_max_fluc;
+  AnaParams anaV1730, anaV1742;
 
 };
 
