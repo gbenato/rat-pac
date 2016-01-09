@@ -164,7 +164,7 @@ void GetHistos(){
     h_mcpmt_charge.push_back(new TH1F(Form("h_mcpmt_charge_%i",ih),"h_mcpmt_charge",200,0,100));
     h_mcpmt_time.push_back(new TH1F(Form("h_mcpmt_time_%i",ih),"h_mcpmt_time",500,0,100));
     h_mcpmt_fetime.push_back(new TH1F(Form("h_mcpmt_fetime_%i",ih),"h_mcpmt_fetime",500,0,100));
-    h_charge.push_back(new TH1F(Form("h_charge_%i",ih),"h_charge",200,0,100));
+    h_charge.push_back(new TH1F(Form("h_charge_%i",ih),"h_charge",300,-2,6));
     h_charge_res.push_back(new TH1F(Form("h_charge_res_%i",ih),"h_charge_res",50,0,50));
     h_charge_vs_trigq.push_back(new TH2F(Form("h_charge_vs_trigq_%i",ih),"h_charge_vs_trigq",200,0,100,200,0,100));
     h_time.push_back(new TH1F(Form("h_time_%i",ih),"h_time",500,0,100));
@@ -194,7 +194,7 @@ void GetHistos(){
       mc = rds->GetMC();
       //If no PMT continue to save time (in theory)
 
-      if(mc->GetMCPMTCount()==0) continue;
+      //      if(mc->GetMCPMTCount()==0) continue;
 
       //MC**************
       //MCPMT loop
@@ -205,12 +205,12 @@ void GetHistos(){
         //count PE
         h_mcpmt_npe[pmtid]->Fill(mcpmt->GetMCPhotonCount());
         h_mcpmt_npevspos->Fill(pos_pmts[pmtid]->X(),pos_pmts[pmtid]->Y(),mcpmt->GetMCPhotonCount()/(double)nentries);
-	h_mcpmt_charge[pmtid]->Fill(mcpmt->GetCharge());
-	h_mcpmt_time[pmtid]->Fill(mcpmt->GetTime());
-	h_mcpmt_fetime[pmtid]->Fill(mcpmt->GetFrontEndTime());
+        h_mcpmt_charge[pmtid]->Fill(mcpmt->GetCharge());
+        h_mcpmt_time[pmtid]->Fill(mcpmt->GetTime());
+        h_mcpmt_fetime[pmtid]->Fill(mcpmt->GetFrontEndTime());
 
         if(MCPHOTONLOOP){
-	  for (int iph=0; iph < mcpmt->GetMCPhotonCount(); iph++){
+          for (int iph=0; iph < mcpmt->GetMCPhotonCount(); iph++){
             h_mcpmt_charge[pmtid]->Fill(mcpmt->GetMCPhoton(iph)->GetCharge());
             h_mcpmt_time[pmtid]->Fill(mcpmt->GetMCPhoton(iph)->GetHitTime());
             h_mcpmt_fetime[pmtid]->Fill(mcpmt->GetMCPhoton(iph)->GetFrontEndTime());
@@ -350,8 +350,8 @@ void DrawHistos(){
     if(pmttype==1){//Fast tubes
       const char *opt = firstdrawn0 ? "sames" : "";
       c_event->cd(2);
-      h_charge_res[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
-      h_charge_res[pmtid]->Draw(opt);
+      h_charge[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
+      h_charge[pmtid]->Draw(opt);
       c_event->cd(3);
       h_time_res[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
       h_time_res[pmtid]->Draw(opt);
@@ -359,8 +359,8 @@ void DrawHistos(){
     } else if(pmttype==2){ //Large tubes
       const char *opt = firstdrawn1 ? "sames" : "";
       c_event->cd(5);
-      h_charge_res[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
-      h_charge_res[pmtid]->Draw(opt);
+      h_charge[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
+      h_charge[pmtid]->Draw(opt);
       c_event->cd(6);
       h_time_res[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
       h_time_res[pmtid]->Draw(opt);
