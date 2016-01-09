@@ -42,9 +42,6 @@ namespace RAT {
     //This processor retrieves the digitized waveforms of the triggered events EV
     //and performs some calculations to get the charge and time
 
-    std::cout<<" Reading "<<ds->GetEVCount()<<" events"<<std::endl;
-    std::cout<<" With "<<ds->GetEV(0)->GetPMTCount()<<" PMTs "<<std::endl;
-
     //Get DAQHeader (only first event)
     if(!gotDAQHeader){
       run = DS::RunStore::GetRun(ds);
@@ -52,7 +49,6 @@ namespace RAT {
         std::cout<<" Run not Found "<<std::endl;
         exit(0);
       }
-      std::cout<<" Got run "<<run->GetID()<<std::endl;
       daqHeaderV1730 = run->GetDAQHeader("V1730");
       daqHeaderV1742 = run->GetDAQHeader("V1742");
       //daqHeader->PrintAttributes();
@@ -63,11 +59,7 @@ namespace RAT {
     for(int iev=0; iev<ds->GetEVCount(); iev++){
       DS::EV *ev = ds->GetEV(iev);
 
-      std::cout<<" Event "<<iev<<"/"<<ds->GetEVCount()<<std::endl;
-
       for (int ipmt=0; ipmt < ev->GetPMTCount(); ipmt++){
-
-        std::cout<<"   PMT "<<ipmt<<"/"<<ev->GetPMTCount()<<std::endl;
 
         DS::PMT* pmt = ev->GetPMT(ipmt);
         int pmtType = pmt->GetType();
@@ -144,7 +136,7 @@ namespace RAT {
       }
     }
     if(sthres == 0) {
-      std::cout<<" AnaProc::GetTimeAtThreshold: waveform did not cross threshold "<<std::endl;
+      //      std::cout<<" AnaProc::GetTimeAtThreshold: waveform did not cross threshold "<<std::endl;
       return -9999;
     }
     else{
