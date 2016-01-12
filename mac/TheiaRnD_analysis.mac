@@ -16,4 +16,4 @@
 /rat/procset file "../results/TheiaRnD_analysis_spe.root"
 #########################################
 
-/rat/inroot/read ../results/spe-12-15.0.root
+/rat/inhdf5/read ../results/spe-12-15.0.h5

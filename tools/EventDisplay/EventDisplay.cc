@@ -252,6 +252,10 @@ void EventDisplay::LoadEvent(int ievt){
   double ymin=9999999.; //yaxis min limit analogue
   UShort_t ymax_d=0.; //yaxis max limit digital
   UShort_t ymin_d=9999999.; //yaxis min limit digital
+  UShort_t ymax_d1=0.; //yaxis max limit digital
+  UShort_t ymin_d1=9999999.; //yaxis min limit digital
+  UShort_t ymax_d2=0.; //yaxis max limit digital
+  UShort_t ymin_d2=9999999.; //yaxis min limit digital
   double ymax_temp=0.;
   double ymin_temp=0.;
   double xmax_temp=0.;//dummy
@@ -320,6 +324,7 @@ void EventDisplay::LoadEvent(int ievt){
   //Get center of the samll PMT array and locate
   TVector3 centerpos(0,0,0);
   int pmtTypeCount = 0;
+
   for (int ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
     TVector3 pmtpos = pmtInfo->GetPosition(ipmt);
     if(pmtInfo->GetType(ipmt) == 1) {
@@ -344,18 +349,21 @@ void EventDisplay::LoadEvent(int ievt){
   }
 
   //Collect charges and times
+  EDGeo->ResetHitPMTs();
   for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
     int pmtID = ev->GetPMT(ipmt)->GetID();
     pmtCharge[pmtID] = ev->GetPMT(ipmt)->GetCharge();
     pmtTime[pmtID] = ev->GetPMT(ipmt)->GetTime();
-    if(pmtTime[pmtID]<0) pmtTime[pmtID] = -400.;
+    if(pmtTime[pmtID]<0){
+      pmtTime[pmtID] = -400.;
+    } else{
+      EDGeo->HitPMT(pmtID,1); //If time>0 means that the WF crossed threshold
+    }
     hPmtTime->Fill(pmtTime[pmtID]);
   }
 
   //Centroid
   centroid = ev->GetCentroid()->GetPosition();
-
-  std::cout<<" pmtcount "<<pmtInfo->GetPMTCount()<<std::endl;
 
   //Fill 2D plot
   for (int ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
@@ -429,14 +437,25 @@ void EventDisplay::LoadEvent(int ievt){
       if(debugLevel > 1) std::cout<<" EventDisplay::LoadEvent - Digit WF: "
       <<"sample "<<isample<<" "<<vPMTDigitizedWaveforms[ipmt][isample]<<std::endl;
 
-      ymax_d = TMath::Max(ymax_d,vPMTDigitizedWaveforms[ipmt][isample]);
-      ymin_d = TMath::Min(ymin_d,vPMTDigitizedWaveforms[ipmt][isample]);
+      if(pmtType==1){
+        ymax_d1 = TMath::Max(ymax_d1,vPMTDigitizedWaveforms[ipmt][isample]);
+        ymin_d1 = TMath::Min(ymin_d1,vPMTDigitizedWaveforms[ipmt][isample]);
+      } else if(pmtType==2){
+        ymax_d2 = TMath::Max(ymax_d2,vPMTDigitizedWaveforms[ipmt][isample]);
+        ymin_d2 = TMath::Min(ymin_d2,vPMTDigitizedWaveforms[ipmt][isample]);
+      }
+
     }
   }
 
   //Set correct limits for drawing purposes
   for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
-    PMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.9*ymin_d,1.1*ymax_d);
+    int pmtType = ev->GetPMT(ipmt)->GetType();
+    if(pmtType==1){
+      PMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.99*ymin_d1,1.01*ymax_d1);
+    } else if(pmtType==2){
+      PMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.9*ymin_d2,1.1*ymax_d2);
+    }
   }
 
 #endif
@@ -628,7 +647,7 @@ void EventDisplay::DisplayEvent(int ievt){
     chargeVsRScint->SetLineColor(kRed);
     chargeVsRScint->SetLineWidth(2);
     chargeVsRScint->SetMinimum(0);
-    chargeVsRScint->SetMaximum(chargeVsRScint->GetMaximum()*1.5);
+    //    chargeVsRScint->SetMaximum(chargeVsRScint->GetMaximum()*1.5);
     chargeVsRScint->Draw("");
     chargeVsR->Draw("same");
     // chargeVsRCorr->SetLineWidth(3);
@@ -646,17 +665,18 @@ void EventDisplay::DisplayEvent(int ievt){
     chargeVsPos->SetLineColor(kBlack);
     chargeVsPos->SetFillColor(kBlack);
     // chargeVsPos->SetFillStyle(3002);
-    chargeVsPos->Draw("lego2Z");
-    timeVsPos->Draw("lego same");
+    chargeVsPos->Draw("colz");
+    chargeVsPos->SetMaximum(TMath::Max( chargeVsPos->GetMaximum(),chargeVsPos->GetMinimum() ) );
+    chargeVsPos->SetMinimum(-chargeVsPos->GetMaximum());
+    // timeVsPos->Draw("lego same");
 
     canvas_event->cd(8);
     chargeVsR->SetLineWidth(3);
     chargeVsR->Draw("");
   }
 
-  if(debugLevel > 0) std::cout<<"Display canvas 9 "<<std::endl;
+  if(debugLevel > 0) std::cout<<"Display canvas 9 & 10"<<std::endl;
   //Digitized waveforms
-  canvas_event->cd(9);
   // for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++) {
   //   if(ipmt==0){
   //     MCPMTDigitizedWaveforms[ipmt].SetTitle("MC event");
@@ -669,19 +689,30 @@ void EventDisplay::DisplayEvent(int ievt){
   //   //      MCPMTDigitizedWaveforms[ipmt].ComputeRange(xmin_temp,xmax_temp,ymin_temp,ymax_temp);
   // }
   if(rds->ExistEV()){
+    bool draw9=false, draw10=false;
     for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
       int pmtID = ev->GetPMT(ipmt)->GetID();
-      if(ipmt==0){
-        PMTDigitizedWaveforms[ipmt].SetTitle("Triggered event");
-        PMTDigitizedWaveforms[ipmt].Draw("AP");
+      int pmtType = ev->GetPMT(ipmt)->GetType();
+      if(pmtType == 1) canvas_event->cd(9);
+      if(pmtType == 2) canvas_event->cd(10);
+      if(pmtType == 1 && draw9==false || pmtType == 2 && draw10==false){
+        PMTDigitizedWaveforms[ipmt].Draw("A LINE");
         PMTDigitizedWaveforms[ipmt].GetXaxis()->SetTitle("t(ns)");
         PMTDigitizedWaveforms[ipmt].GetYaxis()->SetTitle("ADC counts");
+        if(pmtType == 1) {
+          PMTDigitizedWaveforms[ipmt].SetTitle("Triggered event - Ring Tubes");
+          draw9=true;
+        }
+        if(pmtType == 2) {
+          PMTDigitizedWaveforms[ipmt].SetTitle("Triggered event - Light Tubes");
+          draw10=true;
+        }
       }
-      PMTDigitizedWaveforms[ipmt].SetLineColor(ipmt+1);
+      PMTDigitizedWaveforms[ipmt].SetLineColor(ipmt+20);
       PMTDigitizedWaveforms[ipmt].Draw("LINE same");
       TMarker timeMarker;
       timeMarker.SetMarkerSize(1.);
-      timeMarker.SetMarkerColor(ipmt+1);
+      timeMarker.SetMarkerColor(ipmt+20);
       timeMarker.SetMarkerStyle(23);
       timeMarker.DrawMarker(pmtTime[pmtID], PMTDigitizedWaveforms[ipmt].GetYaxis()->GetXmax());
 
@@ -689,10 +720,9 @@ void EventDisplay::DisplayEvent(int ievt){
     }
   }
 
-  if(debugLevel > 0) std::cout<<"Display canvas 10 "<<std::endl;
-  //Digitized waveforms
-  canvas_event->cd(10);
-  hPmtTime->Draw();
+  // if(debugLevel > 0) std::cout<<"Display canvas 10 "<<std::endl;
+  // canvas_event->cd(10);
+  // hPmtTime->Draw();
   ////////////////////
 
   //Wait for user action
