@@ -5,11 +5,11 @@ valid_begin: [0, 0],
 valid_end: [0, 0],
 
 //Pulse analysis
-ped_start: 10.0,    //start time of pedestal window in ns
+ped_start: 200.0,    //start time of pedestal window in ns
 ped_end: 400.0,    //end time of pedestal window in ns
 max_spread: 3.0,   //
 int_start: 400.0,  //start time of integration window in ns
-int_end: 900.0,   //end time of integration window in ns
+int_end: 600.0,   //end time of integration window in ns
 peak_window: 10.0  //width in ns of the sampling window to look for a peak
 peak_qthres: 0.5   //charge threshold in 'peak_window' for looking for a peak
 ped_max_fluc: 10.0 //maximum allowed pedestal fluctuation in mV
