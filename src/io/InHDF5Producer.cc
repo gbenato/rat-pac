@@ -102,33 +102,33 @@ namespace RAT {
     bool DEBUG = false;
     std::map<int,int> FastChtoID;
     std::map<int,int> SlowChtoID;
-    FastChtoID[0]=6;
+    FastChtoID[0]=8;
     FastChtoID[1]=999;
-    FastChtoID[2]=7;
+    FastChtoID[2]=9;
     FastChtoID[3]=999;
-    FastChtoID[4]=8;
+    FastChtoID[4]=10;
     FastChtoID[5]=999;
-    FastChtoID[6]=9;
+    FastChtoID[6]=11;
     FastChtoID[7]=999;
-    FastChtoID[8]=10;
+    FastChtoID[8]=12;
     FastChtoID[9]=999;
-    FastChtoID[10]=11;
+    FastChtoID[10]=13;
     FastChtoID[11]=999;
-    FastChtoID[12]=12;
+    FastChtoID[12]=14;
     FastChtoID[13]=999;
-    FastChtoID[14]=13;
+    FastChtoID[14]=15;
     FastChtoID[15]=999;
-    FastChtoID[16]=14;
+    FastChtoID[16]=16;
     FastChtoID[17]=999;
-    FastChtoID[18]=15;
+    FastChtoID[18]=17;
     FastChtoID[19]=999;
-    FastChtoID[20]=16;
+    FastChtoID[20]=18;
     FastChtoID[21]=999;
-    FastChtoID[22]=17;
+    FastChtoID[22]=19;
     FastChtoID[23]=999;
-    FastChtoID[24]=999;
+    FastChtoID[24]=6;
     FastChtoID[25]=999;
-    FastChtoID[26]=999;
+    FastChtoID[26]=7;
     FastChtoID[27]=999;
     FastChtoID[28]=999;
     FastChtoID[29]=999;
@@ -253,6 +253,7 @@ namespace RAT {
         for(int iev=0; iev<nevents; iev++){
           std::vector<UShort_t> waveform;
           for(int isample=0; isample<nsamples; isample++){
+            if(data[iev*nsamples + isample]>65000) data[iev*nsamples + isample] = 0; //correction
             waveform.push_back(data[iev*nsamples + isample]);
           }
           waveforms[FastChtoID[chnumber]].push_back( (std::vector<UShort_t>) waveform);
@@ -359,8 +360,6 @@ namespace RAT {
         if(iwaveform->second.size()-1 < iev) continue; //FIXME: deal with different number of events...
         RAT::DS::PMT *pmt = ev->AddNewPMT();
         pmt->SetID(iwaveform->first);
-        if(pmt->GetID() >= 6) pmt->SetType(1);
-        else if(pmt->GetID() < 6) pmt->SetType(2);
         pmt->SetWaveform(iwaveform->second.at(iev));
         // info<<"Waveforms "<<pmt->GetWaveform().size()<<"\n";
         // for(int isample=0; isample<iwaveform->second.at(iev).size();isample++){

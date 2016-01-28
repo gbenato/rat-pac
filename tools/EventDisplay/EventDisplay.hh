@@ -59,6 +59,7 @@ protected:
   std::string event_option;
   int event_number;
   std::vector<double> intersection_zplane;
+  RAT::DS::PMTInfo *pmtInfo;
 
   TApplication *dummyApp;
 
