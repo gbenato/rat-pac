@@ -24,6 +24,7 @@
 #include "G4ios.hh"
 #include "G4Event.hh"
 #include "globals.hh"
+#include <CLHEP/Units/SystemOfUnits.h>
 
 #include "fstream"  // for file streams
 #include <sstream>  // for string streams

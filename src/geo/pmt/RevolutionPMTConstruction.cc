@@ -12,6 +12,7 @@
 #include <G4LogicalBorderSurface.hh>
 
 using namespace std;
+using namespace CLHEP;
 
 namespace RAT {
 
