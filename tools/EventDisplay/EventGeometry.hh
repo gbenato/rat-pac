@@ -175,7 +175,10 @@ public:
         b = new TGeoBBox(name.c_str(), size[0], size[1], size[2]);
       }
       else if(type == 2){
-        b = new TGeoSphere(name.c_str(),0.0,size[0]);
+        b = new TGeoSphere(name.c_str(), 0.0, size[0]);
+      }
+      else if(type == 3){
+        b = new TGeoTube(name.c_str(), 0, size[0]/2, size[1]);
       }
       else{
         std::cout<<" EDGeoPMT::GetVolume: type "<<type<<" not defined!"<<std::endl;

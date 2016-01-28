@@ -143,7 +143,7 @@ void GetPMTInfo(){
     pmtidtotype.push_back(pmtInfo->GetType(ipmt));
   }
 
-  Color_t mycolors[] = {1, 1, 1, 1, 1, 1, kBlue, kOrange, kRed, kRed, kOrange, kBlue, kBlue, kOrange, kRed, kRed, kOrange, kBlue};
+  Color_t mycolors[] = {1, 1, 1, 1, 1, 1, 1, 1, kBlue, kOrange, kRed, kRed, kOrange, kBlue, kBlue, kOrange, kRed, kRed, kOrange, kBlue};
   pmtidtocolor.insert(pmtidtocolor.begin(), mycolors, mycolors + npmts );
 
 }
@@ -338,8 +338,9 @@ void DrawHistos(){
   //General plots
   bool firstdrawn0 = false;
   bool firstdrawn1 = false;
-  TCanvas *c_event = new TCanvas("c_event","c_event",900,600);
-  c_event->Divide(3,2);
+  bool firstdrawn2 = false;
+  TCanvas *c_event = new TCanvas("c_event","c_event",900,900);
+  c_event->Divide(3,3);
   c_event->cd(1);
   // h_charge_total->Draw(); //Total charge in event
   h_pmt_qresvspos->Draw("colz text"); //Average charge per pmt vs position
@@ -365,6 +366,15 @@ void DrawHistos(){
       h_time_res[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
       h_time_res[pmtid]->Draw(opt);
       firstdrawn1 = true;
+    } else if(pmttype==3){ //Muon tags
+      const char *opt = firstdrawn2 ? "sames" : "";
+      c_event->cd(8);
+      h_charge[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
+      h_charge[pmtid]->Draw(opt);
+      c_event->cd(9);
+      h_time_res[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
+      h_time_res[pmtid]->Draw(opt);
+      firstdrawn2 = true;
     }
   }
 

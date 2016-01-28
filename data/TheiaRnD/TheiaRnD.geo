@@ -206,22 +206,6 @@
 // PMTS
 //////////////////
 
-// FAKE PMTS (acrylic cubes)
-// {
-//   name: "GEO",
-//   index: "fakepmt",
-//   valid_begin: [0, 0],
-//   valid_end: [0, 0],
-//   invisible: 0, // omitted for visualization
-//   mother: "inner",
-//   type: "box",
-//   position: [-90.0, 0.0, 115.0],
-//   size: [70.5,70.5,14.5],
-//   material: "acrylic_berkeley", //quartz, acrylic_berkeley
-//   color: [0.1, 0.3, 0.8, 0.1],
-// }
-
-// REAL TUBES
 // Container for pmts
 //{
 //  name: "GEO",
@@ -264,8 +248,24 @@
   pmt_detector_type: "idpmt",
   sensitive_detector: "/mydet/pmt/inner",
   efficiency_correction: 1.0,
-  pos_table: "PMTINFO_CLOSE",
+  pos_table: "PMTINFO_FAR",
   orientation: "point",
+  orient_point: [-400.0, -400.0, -200.0],
+}
+
+{
+  name: "GEO",
+  index: "muon_pmts",
+  valid_begin: [0, 0],
+  valid_end: [0, 0],
+  mother: "inner",
+  type: "pmtarray",
+  pmt_model: "h11934", //r7081_hqe, r11780_hqe
+  pmt_detector_type: "idpmt",
+  sensitive_detector: "/mydet/pmt/inner",
+  efficiency_correction: 1.0,
+  pos_table: "PMTINFO_MUON_TAGS",
+  orientation: "manual",
   orient_point: [-400.0, -400.0, -200.0],
 }
 

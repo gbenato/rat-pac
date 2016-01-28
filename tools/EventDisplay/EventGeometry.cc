@@ -155,13 +155,13 @@ void EventGeometry::BuildGeometry(){
 
     for(int ipmt=0; ipmt<pmts.size(); ipmt++){
       if(pmts[ipmt]->GetName() == geoOrder[ivol]){
-	std::vector<double> trans(3,0);
-	pmts[ipmt]->AddVolume(geoVolumes["world"],trans);
-	geoVolumes[pmts[ipmt]->GetName()] = pmts[ipmt]->GetVolume();
+        std::vector<double> trans(3,0);
+        pmts[ipmt]->AddVolume(geoVolumes["world"],trans);
+        geoVolumes[pmts[ipmt]->GetName()] = pmts[ipmt]->GetVolume();
         break;
       }
     }
-    
+
   }
 
   tgeoman->CloseGeometry();
@@ -277,6 +277,9 @@ void EventGeometry::AddNewPMT(std::string name, std::string mother, double x_pos
   }
   else if(type == 2){
     newpmt->SetSize(std::vector<double>(3,125.0));
+  }
+  else if(type == 3){
+    newpmt->SetSize(std::vector<double>(3,14.5));
   }
   else{
     std::cout<<" EDGeoPMT::AddNewPMT: type "<<type<<" not defined!"<<std::endl;

@@ -36,6 +36,7 @@ protected:
   DS::Run *run;
   DS::DAQHeader *daqHeaderV1730;
   DS::DAQHeader *daqHeaderV1742;
+  RAT::DS::PMTInfo *pmtInfo;
   bool gotDAQHeader;
 
   DBLinkPtr fLAnalysis;
