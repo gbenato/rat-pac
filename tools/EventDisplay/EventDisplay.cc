@@ -36,6 +36,7 @@ bool fexists(const char *filename)
 EventDisplay::EventDisplay(std::string _inputFileName){
 
   //Init
+  event_cut = false;
   inputFileName = _inputFileName;
   SetParameters();
   OpenFile(inputFileName);
@@ -258,6 +259,8 @@ void EventDisplay::LoadEvent(int ievt){
   UShort_t ymin_d2=99999.; //yaxis min limit digital
   UShort_t ymax_d3=0.; //yaxis max limit digital
   UShort_t ymin_d3=99999.; //yaxis min limit digital
+  UShort_t ymax_d4=0.; //yaxis max limit digital
+  UShort_t ymin_d4=99999.; //yaxis min limit digital
   double ymax_temp=0.;
   double ymin_temp=0.;
   double xmax_temp=0.;//dummy
@@ -323,7 +326,7 @@ void EventDisplay::LoadEvent(int ievt){
   chargeVsRScint->Reset();
   chargeVsRCorr->Reset();
 
-  //Get center of the samll PMT array and locate
+  //Get center of the small PMT array and locate
   TVector3 centerpos(0,0,0);
   int pmtTypeCount = 0;
 
@@ -358,6 +361,11 @@ void EventDisplay::LoadEvent(int ievt){
     int pmtID = ev->GetPMT(ipmt)->GetID();
     pmtCharge[pmtID] = ev->GetPMT(ipmt)->GetCharge();
     pmtTime[pmtID] = ev->GetPMT(ipmt)->GetTime();
+    // //Apply cut condition
+    // if(pmtID==charge_cut_pmts[0] && pmtCharge[pmtID]<charge_cut_values[0]) {
+    //   this->SetIsCut(true);
+    //   return;
+    // }
     if(pmtTime[pmtID]<0){
       pmtTime[pmtID] = -400.;
     } else{
@@ -424,7 +432,7 @@ void EventDisplay::LoadEvent(int ievt){
     double timeStep = 0;
     double timeDelay = 0;
 
-    if(pmtType==2){
+    if(pmtType==2 || pmtType==4){
       timeStep = daqHeaderV1730->GetDoubleAttribute("TIME_RES");
       timeDelay = daqHeaderV1730->GetDoubleAttribute("TIME_DELAY");
     } else if(pmtType==1 || pmtType==3){
@@ -449,6 +457,9 @@ void EventDisplay::LoadEvent(int ievt){
       } else if(pmtType==3){
         ymax_d3 = TMath::Max(ymax_d3,vPMTDigitizedWaveforms[ipmt][isample]);
         ymin_d3 = TMath::Min(ymin_d3,vPMTDigitizedWaveforms[ipmt][isample]);
+      } else if(pmtType==4){
+        ymax_d4 = TMath::Max(ymax_d4,vPMTDigitizedWaveforms[ipmt][isample]);
+        ymin_d4 = TMath::Min(ymin_d4,vPMTDigitizedWaveforms[ipmt][isample]);
       }
       //Temporary
       ymin_d2 = 14400.;
@@ -464,6 +475,8 @@ void EventDisplay::LoadEvent(int ievt){
       PMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.999*ymin_d2,1.001*ymax_d2);
     } else if(pmtType==3){
       PMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.99*ymin_d3,1.01*ymax_d3);
+    } else if(pmtType==4){
+      PMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.99*ymin_d4,1.01*ymax_d4);
     }
   }
 
@@ -489,7 +502,13 @@ void EventDisplay::SetParameters(){
   finalTrack = dbED->GetI("final_track");
   event_option = dbED->GetS("event_option");
   event_number = dbED->GetI("event_number");
+
+  //XY plane
   intersection_zplane = dbED->GetDArray("intersection_zplane");
+
+  //Cuts
+  charge_cut_pmts = dbED->GetIArray("charge_cut_pmts");
+  charge_cut_values = dbED->GetDArray("charge_cut_values");
 
   //Analysis file
   if(inputFileName == "") inputFileName = dbED->GetS("input_file");
@@ -578,6 +597,7 @@ void EventDisplay::DisplayEvent(int ievt){
   if(debugLevel > 0) std::cout<<"Starting canvases "<<std::endl;
   if(event_option == "cherenkov" && !this->IsCerenkov()) return;
   if(event_option == "pe" && !this->IsPE()) return;
+  if(this->IsCut()) return;
   this->DumpEventInfo(ievt);
   if(event_number>=0) this->DumpDisplayInfo();
 
@@ -693,7 +713,7 @@ void EventDisplay::DisplayEvent(int ievt){
   //   //      MCPMTDigitizedWaveforms[ipmt].ComputeRange(xmin_temp,xmax_temp,ymin_temp,ymax_temp);
   // }
   if(rds->ExistEV()){
-    bool drawRingPMTs=false, drawLightPMTs=false, drawMuonPMTs=false;
+    bool drawRingPMTs=false, drawLightPMTs=false, drawMuonPMTs=false, drawTriggerPMT=false;
     for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
       int pmtID = ev->GetPMT(ipmt)->GetID();
       int pmtType = pmtInfo->GetType(ipmt);
@@ -701,7 +721,8 @@ void EventDisplay::DisplayEvent(int ievt){
       if(pmtType == 1) canvas_event->cd(5);
       if(pmtType == 2) canvas_event->cd(6);
       if(pmtType == 3) canvas_event->cd(7);
-      if(pmtType == 1 && drawRingPMTs==false || pmtType == 2 && drawLightPMTs==false || pmtType == 3 && drawMuonPMTs==false){
+      if(pmtType == 4) canvas_event->cd(8);
+      if( (pmtType == 1 && drawRingPMTs==false) || (pmtType == 2 && drawLightPMTs==false) || (pmtType == 3 && drawMuonPMTs==false)  || (pmtType == 4 && drawTriggerPMT==false)){
         PMTDigitizedWaveforms[ipmt].Draw("A LINE");
         PMTDigitizedWaveforms[ipmt].GetXaxis()->SetTitle("t(ns)");
         PMTDigitizedWaveforms[ipmt].GetYaxis()->SetTitle("ADC counts");
@@ -716,6 +737,10 @@ void EventDisplay::DisplayEvent(int ievt){
         if(pmtType == 3) {
           PMTDigitizedWaveforms[ipmt].SetTitle("Triggered event - Muon Tags");
           drawMuonPMTs=true;
+        }
+        if(pmtType == 4) {
+          PMTDigitizedWaveforms[ipmt].SetTitle("Triggered event - Trigger PMT");
+          drawTriggerPMT=true;
         }
       }
       PMTDigitizedWaveforms[ipmt].SetLineColor(ipmt+20);
@@ -749,6 +774,12 @@ void EventDisplay::DisplayEvent(int ievt){
 bool EventDisplay::IsCerenkov(){
 
   return FirstProcessCounter["Cerenkov"]>0;
+
+}
+
+bool EventDisplay::IsCut(){
+
+  return event_cut;
 
 }
 

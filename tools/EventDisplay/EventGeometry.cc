@@ -281,6 +281,9 @@ void EventGeometry::AddNewPMT(std::string name, std::string mother, double x_pos
   else if(type == 3){
     newpmt->SetSize(std::vector<double>(3,14.5));
   }
+  else if(type == 4){
+    newpmt->SetSize(std::vector<double>(3,14.5));
+  }
   else{
     std::cout<<" EDGeoPMT::AddNewPMT: type "<<type<<" not defined!"<<std::endl;
     exit(0);

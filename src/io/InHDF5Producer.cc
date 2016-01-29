@@ -134,7 +134,7 @@ namespace RAT {
     FastChtoID[29]=999;
     FastChtoID[30]=999;
     FastChtoID[31]=999;
-    SlowChtoID[0]=999;
+    SlowChtoID[0]=20;
     SlowChtoID[1]=0;
     SlowChtoID[2]=1;
     SlowChtoID[3]=2;
@@ -374,6 +374,12 @@ namespace RAT {
       run->SetStartTime(1440638077);
       run->SetDAQHeader(daqHeaderV1730,"V1730");
       run->SetDAQHeader(daqHeaderV1742,"V1742");
+
+      const RAT::DS::PMTInfo *pmtInfo = &PMTFactoryBase::GetPMTInfo();
+      for (int ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
+        int pmtType = pmtInfo->GetType(ipmt);
+        //        std::cout<<" PMT "<<ipmt<<" "<<pmtType<<std::endl;
+      }
       run->SetPMTInfo(&PMTFactoryBase::GetPMTInfo());
       DS::RunStore::AddNewRun(run);
 

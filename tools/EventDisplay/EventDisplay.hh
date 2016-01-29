@@ -18,12 +18,13 @@
 #include<RAT/DSReader.hh>
 #include<RAT/DS/Root.hh>
 #include<RAT/DS/MC.hh>
+#include<RAT/DS/PMTInfo.hh>
 
 #include<RAT/DB.hh>
 
 #include"EventGeometry.hh"
 
-class EventDisplay{
+class EventDisplay {
 public:
   EventDisplay(std::string _inputFileName = "");
   ~EventDisplay(){};
@@ -35,11 +36,13 @@ public:
   void DumpEventInfo(int);
   void DumpDisplayInfo();
   void SetGeometry();
+  bool IsCut();
   bool IsCerenkov();
   bool IsPE();
   void CustomizeTrack(TPolyLine3D*,RAT::DS::MCTrack*);
 
   void SetParameters();
+  void SetIsCut(bool value){event_cut = value;};
 
 protected:
 
@@ -49,6 +52,7 @@ protected:
   int debugLevel;
   bool drawGeometry;
   bool drawPMTs;
+  bool event_cut;
   std::string geoFileName;
   std::string pmtInfoFileName;
   std::string inputFileName;
@@ -58,6 +62,8 @@ protected:
   int finalTrack;
   std::string event_option;
   int event_number;
+  std::vector<int> charge_cut_pmts;
+  std::vector<double> charge_cut_values;
   std::vector<double> intersection_zplane;
   RAT::DS::PMTInfo *pmtInfo;
 

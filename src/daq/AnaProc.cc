@@ -64,15 +64,11 @@ namespace RAT {
         int pmtID = pmt->GetID();
         int pmtType = pmtInfo->GetType(pmtID);
         std::vector<UShort_t> dWaveform = pmt->GetWaveform();
-        if(pmtType==1){
+        if(pmtType==1 || pmtType==3){
           //        pmt->SetTime(GetTimeAtPeak(dWaveform), daqHeaderV1742 );
           pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1742, anaV1742) );
           pmt->SetCharge(IntegrateCharge(dWaveform, daqHeaderV1742, anaV1742) );
-        } else if(pmtType==3){
-          //        pmt->SetTime(GetTimeAtPeak(dWaveform), daqHeaderV1742 );
-          pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1742, anaV1742) );
-          pmt->SetCharge(IntegrateCharge(dWaveform, daqHeaderV1742, anaV1742) );
-        } else if(pmtType==2){
+        } else if(pmtType==2 || pmtType==4){
           //        pmt->SetTime(GetTimeAtPeak(dWaveform), daqHeaderV1730 );
           pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1730, anaV1730) );
           pmt->SetCharge(IntegrateCharge(dWaveform, daqHeaderV1730, anaV1730) );

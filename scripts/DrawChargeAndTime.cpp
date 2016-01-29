@@ -107,7 +107,7 @@ void GetDBPlots(){
   std::cout<<" Get DB scint correction plots for "<<gTargetMaterial<<std::endl;
 
   RAT::DB* db = RAT::DB::Get();
-  db->Load("/Users/snoplus/Work/snoing/install/rat-pac/data/TheiaRnD/SCINTCORR.ratdb");
+  db->Load("/Users/snoplus/Work/TheiaRnD/rat-pac/data/TheiaRnD/SCINTCORR.ratdb");
   RAT::DBLinkPtr dbScintCorr = db->GetLink("SCINTCORR",gTargetMaterial);
   qScintCorr = dbScintCorr->GetDArray("corr");
   qScintCorrErr = dbScintCorr->GetDArray("corr_err");
@@ -164,7 +164,7 @@ void GetHistos(){
     h_mcpmt_charge.push_back(new TH1F(Form("h_mcpmt_charge_%i",ih),"h_mcpmt_charge",200,0,100));
     h_mcpmt_time.push_back(new TH1F(Form("h_mcpmt_time_%i",ih),"h_mcpmt_time",500,0,100));
     h_mcpmt_fetime.push_back(new TH1F(Form("h_mcpmt_fetime_%i",ih),"h_mcpmt_fetime",500,0,100));
-    h_charge.push_back(new TH1F(Form("h_charge_%i",ih),"h_charge",300,-2,6));
+    h_charge.push_back(new TH1F(Form("h_charge_%i",ih),"h_charge",300,-2,30));
     h_charge_res.push_back(new TH1F(Form("h_charge_res_%i",ih),"h_charge_res",50,0,50));
     h_charge_vs_trigq.push_back(new TH2F(Form("h_charge_vs_trigq_%i",ih),"h_charge_vs_trigq",200,0,100,200,0,100));
     h_time.push_back(new TH1F(Form("h_time_%i",ih),"h_time",500,0,100));
