@@ -19,10 +19,11 @@
 // time.h must come after Randomize.hh on RedHat 7.3 
 #include <time.h>
 
-#include <RAT/Config.hh>
+#include "RAT/Config.hh"
 #include <RAT/Log.hh>
 #include <RAT/RunManager.hh>
 #include <RAT/InROOTProducer.hh>
+#include <RAT/InHDF5Producer.hh>
 #include <RAT/InNetProducer.hh>
 #include <RAT/ProcBlock.hh>
 #include <RAT/ProcBlockManager.hh>
@@ -104,11 +105,11 @@ int main(int argc, char** argv) {
     try { // Catch database errors
       // Set default input and output files
       if (options.input_filename != "") {
-	rdb->SetS("IO", "", "default_input_filename", options.input_filename);
+	rdb->Set("IO", "", "default_input_filename", options.input_filename);
 	info << "Setting default input file to " << options.input_filename << "\n";
       }
       if (options.output_filename != "") {
-	rdb->SetS("IO", "", "default_output_filename", options.output_filename);
+	rdb->Set("IO", "", "default_output_filename", options.output_filename);
 	info << "Setting default output file to " << options.output_filename << "\n";
       }
 
@@ -122,6 +123,7 @@ int main(int argc, char** argv) {
     // Build event producers
     RunManager* runManager = new RunManager(mainBlock);
     InROOTProducer *inroot = new InROOTProducer(mainBlock);
+    InHDF5Producer *inhdf5 = new InHDF5Producer(mainBlock);
     InNetProducer *innet = new InNetProducer(mainBlock);
     // RATFsim *fsim = new RATFsim(analysisStack); // SOMEDAY!
 
@@ -203,6 +205,7 @@ int main(int argc, char** argv) {
 
     delete runManager;
     delete inroot;
+    delete inhdf5;
     delete innet;
 
     delete rdb_messenger;

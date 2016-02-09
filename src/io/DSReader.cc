@@ -7,9 +7,10 @@ namespace RAT {
 
 #undef DEBUG
 
-DSReader::DSReader(const char *filename) : T("T")
-{  
+DSReader::DSReader(const char *filename) : T("T"), runT("runT")
+{
   T.Add(filename);
+  runT.Add(filename);
 
   next = 0;
   total = T.GetEntries();
@@ -29,10 +30,11 @@ DSReader::~DSReader()
   delete ds;
 }
 
-void DSReader::Add(const char* filename) 
-{ 
-  T.Add(filename); 
-  total = T.GetEntries(); 
+void DSReader::Add(const char* filename)
+{
+  T.Add(filename);
+  runT.Add(filename);
+  total = T.GetEntries();
 
 #ifdef DEBUG
   std::cout << "DSReader::Add - "
@@ -42,9 +44,9 @@ void DSReader::Add(const char* filename)
 }
 
 DS::Root *DSReader::NextEvent()
-{ 
+{
   if (next < total) {
-    T.GetEntry(next); 
+    T.GetEntry(next);
     next++;
     return ds;
   } else

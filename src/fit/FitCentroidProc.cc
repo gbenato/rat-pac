@@ -12,9 +12,10 @@
 
 namespace RAT {
 
-FitCentroidProc::FitCentroidProc() : Processor("fitcentroid") { 
-  fPower = 2.0; 
+FitCentroidProc::FitCentroidProc() : Processor("fitcentroid") {
+  fPower = 2.0;
   fRescale = 1.0;
+  fPMTType = -999;
 }
 
 void FitCentroidProc::SetD(std::string param, double value) {
@@ -29,14 +30,27 @@ void FitCentroidProc::SetD(std::string param, double value) {
   }
 }
 
+void FitCentroidProc::SetI(std::string param, int value) {
+
+  if (param == "pmttype") {
+    fPMTType = value;
+  }
+  else {
+    throw ParamUnknown(param);
+  }
+
+}
 
 Processor::Result FitCentroidProc::Event(DS::Root* ds, DS::EV* ev) {
   double totalQ = 0;
   TVector3 centroid(0.0, 0.0, 0.0);
 
   for (int i=0; i < ev->GetPMTCount(); i++) {
+
     DS::PMT *pmt = ev->GetPMT(i);
-    
+
+    if(ev->GetPMT(i)->GetType() != fPMTType) continue;
+
     double Qpow = 0.0;
     Qpow = pow(pmt->GetCharge(), fPower);
     totalQ += Qpow;
@@ -61,4 +75,3 @@ Processor::Result FitCentroidProc::Event(DS::Root* ds, DS::EV* ev) {
 }
 
 } // namespace RAT
-

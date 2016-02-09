@@ -1,0 +1,34 @@
+{
+    "name": "EVENTDISPLAY",
+    "valid_begin": [0, 0],
+    "valid_end": [0, 0],
+
+    //Analysis
+    //    "input_file": "../../mac/sphere_betas.root", // Analysis ROOT file
+    //    "input_file": "../../mac/hdf5_converted.root", // Analysis ROOT file
+    "input_file": "../../results/TheiaRnD_cosmics_cher_WBLS1MOD.root", // Analysis ROOT file
+
+    //Geometry files: used only if 'draw_geo==1'
+    "geo_file": "/Users/snoplus/Work/TheiaRnD/rat-pac/data/TheiaRnD/TheiaRnD.geo",
+    "corr_file": "/Users/snoplus/Work/TheiaRnD/rat-pac/data/TheiaRnD/SCINTCORR.ratdb",
+    "material": "WBLS10pct", //LAB, WBLS1pct, WBLS10pct
+
+    //XY plane for ring imaging
+    "intersection_zplane": [-600.0,0.0,-232.5], // Photon-plane intersection dimensions and Z position [SIDE_MIN, SIDE_MAX, ZPOS]
+
+    //Flags
+    "event_number": 1,     // Event number to draw: Negative -> Event by event mode
+    "initial_track": 0,     // First track to be drawn
+    "final_track": -1,      // Last track to be drawn: Negative -> Set to max
+    "draw_geo": 1,          // 1 -> Draw Detector geometry
+    "draw_pmts": 1,         // 1 -> Draw PMTs stored in PMTINFO
+
+    //Cuts
+    "charge_cut_pmts": [6,7],   //PMT IDs to be applied the cuts
+    "charge_cut_values": [0.0,0.0],  //Charge cut
+    "event_option": "",       // Drawing options: "pe" -> only events with at least one PE,
+                                     //                  "cherenkov" -> only events with a cherenkov process
+                                     //                  "triggered" -> only events triggered by the DAQ
+    "debug_level": 0,
+
+}

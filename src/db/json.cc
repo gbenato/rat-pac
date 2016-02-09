@@ -28,8 +28,9 @@ namespace json {
         decref();
         this->type = _type;
         switch (_type) {
+
             case TSTRING:
-                data._string = new TString();
+                data.string = new TString();
                 refcount = new TUInteger(0);
                 return;
             case TOBJECT:
@@ -44,17 +45,17 @@ namespace json {
                 refcount = NULL;
         }
     }
-    
+
     void Value::clean() {
         if (refcount) delete refcount;
         switch (type) {
             case TSTRING:
-                delete data._string;
+                delete data.string;
                 break;
             case TOBJECT:
                 delete data.object;
-                break;   
-            case TARRAY: 
+                break;
+            case TARRAY:
                 delete data.array;
                 break;
             default:
@@ -63,7 +64,7 @@ namespace json {
         type = TNULL;
         refcount = NULL;
     }
-    
+
     std::vector<std::string> Value::getMembers() const {
         checkType(TOBJECT);
         std::vector<std::string> keys(data.object->size());
@@ -73,12 +74,12 @@ namespace json {
         }
         return keys;
     }
-    
+
     bool Value::isMember(std::string key) const {
         checkType(TOBJECT);
         return (data.object->find(key) != data.object->end());
     }
-    
+
     std::string Value::prettyType(Type type) {
         switch (type) {
             case TOBJECT:
@@ -98,28 +99,28 @@ namespace json {
             case TNULL:
                 return "TNULL";
             default:
-                return "UNKNOWN";
+                return "ERROR";
         }
     }
-    
+
     void Value::wrongType(Type actual, Type requested) {
         std::stringstream pretty;
         pretty << "JSON Value of type " << prettyType(actual) << " is not type " << prettyType(requested);
         throw std::runtime_error(pretty.str());
     }
-    
+
     parser_error::parser_error(const int line_, const int pos_, std::string desc_) : line(line_), pos(pos_), desc(desc_)  {
         std::stringstream prettyss;
         prettyss << '[' << line << ':' << pos << "] " << desc;
         this->pretty = prettyss.str();
     }
-    
+
     parser_error::~parser_error() throw () { }
-    
+
     const char* parser_error::what() const throw () {
         return pretty.c_str();
     }
-    
+
     Reader::Reader(std::istream &in) {
         std::string ret;
         char buffer[4096];
@@ -133,7 +134,7 @@ namespace json {
         line = 1;
         lastbr = cur;
     }
-    
+
     Reader::Reader(const std::string &str) {
         data = new char[str.length()+1];
         cur = data;
@@ -142,9 +143,9 @@ namespace json {
         line = 1;
         lastbr = cur;
     }
-    
+
     Reader::~Reader() {
-        delete [] data;
+        delete[] data;
     }
 
     bool Reader::getValue(Value &result) {
@@ -214,7 +215,7 @@ namespace json {
         }
         throw parser_error(line,cur-lastbr,"Should never reach here. Probably hardware error.");
     }
-    
+
     void Reader::skipComment() {
         if (cur[1] == '/') {
             cur++;
@@ -242,7 +243,7 @@ namespace json {
         }
         throw parser_error(line,cur-lastbr,"Malformed comment");
     }
-    
+
     Value Reader::readNumber() {
         bool real = false;
         bool exp = false;
@@ -361,12 +362,12 @@ namespace json {
         }
         throw parser_error(line,cur-lastbr,"Should never reach here. Probably hardware error.");
     }
-    
+
     Value Reader::readString() {
         char *start = ++cur;
         for (;;) {
             switch (*(cur++)) {
-                case '\\': 
+                case '\\':
                     cur++; //definitely an escape, so skip next character
                     break;
                 case '\"':
@@ -378,7 +379,7 @@ namespace json {
         }
         throw parser_error(line,cur-lastbr,"Should never reach here. Probably hardware error.");
     }
-    
+
     Value Reader::readObject() {
         Value object = Value();
         object.reset(TOBJECT);
@@ -446,7 +447,7 @@ namespace json {
         }
         throw parser_error(line,cur-lastbr,"Should never reach here. Probably hardware error.");
     }
-    
+
     Value Reader::readArray() {
         Value array = Value();
         array.reset(TARRAY);
@@ -471,10 +472,10 @@ namespace json {
                     Value reps;
                     if (!getValue(reps) || reps.getType() != TINTEGER || reps.getInteger() < 0) {
                         throw parser_error(line,cur-lastbr,"Array value repetition syntax error");
-                    }    
+                    }
                     const int nreps = reps.getInteger();
                     // The value to be repeated has already been pushed once
-                    if (nreps == 0) { 
+                    if (nreps == 0) {
                         array.data.array->pop_back();
                     } else {
                         array.data.array->reserve(array.data.array->size() + nreps - 1);
@@ -500,53 +501,61 @@ namespace json {
     }
 
     Writer::Writer(std::ostream &stream) : out(stream) {
-        
-    }
-    
-    Writer::~Writer() {
-        
+
     }
 
-    void Writer::putValue(Value value) {
-        writeValue(value);
+    Writer::~Writer() {
+
+    }
+
+    void Writer::putValue(const Value &value) {
+        writeValue(value,"");
         out << '\n';
     }
-    
-    //This could make prettier output
-    void Writer::writeValue(Value value) {
+
+    void Writer::writeValue(const Value &value, const std::string &depth) {
         switch (value.type) {
             case TINTEGER:
                 out << value.data.integer;
                 break;
             case TUINTEGER:
-                out << value.data.uinteger << 'u';
+                out << value.data.uinteger;
                 break;
             case TREAL:
                 out.precision(std::numeric_limits<double>::digits10);
                 out << value.data.real;
                 break;
             case TSTRING:
-                out << '"' << escapeString(*(value.data._string)) << '"';
+                out << '"' << escapeString(*(value.data.string)) << '"';
                 break;
             case TOBJECT: {
+                    const std::string nextdepth(depth+"    ");
                     TObject::iterator it = value.data.object->begin();
                     TObject::iterator end = value.data.object->end();
                     out << "{\n";
-                    for ( ; it != end; ++it) {
-                        out << '\"' << it->first << "\" : ";
-                        writeValue(it->second);
-                        out << ",\n";
+                    if (it != end) {
+                        out << nextdepth << '\"' << it->first << "\" : ";
+                        writeValue(it->second,nextdepth);
+                        it++;
                     }
-                    out << '}';
+                    for ( ; it != end; it++) {
+                        out << ",\n" << nextdepth << '\"' << it->first << "\" : ";
+                        writeValue(it->second,nextdepth);
+                    }
+                    out << '\n' << depth << '}';
                 }
-                break;   
+                break;
             case TARRAY: {
                     TArray::iterator it = value.data.array->begin();
                     TArray::iterator end = value.data.array->end();
                     out << '[';
-                    for ( ; it != end; ++it) {
+                    if (it != end) {
                         writeValue(*it);
+                        it++;
+                    }
+                    for ( ; it != end; it++) {
                         out << ", ";
+                        writeValue(*it);
                     }
                     out << ']';
                 }
@@ -583,7 +592,7 @@ namespace json {
                     escaped << unescaped.substr(last,pos-last) << "\\n";
                     last = pos+1;
                     break;
-                case '\r': 
+                case '\r':
                     escaped << unescaped.substr(last,pos-last) << "\\r";
                     last = pos+1;
                     break;
@@ -599,7 +608,7 @@ namespace json {
         escaped << unescaped.substr(last,pos-last);
         return escaped.str();
     }
-    
+
     //https://tools.ietf.org/rfc/rfc7159.txt
     std::string Reader::unescapeString(std::string escaped) {
         if (escaped.find("\\") != std::string::npos) {
@@ -646,6 +655,6 @@ namespace json {
             return escaped;
         }
     }
-    
+
 }
 

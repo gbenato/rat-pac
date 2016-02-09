@@ -131,7 +131,7 @@ protected:
   std::vector<MCParticle> particle;
   std::vector<MCParticle> parent;
   std::vector<MCTrack> track;
-  std::vector<MCPMT> pmt;
+  std::vector<MCPMT> pmt; //PMTs with at least one photoelectron in the simulation
 };
 
   } // namespace DS

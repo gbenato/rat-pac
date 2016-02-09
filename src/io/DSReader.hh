@@ -16,11 +16,12 @@ public:
   virtual ~DSReader();
 
   void Add(const char* filename);
-  void SetBranchStatus(const char *bname, bool status=1) { 
+  void SetBranchStatus(const char *bname, bool status=1) {
     T.SetBranchStatus(bname, status);
   };
 
   TTree* GetT() { return &T; };
+  TTree* GetRunT() { return &runT; };
   DS::Root* GetDS() { return ds; };
   Long64_t GetTotal() { return total; };
 
@@ -32,6 +33,7 @@ public:
 
 protected:
   TChain T;
+  TChain runT;
   DS::Root *ds;
   Long64_t next;
   Long64_t total;

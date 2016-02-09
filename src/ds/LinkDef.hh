@@ -21,6 +21,7 @@
 
 #pragma link C++ class RAT::DS::RunStore+;
 #pragma link C++ class RAT::DS::Run+;
+#pragma link C++ class RAT::DS::DAQHeader+;
 
 #pragma link C++ class RAT::DSReader;
 #pragma link C++ class RAT::DSWriter;
@@ -66,6 +67,7 @@
 #pragma link C++ class vector<RAT::DS::PMT>;
 #pragma link C++ class vector< pair<string, int> >;
 #pragma link C++ class vector<RAT::DBTable*>;
+#pragma link C++ class vector<RAT::DS::DAQHeader>;
 
 #pragma link C++ class vector<RAT::TrackNode*>;
 #pragma link C++ class vector<RAT::DS::EV*>;

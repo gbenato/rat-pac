@@ -10,7 +10,7 @@ Andy Mastbaum <mastbaum@hep.upenn.edu>, June 2014
 import argparse
 import numpy as np
 
-def disk(npmts, radius, holdoff=0, z=0, orient=1):
+def disk(npmts, radius, holdoff=0, z=0, orient=1, px=0, py=0, pz=0):
     npmts = int(npmts * (2*radius)**2 / (np.pi * radius**2))
     x = np.linspace(-radius, radius, int(np.sqrt(npmts)))
     y = np.linspace(-radius, radius, int(np.sqrt(npmts)))
@@ -18,10 +18,10 @@ def disk(npmts, radius, holdoff=0, z=0, orient=1):
     for i in range(len(x)):
         for j in range(len(y)):
             if x[i]**2 + y[j]**2 <= (radius - holdoff)**2:
-                pos.append([x[i], y[j], z, 0, 0, 1.0 * np.sign(orient)])
+                pos.append([x[i] + px, y[j] + py, z + pz, 0, 0, 1.0 * np.sign(orient)])
     return pos
 
-def tube(npmts, radius, height, holdoff=0):
+def tube(npmts, radius, height, holdoff=0, px=0, py=0, pz=0):
     z = np.linspace(-height/2+holdoff, height/2-holdoff, int(np.sqrt(npmts)/2))
     phi = np.linspace(-np.pi, np.pi, int(np.sqrt(npmts)*2))
     pos = []
@@ -33,7 +33,7 @@ def tube(npmts, radius, height, holdoff=0):
             uu = np.cos(np.pi - phi[j])
             vv = np.cos(np.pi / 2 + phi[j])
             ww = np.cos(np.pi/2)
-            pos.append([xx, yy, zz, uu, vv, ww])
+            pos.append([xx + px, yy + py, zz + pz, uu, vv, ww])
     return pos
 
 if __name__ == '__main__':
@@ -48,6 +48,12 @@ if __name__ == '__main__':
                         help='Dead distance at plane/tube corners (mm)')
     parser.add_argument('--output', '-o', default='PMTINFO.ratdb',
                         help='Ouput RATDB filename')
+    parser.add_argument('--posx', '-px', type=float, default=0,
+                        help='Position of the center of the cylinder')
+    parser.add_argument('--posy', '-py', type=float, default=0,
+                        help='Position of the center of the cylinder')
+    parser.add_argument('--posz', '-pz', type=float, default=0,
+                        help='Position of the center of the cylinder')
     args = parser.parse_args()
 
     disk_area = np.pi * args.radius**2
@@ -57,11 +63,11 @@ if __name__ == '__main__':
     tube_fraction = tube_area / (8 * disk_area + tube_area)
 
     top =    disk(int(args.npmts * disk_fraction),
-                  args.radius, args.holdoff, z=args.height/2, orient=-1)
+                  args.radius, args.holdoff, z=args.height/2, orient=-1, px=args.posx, py=args.posy, pz=args.posz)
     bottom = disk(int(args.npmts * disk_fraction),
-                  args.radius, args.holdoff, z=-args.height/2, orient=1)
+                  args.radius, args.holdoff, z=-args.height/2, orient=1, px=args.posx, py=args.posy, pz=args.posz)
     sides =  tube(args.npmts * tube_fraction,
-                  args.radius, args.height, args.holdoff)
+                  args.radius, args.height, args.holdoff, args.posx, args.posy, args.posz)
 
     everything = np.array(top + bottom + sides)
 

@@ -35,7 +35,7 @@ pmt_model: "r1408",
 pmt_detector_type: "idpmt",
 sensitive_detector: "/mydet/pmt/inner", 
 efficiency_correction: 1.027,  
-pos_table: "PMTINFO", 
+pos_table: "PMTINFO",
 orientation: "manual",
 //orient_point: [0.0, 0.0, 0.0], 
 } 

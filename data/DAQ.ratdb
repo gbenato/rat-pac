@@ -3,5 +3,19 @@ name: "DAQ",
 valid_begin: [0, 0],
 valid_end: [0, 0],
 channel_efficiency: 1.0,
-}
 
+//Dark hits noise
+noise_rate: 0.0,
+
+//Realistic pulses
+pulse_type: 1, //0=square pulses, 1=realistic pulses
+               //must change pulse_width depending on selection
+pulse_width: 0.5, //0.15, 0.22 PMT pulse width in log(ns) for real pulses
+pulse_offset: 0.0, //PMT pulse offset in pA
+pulse_min: -0.00001, //minimum pulse height to consider in mV
+pulse_mean: 5.5, //1.7 PMT pulse mean in ns
+pulse_time_step: 0.1, //time step in ns (0.1ns is reasonable to get a fast simulation)
+
+sampling_time: 500.0,
+
+}

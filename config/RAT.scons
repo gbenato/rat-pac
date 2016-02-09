@@ -85,7 +85,7 @@ for key in ['CXX', 'CC']:
         env.Replace(**kwargs)
 
 env.Append(ENV=os.environ,
-           CPPPATH=['#/include', '#/include/RAT'],  # FIXME: remove second
+           CPPPATH=['$RATROOT/include','$RATROOT/include/RAT'],  # FIXME: remove second
            CPPDEFINES=[('KL_USE_ROOT', 1)
                        ],
            LIBPATH=['#/lib']
@@ -226,6 +226,8 @@ env['ROOTCINT_INCFLAGS'] = ['-I$RATROOT/include/RAT',
 env.Append(BUILDERS={'RATApp' : ratapp,
                      'RATAppNoMain' : ratapp_nomain,
                      'RATHeader' : ratheader})
+
+env.Append(LIBS=['-lhdf5_cpp','-lhdf5'])
 
 # Allows user-compiled apps to find rat.cc main function.
 env.Repository('$RATROOT')

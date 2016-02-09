@@ -7,7 +7,7 @@
 #### Add new source module names here ####
 
 modules = Split('''
-cmd core cut daq db fit gen geo io physics stlplus util
+cmd core cut daq db fit gen geo geo/pmt io physics stlplus util
 ''') # ds handled separately
 
 
@@ -38,7 +38,7 @@ env.Default(copy_headers)
 cint_cls= Split('DS/Root DS/MC DS/EV DS/MCParticle DS/MCPhoton '
                 'DS/MCPMT DS/MCSummary DS/PMT '
                 'DS/RunStore DS/Run '
-                'DS/PosFit DS/PMTInfo '
+                'DS/PosFit DS/PMTInfo DS/DAQHeader '
                 'DS/MCTrack DS/MCTrackStep DS/Calib '
                 'DS/Centroid DS/PathFit '
                 'DSReader DSWriter TrackNav TrackNode TrackCursor DB DBLink '

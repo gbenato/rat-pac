@@ -11,6 +11,9 @@
 #include <TObject.h>
 #include <TVector3.h>
 #include <algorithm>
+#include <iostream>
+
+using namespace std;
 
 namespace RAT {
   namespace DS {
@@ -24,9 +27,11 @@ public:
                       const TVector3& _dir,
                       const int _type,
                       const std::string _model) {
+
     pos.push_back(_pos);
     dir.push_back(_dir);
     type.push_back(_type);
+    npmts_type[_type]++;
     std::vector<std::string>::iterator which = std::find(models.begin(),models.end(),_model);
     if (which != models.end()) {
         modeltype.push_back(which-models.begin());
@@ -35,14 +40,15 @@ public:
         modeltype.push_back(models.size()-1);
     }
   }
-  
+
   virtual void AddPMT(const TVector3& _pos,
                       const TVector3& _dir,
                       const int _type) {
-    AddPMT(_pos,_dir,_type,"");                   
+    AddPMT(_pos,_dir,_type,"");
   }
 
   virtual Int_t GetPMTCount() const { return pos.size(); }
+  virtual std::map<int,int> GetPMTTypeCount() const { return npmts_type;}
 
   virtual TVector3 GetPosition(int id) const { return pos.at(id); }
   virtual void SetPosition(int id, const TVector3& _pos) { pos.at(id) = _pos; }
@@ -52,7 +58,7 @@ public:
 
   virtual int GetType(int id) const { return type.at(id); }
   virtual void SetType(int id, int _type) { type.at(id) = _type; }
-  
+
   virtual int GetModel(int id) const { return modeltype.at(id); }
   virtual int SetModel(int id, std::string _model) {
     std::vector<std::string>::iterator which = std::find(models.begin(),models.end(),_model);
@@ -74,7 +80,8 @@ public:
 protected:
   std::vector<TVector3> pos;
   std::vector<TVector3> dir;
-  std::vector<int> type;
+  std::vector<int> type; //PMT type ordered by ID
+  std::map <int,int> npmts_type;
   std::vector<int> modeltype;
   std::vector<std::string> models;
 };
@@ -83,4 +90,3 @@ protected:
 } // namespace RAT
 
 #endif
-

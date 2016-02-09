@@ -77,6 +77,9 @@ G4int GLG4Scint::fPhotonCount;
 /////////////////
 
 GLG4Scint::GLG4Scint(const G4String& tablename, G4double lowerMassLimit) {
+
+  //  std::cout<<" ***** GLG4Scint ***** : Constructor "<<std::endl;
+
   verboseLevel = 0;
   myLowerMassLimit = lowerMassLimit;
   
@@ -183,6 +186,8 @@ GLG4Scint::PostPostStepDoIt(const G4Track& aTrack, const G4Step& aStep) {
   GLG4Scint_num_calls ++;
 #endif
 
+  //  std::cout<<" ***** GLG4Scint ***** : PostPostStepDoIt "<<std::endl;
+  
   // Below this anonymous namespace is label PostStepDoIt_DONE
   {
     // prepare to generate an event, organizing to
@@ -210,6 +215,8 @@ GLG4Scint::PostPostStepDoIt(const G4Track& aTrack, const G4Step& aStep) {
                         aTrack.GetTrackStatus() == fStopAndKill &&
                         aStep.GetPostStepPoint()->GetStepStatus() != fGeomBoundary);
 
+      //      std::cout<<" ***** GLG4Scint ***** : flagReemission "<<flagReemission<<std::endl;
+
       if (!flagReemission) {
         goto PostStepDoIt_DONE;
       }
@@ -217,8 +224,12 @@ GLG4Scint::PostPostStepDoIt(const G4Track& aTrack, const G4Step& aStep) {
 
     G4double TotalEnergyDeposit = aStep.GetTotalEnergyDeposit();
   
+    //    std::cout<<" ***** GLG4Scint ***** : TotalEnergyDeposit "<<TotalEnergyDeposit<<std::endl;
+    
     if (TotalEnergyDeposit <= 0.0 && !flagReemission)
       goto PostStepDoIt_DONE;
+
+    //    std::cout<<" ***** GLG4Scint ***** : physicsEntry "<<physicsEntry<<std::endl;
 
     if (!physicsEntry)
       goto PostStepDoIt_DONE;
@@ -239,6 +250,11 @@ GLG4Scint::PostPostStepDoIt(const G4Track& aTrack, const G4Step& aStep) {
     G4PhysicsOrderedFreeVector* ReemissionIntegral =
       physicsEntry->reemissionIntegral;
     
+    // std::cout<<" ***** GLG4Scint ***** : Material Name "<<aMaterial->GetName()<<std::endl;
+    // std::cout<<" ***** GLG4Scint ***** : ScintillationYield "<<ScintillationYield<<std::endl;
+    // std::cout<<" ***** GLG4Scint ***** : ScintillationIntegral "<<ScintillationIntegral<<std::endl;
+    // std::cout<<" ***** GLG4Scint ***** : ReemissionIntegral "<<ReemissionIntegral<<std::endl;
+
     if (!ScintillationIntegral) {
       if (ReemissionIntegral == NULL) { // If reemits, there's still work to do!
         goto PostStepDoIt_DONE;
@@ -271,6 +287,8 @@ GLG4Scint::PostPostStepDoIt(const G4Track& aTrack, const G4Step& aStep) {
     //G4int numComponents = -1;
     //G4int absorberIndex = -1;
 
+    //    std::cout<<" ***** GLG4Scint ***** : flagReemission2 "<<flagReemission<<std::endl;
+    
     if (flagReemission) {
       G4MaterialPropertiesTable* mpt_scint =
         aMaterial->GetMaterialPropertiesTable();
@@ -292,6 +310,8 @@ GLG4Scint::PostPostStepDoIt(const G4Track& aTrack, const G4Step& aStep) {
         mpv_scint_reemission->Value(aTrack.GetKineticEnergy());
 
       numSecondaries = (G4int)(CLHEP::RandPoisson::shoot(p_reemission));
+
+      //      std::cout<<" ***** GLG4Scint ***** : numSecondaries "<<numSecondaries<<std::endl;
 
       if (numSecondaries == 0) {
         goto PostStepDoIt_DONE;
@@ -315,6 +335,8 @@ GLG4Scint::PostPostStepDoIt(const G4Track& aTrack, const G4Step& aStep) {
       scintCentroidSum +=
         QuenchedTotalEnergyDeposit * (x0 + p0*(0.5*aStep.GetStepLength()));
 
+      //      std::cout<<" ***** GLG4Scint ***** : doScintillation "<<doScintillation<<std::endl;
+      
       // Now we are done if we are not actually making photons here
       if (!doScintillation) {
         goto PostStepDoIt_DONE;
@@ -327,6 +349,13 @@ GLG4Scint::PostPostStepDoIt(const G4Track& aTrack, const G4Step& aStep) {
          QuenchedTotalEnergyDeposit *
          (1.0 + birksConstant * (physicsEntry->ref_dE_dx)));
 
+      
+      // std::cout<<" ***** GLG4Scint ***** : Material Name "<<aMaterial->GetName()<<std::endl;
+      // std::cout<<" ***** GLG4Scint ***** : ScintillationYield "<<ScintillationYield<<std::endl;
+      // std::cout<<" ***** GLG4Scint ***** : GetQuenchingFactor "<<GetQuenchingFactor<<" "<<QuenchedTotalEnergyDeposit<<" "<<birksConstant<<" "<<physicsEntry->ref_dE_dx<<std::endl;
+      // std::cout<<" ***** GLG4Scint ***** : # photons = "<<MeanNumPhotons<<std::endl;
+
+      
       if (MeanNumPhotons <= 0.0) {
         goto PostStepDoIt_DONE;
       }

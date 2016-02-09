@@ -16,9 +16,9 @@
 #include <string>
 #include <TFile.h>
 #include <TH1F.h>
-#include <RAT/Processor.hh>
-#include <RAT/Log.hh>
-#include <RAT/DS/Root.hh>
+#include "RAT/Processor.hh"
+#include "RAT/Log.hh"
+#include "RAT/DS/Root.hh"
 
 using namespace RAT;
 

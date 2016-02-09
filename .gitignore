@@ -18,3 +18,7 @@ src/core/config.hh
 .pydevproject
 .settings
 
+#my untracked files
+data/TheiaRnD/Acrylic*
+data/TheiaRnD/Sample*
+scripts/Makefile

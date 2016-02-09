@@ -1,4 +1,4 @@
-/** 
+/**
  * @class DS::MCPMT
  *  Data Structure: Hit PMT in Monte Carlo
  *
@@ -14,6 +14,7 @@
 #include <vector>
 #include <RAT/DS/MCPhoton.hh>
 #include <RAT/Log.hh>
+//#include <RAT/DS/PMTWaveform.hh>
 
 namespace RAT {
   namespace DS {
@@ -29,6 +30,16 @@ public:
 
   /** Charge */
   virtual Float_t GetCharge() const;
+  virtual void SetWFCharge(double _charge) {wf_charge = _charge;};
+  virtual Float_t GetWFCharge() const {return wf_charge;};
+
+  /** Time */
+  virtual void SetTime() {time = this->GetTime();};
+  virtual Float_t GetTime() const;
+
+  /** FETime */
+  virtual void SetFrontEndTime() {feTime = this->GetFrontEndTime();};
+  virtual Float_t GetFrontEndTime() const;
 
   /** PMT type */
   virtual Int_t GetType() const { return type; };
@@ -42,17 +53,34 @@ public:
     return &photon.back();
   }
   void PruneMCPhoton() { photon.resize(0); }
- 
+
+  /** PMT waveform */
+  std::vector<double> GetWaveform() { return waveform;};
+  void SetWaveform(std::vector<double> _waveform) {waveform = _waveform;};
+  void SetDigitizedWaveform(std::vector<UShort_t> _digitwaveform) {digitWaveForm = _digitwaveform;};
+  std::vector<UShort_t> GetDigitizedWaveform() {return digitWaveForm;};
+
+  /** Total charge as the sum of the charge of all the PE. */
+  Float_t GetTotalCharge() const { return charge; }
+  void SetTotalCharge() { charge = this->GetCharge(); }
+
+
   ClassDef(MCPMT, 1)
-    
+
 protected:
   Int_t id;
   Int_t type;
+  Float_t charge;
+  Float_t wf_charge;
+  Float_t time;
+  Float_t feTime;
   std::vector<MCPhoton> photon;
+  std::vector<UShort_t> digitWaveForm;
+  std::vector<double> waveform;
+
 };
 
   } // namespace DS
 } // namespace RAT
 
 #endif
-
