@@ -7,7 +7,7 @@ valid_end: [0, 0],
 noise_amplitude: 1.0, //amplitude of high frequency noise in mV
 
 nbits: 14, //number of bits
-time_res: 2.0, //time resolution in ns
+sampling_rate: 0.5, //sampling rate in GHz
 volt_high: 1000.0, //upper voltage limit in mV
 volt_low: -1000.0, //lower voltage limit in mV
 offset: -500.0, //voltage offset in mV
@@ -27,7 +27,7 @@ valid_end: [0, 0],
 noise_amplitude: 1.0, //amplitude of high frequency noise in mV
 
 nbits: 12, //number of bits
-time_res: 0.2, //time resolution in ns
+sampling_rate: 5, //sampling rate in GHz
 volt_high: 1000.0, //upper voltage limit in mV
 volt_low: -1000.0, //lower voltage limit in mV
 offset: -500.0, //voltage offset in mV

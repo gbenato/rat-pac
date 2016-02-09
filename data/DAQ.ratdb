@@ -16,4 +16,6 @@ pulse_min: -0.00001, //minimum pulse height to consider in mV
 pulse_mean: 5.5, //1.7 PMT pulse mean in ns
 pulse_time_step: 0.1, //time step in ns (0.1ns is reasonable to get a fast simulation)
 
+sampling_time: 500.0,
+
 }

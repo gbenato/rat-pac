@@ -46,7 +46,8 @@ namespace RAT {
     //Getters
     virtual double GetThreshold(){return fThreshold;};
     virtual int GetDigitizedThreshold(){return fDigitizedThreshold;};
-    virtual double GetTimeStep(){return fTimeStep;};
+    virtual double GetSamplingRate(){return fSamplingRate;};
+    virtual double GetTimeResolution();
     virtual int GetNBits(){return fNBits;};
     virtual double GetVHigh(){return fVhigh;};
     virtual double GetVLow(){return fVlow;};
@@ -62,7 +63,7 @@ namespace RAT {
     DBLinkPtr fLdaq;
 
     std::string fDigitName; //Digitizer type
-    double fTimeStep; //Time resolution in ns
+    double fSamplingRate; //Time resolution in ns
     int fNBits; //N bits of the digitizer
     double fVhigh; //Higher voltage
     double fVlow; //Lower voltage

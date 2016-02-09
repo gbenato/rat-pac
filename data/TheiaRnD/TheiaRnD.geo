@@ -70,21 +70,22 @@
 //  position: [-400.0, -400.0, -180.0],
   material: "mirror",
   color: [0.5, 0.2, 0.1, 0.1],
-}
-
-{
-  name: "GEO",
-  index: "mirror",
-  valid_begin: [0, 0],
-  valid_end: [0, 0],
-  invisible: 0, // omitted for visualization
-  mother: "world", //not used
-  type: "border",
-  volume1: "inner",
-  volume2: "cover",
-  reverse: 1,
   surface: "mirror",
 }
+
+//{
+//  name: "GEO",
+//  index: "mirror",
+//  valid_begin: [0, 0],
+//  valid_end: [0, 0],
+//  invisible: 0, // omitted for visualization
+//  mother: "world", //not used
+//  type: "border",
+//  volume1: "inner",
+//  volume2: "cover",
+//  reverse: 1,
+//  surface: "mirror",
+//}
 
 {
   name: "GEO",
@@ -162,7 +163,7 @@
   r_max: 45.0, //LAB->35.0, WBLS->30.0
   size_z: 14.0,
   position: [0.0, 0.0, 1.0],
-  material: "labppo_scintillator", //water, wbls_1pct_mod, wbls_1pct, wbls_5pct, wbls_10pct, labppo_scintillator
+  material: "water", //water, wbls_1pct_mod, wbls_1pct, wbls_5pct, wbls_10pct, labppo_scintillator
   color: [0.5, 0.1, 0.5, 0.5],
 }
 
@@ -258,7 +259,7 @@
   index: "muon_pmts",
   valid_begin: [0, 0],
   valid_end: [0, 0],
-  mother: "inner",
+  mother: "world",
   type: "pmtarray",
   pmt_model: "h11934", //r7081_hqe, r11780_hqe
   pmt_detector_type: "idpmt",
@@ -274,7 +275,7 @@
    index: "trigger_pmt",
    valid_begin: [0, 0],
    valid_end: [0, 0],
-   mother: "inner",
+   mother: "world",
    type: "pmtarray",
    pmt_model: "h11934", //r7081_hqe, r11780_hqe, fast_test
    pmt_detector_type: "idpmt",

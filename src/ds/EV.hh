@@ -22,6 +22,7 @@
 #include <RAT/DS/Centroid.hh>
 #include <RAT/DS/PathFit.hh>
 #include <vector>
+#include <iostream>
 
 namespace RAT {
   namespace DS {
@@ -41,6 +42,12 @@ public:
 
   /** List of pmts with at least one charge sample in this event. */
   virtual PMT* GetPMT(Int_t i) { return &pmt[i]; }
+  virtual PMT* GetPMTWithID(Int_t pmtid){
+    for(std::vector<PMT>::iterator it = pmt.begin(); it<pmt.end(); it++){
+      if(it->GetID() == pmtid) return &*it;
+    }
+    return NULL;
+  };
   virtual Int_t GetPMTCount() const { return pmt.size(); }
   virtual PMT* AddNewPMT() {
     pmt.resize(pmt.size() + 1);

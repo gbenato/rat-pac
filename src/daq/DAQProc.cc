@@ -6,7 +6,6 @@
 #include <RAT/PMTPulse.hh>
 #include <RAT/PMTWaveform.hh>
 #include <RAT/DS/DAQHeader.hh>
-#include <RAT/DS/RunStore.hh>
 
 #include <CLHEP/Random/RandGauss.h>
 
@@ -14,8 +13,7 @@ using namespace std;
 
 namespace RAT {
 
-  inline bool Cmp_PMTPulse_TimeAscending(const PMTPulse *a,
-    const PMTPulse *b)
+  inline bool Cmp_PMTPulse_TimeAscending(const PMTPulse *a, const PMTPulse *b)
     {
       double atime = a->GetPulseStartTime();
       double btime = b->GetPulseStartTime();
@@ -23,6 +21,7 @@ namespace RAT {
     }
 
     DAQProc::DAQProc() : Processor("daq") {
+
       fLdaq = DB::Get()->GetLink("DAQ");
       fDigitizerV1730 = new Digitizer("V1730");
       fDigitizerV1742 = new Digitizer("V1742");
@@ -51,13 +50,14 @@ namespace RAT {
       detail << dformat("  Min PMT Pulse Height: .................. %5.1f mV\n", fPulseMin);
 
       fEventCounter = 0;
+      setRun = false;
     }
 
 
     void DAQProc::SetS(std::string param, std::string value)
     {
       if(param=="trigger")
-      fTriggerType = value;
+        fTriggerType = value;
 
       if(fTriggerType!="allpmts" && fTriggerType!="triggerpmt" && fTriggerType!="simple" && fTriggerType!="external"){
         std::cerr<<"DAQ: "<<fTriggerType<<" option unknown... EXIT "<<std::endl;
@@ -73,7 +73,7 @@ namespace RAT {
       DS::DAQHeader *daqHeaderV1730 = new DS::DAQHeader();
       daqHeaderV1730->SetAttribute("DAQ_NAME","V1730");
       daqHeaderV1730->SetAttribute("NBITS",fDigitizerV1730->GetNBits());
-      daqHeaderV1730->SetAttribute("TIME_RES",fDigitizerV1730->GetTimeStep());
+      daqHeaderV1730->SetAttribute("TIME_RES",fDigitizerV1730->GetTimeResolution());
       daqHeaderV1730->SetAttribute("TIME_DELAY",fDigitizerV1730->GetSampleDelay());
       daqHeaderV1730->SetAttribute("V_OFFSET",fDigitizerV1730->GetVOffSet());
       daqHeaderV1730->SetAttribute("V_HIGH",fDigitizerV1730->GetVHigh());
@@ -82,20 +82,30 @@ namespace RAT {
       DS::DAQHeader *daqHeaderV1742= new DS::DAQHeader();
       daqHeaderV1742->SetAttribute("DAQ_NAME","V1742");
       daqHeaderV1742->SetAttribute("NBITS",fDigitizerV1742->GetNBits());
-      daqHeaderV1742->SetAttribute("TIME_RES",fDigitizerV1742->GetTimeStep());
+      daqHeaderV1742->SetAttribute("TIME_RES",fDigitizerV1742->GetTimeResolution());
       daqHeaderV1742->SetAttribute("TIME_DELAY",fDigitizerV1742->GetSampleDelay());
       daqHeaderV1742->SetAttribute("V_OFFSET",fDigitizerV1742->GetVOffSet());
       daqHeaderV1742->SetAttribute("V_HIGH",fDigitizerV1742->GetVHigh());
       daqHeaderV1742->SetAttribute("V_LOW",fDigitizerV1742->GetVLow());
       daqHeaderV1742->SetAttribute("RESISTANCE",fDigitizerV1742->GetResistance());
 
-      DS::Run *run = DS::RunStore::GetRun(ds);
-      run->SetID(1);
-      run->SetType(0x00001111);
-      run->SetStartTime(1440638077);
-      run->SetDAQHeader(daqHeaderV1730,"V1730");
-      run->SetDAQHeader(daqHeaderV1742,"V1742");
+      //Get PMTInfo and set Run (only first event)
+      if(!setRun){
+        run = DS::RunStore::GetRun(ds);
+        if(run == NULL) {
+          std::cout<<" Run not Found "<<std::endl;
+          exit(0);
+        }
+        run->SetID(1);
+        run->SetType(0x00001111);
+        run->SetStartTime(1440638077);
+        run->SetDAQHeader(daqHeaderV1730,"V1730");
+        run->SetDAQHeader(daqHeaderV1742,"V1742");
+        pmtInfo = run->GetPMTInfo();
+        //daqHeader->PrintAttributes();
 
+        setRun = true;
+      }
 
       DS::MC *mc = ds->GetMC();
 
@@ -106,6 +116,8 @@ namespace RAT {
         for (int imcpmt=0; imcpmt < mc->GetMCPMTCount(); imcpmt++){
 
           DS::MCPMT *mcpmt = mc->GetMCPMT(imcpmt);
+          int pmtID = mcpmt->GetID();
+          int pmtType = pmtInfo->GetType(pmtID);
 
           //Loop over PEs and create a pulse for each one
           PMTWaveform pmtwf;
@@ -141,14 +153,14 @@ namespace RAT {
           //for posterior analysis
           //          std::cout<<" CHARGE "<<mcpmt->GetCharge()<<" "<<-pmtwf.GetCharge(0.,200.)<<std::endl;
           mcpmt->SetWFCharge(pmtwf.GetCharge(0.,200.)); //for debugging
-          if(mcpmt->GetType() == 1){
-            fDigitizerV1742->AddChannel(mcpmt->GetID(),pmtwf);
-            mcpmt->SetWaveform(fDigitizerV1742->GetAnalogueWaveform(mcpmt->GetID()));
-            mcpmt->SetDigitizedWaveform(fDigitizerV1742->GetDigitizedWaveform(mcpmt->GetID()));
-          } else if(mcpmt->GetType() == 2){
-            fDigitizerV1730->AddChannel(mcpmt->GetID(),pmtwf);
-            mcpmt->SetWaveform(fDigitizerV1730->GetAnalogueWaveform(mcpmt->GetID()));
-            mcpmt->SetDigitizedWaveform(fDigitizerV1730->GetDigitizedWaveform(mcpmt->GetID()));
+          if(pmtType == 1 || pmtType == 3){
+            fDigitizerV1742->AddChannel(pmtID,pmtwf);
+            mcpmt->SetWaveform(fDigitizerV1742->GetAnalogueWaveform(pmtID));
+            mcpmt->SetDigitizedWaveform(fDigitizerV1742->GetDigitizedWaveform(pmtID));
+          } else if(pmtType == 2 || pmtType == 4){
+            fDigitizerV1730->AddChannel(pmtID,pmtwf);
+            mcpmt->SetWaveform(fDigitizerV1730->GetAnalogueWaveform(pmtID));
+            mcpmt->SetDigitizedWaveform(fDigitizerV1730->GetDigitizedWaveform(pmtID));
           }
 
         } //end pmt loop
@@ -171,7 +183,8 @@ namespace RAT {
           // std::cout<<" simple "<<imcpmt<<"/"<<mc->GetMCPMTCount()<<std::endl;
 
           DS::MCPMT *mctriggerpmt = mc->GetMCPMT(imcpmt);
-          if(mctriggerpmt->GetType() != 0) continue; //didn't found the trigger PMT yet
+          int triggerID = mctriggerpmt->GetID();
+          if(pmtInfo->GetType(triggerID) != 0) continue; //didn't found the trigger PMT yet
           //Found trigger PMT!
           if (mctriggerpmt->GetMCPhotonCount() == 0) break;
           //Trigger PMT has PEs!
@@ -184,7 +197,7 @@ namespace RAT {
 
             DS::PMT* pmt = ev->AddNewPMT();
             pmt->SetID(pmtID);
-            pmt->SetType(mcpmt->GetType());
+            pmt->SetType(pmtInfo->GetType(pmtID));
 
             double time = mcpmt->GetMCPhoton(0)->GetFrontEndTime();
             double charge = 0;
@@ -222,10 +235,10 @@ namespace RAT {
         for (int imcpmt=0; imcpmt < mc->GetMCPMTCount(); imcpmt++){
 
           int pmtID = mc->GetMCPMT(imcpmt)->GetID();
-          int pmtType = mc->GetMCPMT(imcpmt)->GetType();
+          int pmtType = pmtInfo->GetType(pmtID);
 
-          if(pmtType == 1) digitizer = fDigitizerV1742;
-          else if(pmtType == 2) digitizer = fDigitizerV1730;
+          if(pmtType == 1 || pmtType == 3) digitizer = fDigitizerV1742;
+          else if(pmtType == 2 || pmtType == 4) digitizer = fDigitizerV1730;
 
           //Sample digitized waveform and look for triggers
           std::vector<UShort_t> DigitizedWaveform = digitizer->GetDigitizedWaveform(pmtID);
@@ -241,7 +254,7 @@ namespace RAT {
 
               DS::PMT* pmt = ev->AddNewPMT();
               pmt->SetID(pmtID);
-              pmt->SetType(mc->GetMCPMT(imcpmt)->GetType());
+              pmt->SetType(pmtType);
               pmt->SetWaveform(digitizer->SampleWaveform(DigitizedWaveform,isample)); //it is defined by the sample that crosses threshold
               isample = digitizer->GoToEndOfSample(isample); //go forward towards the end of the sampling window
             }//end if above trigger
@@ -263,22 +276,20 @@ namespace RAT {
         for (int imcpmt=0; imcpmt < mc->GetMCPMTCount(); imcpmt++){
 
           int pmtID = mc->GetMCPMT(imcpmt)->GetID();
-          int pmtType = mc->GetMCPMT(imcpmt)->GetType();
+          int pmtType = pmtInfo->GetType(pmtID);
 
-          if(pmtType == 1) digitizer = fDigitizerV1742;
-          else if(pmtType == 2) digitizer = fDigitizerV1730;
+          if(pmtType == 1 || pmtType == 3) digitizer = fDigitizerV1742;
+          else if(pmtType == 2 || pmtType == 4) digitizer = fDigitizerV1730;
 
           std::vector<UShort_t> DigitizedWaveform = digitizer->GetDigitizedWaveform(pmtID);
           DS::PMT* pmt = ev->AddNewPMT();
           pmt->SetID(pmtID);
-          pmt->SetType(mc->GetMCPMT(imcpmt)->GetType());
           pmt->SetWaveform(digitizer->SampleWaveform(DigitizedWaveform)); //sample from the beggining of the signal window
 
           DigitizedWaveform.clear(); //prune for next round of PMTs
 
         }//end PMT loop
         digitizer->Clear(); //Clear waveforms for the next round of hits
-
         fEventCounter++;
 
       }
@@ -316,12 +327,12 @@ namespace RAT {
                 int pmtID = mc->GetMCPMT(imcpmt)->GetID();
                 int pmtType = mc->GetMCPMT(imcpmt)->GetType();
 
-                if(pmtType == 1) digitizer = fDigitizerV1742;
-                else if(pmtType == 2) digitizer = fDigitizerV1730;
+                if(pmtType == 1 || pmtType ==3) digitizer = fDigitizerV1742;
+                else if(pmtType == 2 || pmtType == 4) digitizer = fDigitizerV1730;
 
                 DS::PMT* pmt = ev->AddNewPMT();
                 pmt->SetID(pmtID);
-                pmt->SetType(mc->GetMCPMT(imcpmt)->GetType());
+                pmt->SetType(pmtType);
                 pmt->SetWaveform(digitizer->SampleWaveform(digitizer->GetDigitizedWaveform(pmtID), isample));
               } //end reading PMTs
 
@@ -335,7 +346,7 @@ namespace RAT {
 
         digitizer->Clear(); //Clear waveforms for the next round of hits
 
-      } //end if second type of trigger
+      } //end if triggerpmt type of trigger
 
       return Processor::OK;
 

@@ -19,6 +19,7 @@ struct AnaParams {
   double peak_window;
   double peak_qthres;
   double ped_max_fluc;
+  double time_thres;
 
 };
 

@@ -5,7 +5,9 @@
 #include <RAT/Processor.hh>
 #include <RAT/DB.hh>
 #include <CLHEP/Random/RandGeneral.h>
+#include <RAT/DS/PMTInfo.hh>
 #include <RAT/Digitizer.hh>
+#include <RAT/DS/RunStore.hh>
 
 namespace RAT {
 
@@ -18,6 +20,11 @@ public:
   virtual void SetS(std::string param, std::string value);
 
 protected:
+
+  DS::Run *run;
+  RAT::DS::PMTInfo *pmtInfo;
+  bool setRun;
+  DBLinkPtr fLdaq;
   int fEventCounter;
 
   std::vector<double> fSPECharge;
@@ -32,15 +39,6 @@ protected:
   double fTriggerThreshold; ///< time before discriminator fires that sampling gate opens
   int fPulseType; ///< Pulse type: 0=square pulses, 1=real pulses
   float fPulseMean; ///< mean of a PMT pulse in ns (only real pulses)
-
-  DBLinkPtr fLdaq;
-
-  //Digitizer
-  double fOffSet;
-  double fVHigh;
-  double fVLow;
-  double fResistance;
-  int fNBits;
 
   Digitizer *fDigitizerV1730;
   Digitizer *fDigitizerV1742;

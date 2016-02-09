@@ -2,12 +2,10 @@
 /glg4debug/glg4param omit_hadronic_processes  1.0
 
 /rat/db/set DETECTOR experiment "TheiaRnD"
-#/rat/db/set DETECTOR geo_file "TheiaRnD/pmt_test.geo"
-#/rat/db/set DETECTOR geo_file "TheiaRnD/onepmt_new_close.geo"
 /rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD.geo"
 
 /run/initialize
-/process/inactivate Cerenkov
+#/process/inactivate Cerenkov
 #/glg4scint/off
 #/glg4scint/reemission off
 /tracking/storeTrajectory 1
@@ -66,15 +64,13 @@
 ##### BEGIN EVENT LOOP ##################
 /rat/proc daq
 /rat/procset trigger "external" #simple, triggerpmt, allpmts, external
-/rat/proc fitcentroid
-/rat/procset pmttype 1 //use only this type to fit centroid
 /rat/proc analysis
 /rat/proc count
 /rat/procset update 10
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "../results/TheiaRnD_cosmics_scint_labppo_time_tracks.root"
+/rat/procset file "../../results/TheiaRnD_mcprod_water_cosmics.root"
 #########################################
 
 ##### GENERATORS #################
@@ -101,7 +97,7 @@
 
 ###PHOTON BOMB
 # /generator/add combo pbomb:point:uniform    # Photonbomb generator from fixed point, uniform in time
-# /generator/pos/set 0.0 0.0 200.0
+# /generator/pos/set 0.0 -200.0 400.0
 # /generator/vtx/set 1000 400      # For photobomb
 
 #/generator/add combo gun:point
@@ -110,7 +106,6 @@
 # /generator/vtx/set opticalphoton 0 0 -3.0e-6
 # /generator/pos/set 0.0 0.0 300.0
 # /generator/pos/set photons
-
 
 ###RADIACTIVE SOURCE DECAY0
 # /generator/add combo decay0:fill:uniform
@@ -132,4 +127,4 @@
 #######################################
 
 ##### RUN ###########
-/run/beamOn 20
+/run/beamOn 10

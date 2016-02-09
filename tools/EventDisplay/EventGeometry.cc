@@ -291,8 +291,6 @@ void EventGeometry::AddNewPMT(std::string name, std::string mother, double x_pos
 
   newpmt->SetNPE(0);
 
-  std::cout<<"Adding PMT "<<name<<" "<<std::endl;
-
 }
 
 

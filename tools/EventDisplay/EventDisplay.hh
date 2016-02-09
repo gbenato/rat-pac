@@ -32,7 +32,7 @@ public:
   void OpenFile(std::string);
   int GetNEvents(){return nevents;};
   void DisplayEvent(int);
-  void LoadEvent(int);
+  bool LoadEvent(int);
   void DumpEventInfo(int);
   void DumpDisplayInfo();
   void SetGeometry();
