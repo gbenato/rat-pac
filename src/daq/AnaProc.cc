@@ -249,8 +249,6 @@ namespace RAT {
     double fResistance = daqHeader->GetDoubleAttribute("RESISTANCE");
     int fNBits = daqHeader->GetIntAttribute("NBITS");
 
-    std::cout<<" ana "<<anaParams.int_start<<" "<<fTimeStep<<std::endl;
-
     int nADCs = 1 << fNBits; //Calculate the number of adc counts
     double voltsperadc = (fVHigh - fVLow)/(double)nADCs;
 

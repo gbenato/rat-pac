@@ -24,14 +24,14 @@ valid_begin: [0, 0],
 valid_end: [0, 0],
 
 //Pulse analysis
-ped_start: -300.0,   //start time of pedestal window in ns (20.0)
-ped_end: 0.0,        //end time of pedestal window in ns (70.0)
+ped_start: 20.0,     //start time of pedestal window in ns (mc:-300.0, dt:20.0)
+ped_end: 100.0,      //end time of pedestal window in ns (mc:0.0, dt:100.0)
 max_spread: 3.0,     //
-int_start: 0.0,      //start time of integration window in ns (70.0)
-int_end: 40.0,       //end time of integration window in ns (210.0)
+int_start: 200.0,    //start time of integration window in ns (mc:0.0, dt:100.0)
+int_end: 250.0,      //end time of integration window in ns (mc:40.0, dt:180.0)
 peak_window: 10.0,   //width in ns of the sampling window to look for a peak
 peak_qthres: 0.5,    //charge threshold in 'peak_window' for looking for a peak
 ped_max_fluc: 5.0,   //maximum allowed pedestal fluctuation in mV
-time_thres: -0.3,   //threshold from pedestal to define a pulse time
+time_thres: -0.3,    //threshold from pedestal to define a pulse time
 
 }
