@@ -89,6 +89,7 @@ namespace RAT {
     std::string daqName = daqHeader->GetStringAttribute("DAQ_NAME");
     double fTimeStep = daqHeader->GetDoubleAttribute("TIME_RES");
     double fTimeDelay = daqHeader->GetDoubleAttribute("TIME_DELAY");
+    fTimeDelay = 0.;
     double fVHigh = daqHeader->GetDoubleAttribute("V_HIGH");
     double fVLow = daqHeader->GetDoubleAttribute("V_LOW");
     double fVOffSet = daqHeader->GetDoubleAttribute("V_OFFSET");
@@ -150,6 +151,7 @@ namespace RAT {
 
     double fTimeStep = daqHeader->GetDoubleAttribute("TIME_RES");
     double fTimeDelay = daqHeader->GetDoubleAttribute("TIME_DELAY");
+    fTimeDelay = 0.;
     double fVHigh = daqHeader->GetDoubleAttribute("V_HIGH");
     double fVLow = daqHeader->GetDoubleAttribute("V_LOW");
     double fVOffSet = daqHeader->GetDoubleAttribute("V_OFFSET");
@@ -243,6 +245,7 @@ namespace RAT {
 
     double fTimeStep = daqHeader->GetDoubleAttribute("TIME_RES");
     double fTimeDelay = daqHeader->GetDoubleAttribute("TIME_DELAY");
+    fTimeDelay = 0.;
     double fVHigh = daqHeader->GetDoubleAttribute("V_HIGH");
     double fVLow = daqHeader->GetDoubleAttribute("V_LOW");
     double fVOffSet = daqHeader->GetDoubleAttribute("V_OFFSET");

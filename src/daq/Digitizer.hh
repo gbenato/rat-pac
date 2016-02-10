@@ -55,8 +55,13 @@ namespace RAT {
     virtual double GetResistance(){return fResistance;};
     virtual double GetNoiseAmpl(){return fNoiseAmpl;};
     virtual double GetDigitThres(){return fDigitizedThreshold;};
-    virtual int GetSamplingWindow(){return fSamplingWindow;};
+    virtual int GetNSamples(){return fNSamples;};
+    virtual double GetTimeWindow();
     virtual double GetSampleDelay(){return fSampleDelay;};
+
+    //Methods
+    virtual double GetTimeAtSample(int sample);
+    virtual int GetSampleAtTime(double time);
 
   protected:
 
@@ -72,7 +77,7 @@ namespace RAT {
     double fNoiseAmpl; //Electronic noise amplitud
     double fThreshold; //Threshold in volts
     int fDigitizedThreshold; //Trigger threshold in ADC counts
-    int fSamplingWindow; //Width of the sampling windows in ns
+    int fNSamples; //Total number of samples per digitized trace
     double fSampleDelay; //Time delay before threshold for the sampling window
     std::map< int, std::vector<double> > fNoise; //Channel:Electronic noise non-digitized
     std::map< int, std::vector<double> > fAnalogueWaveForm; //Channel:Real waveform for each channel

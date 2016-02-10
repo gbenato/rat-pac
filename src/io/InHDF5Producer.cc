@@ -225,6 +225,7 @@ namespace RAT {
           daqHeaderV1742->SetAttribute("DAQ_NAME","V1742");
           daqHeaderV1742->SetAttribute("NBITS",(int)bits);
           daqHeaderV1742->SetAttribute("TIME_RES",(double)ns_sample);
+          daqHeaderV1742->SetAttribute("TIME_DELAY",0.0);
           daqHeaderV1742->SetAttribute("V_OFFSET",(double)voffset);
           daqHeaderV1742->SetAttribute("V_HIGH",1000.);
           daqHeaderV1742->SetAttribute("V_LOW",-1000.);
@@ -312,6 +313,7 @@ namespace RAT {
         daqHeaderV1730->SetAttribute("DAQ_NAME","V1730");
         daqHeaderV1730->SetAttribute("NBITS",(int)bits);
         daqHeaderV1730->SetAttribute("TIME_RES",(double)ns_sample);
+        daqHeaderV1730->SetAttribute("TIME_DELAY",0.0);
         daqHeaderV1730->SetAttribute("V_OFFSET",(double)voffset);
         daqHeaderV1730->SetAttribute("V_HIGH",1000.);
         daqHeaderV1730->SetAttribute("V_LOW",-1000.);

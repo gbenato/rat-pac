@@ -38,6 +38,7 @@ public:
   void SetGeometry();
   bool IsCut();
   bool IsCerenkov();
+  bool IsTriggered();
   bool IsPE();
   void CustomizeTrack(TPolyLine3D*,RAT::DS::MCTrack*);
 

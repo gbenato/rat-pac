@@ -9,21 +9,25 @@ namespace RAT {
 // Default implementations
 void Processor::SetI(std::string param, int /*value*/)
 {
+  std::cout<<" int "<<param<<std::endl;
   throw Processor::ParamUnknown(param);
 }
 
 void Processor::SetF(std::string param, float /*value*/)
 {
+  std::cout<<" float "<<param<<std::endl;
   throw Processor::ParamUnknown(param);
 }
 
 void Processor::SetD(std::string param, double /*value*/)
 {
+  std::cout<<" double "<<param<<std::endl;
   throw Processor::ParamUnknown(param);
 }
 
 void Processor::SetS(std::string param, std::string /*value*/)
 {
+  std::cout<<" string "<<param<<std::endl;
   throw Processor::ParamUnknown(param);
 }
 

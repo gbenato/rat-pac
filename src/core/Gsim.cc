@@ -48,7 +48,6 @@
 #include <math.h>
 
 #include <RAT/ParentPrimaryVertexInformation.hh>
-#include <RAT/VertexGen_Decay0.hh>
 
 
 namespace RAT {
@@ -126,10 +125,6 @@ void Gsim::Init() {
                                    new Alloc<GLG4Gen,Coincidence_Gen>);
   GlobalFactory<GLG4Gen>::Register("vertexfile",
                                    new Alloc<GLG4Gen,VertexFile_Gen>);
-
-  GlobalFactory<GLG4VertexGen>::Register("decay0",
-					 new Alloc<GLG4VertexGen,
-					 VertexGen_Decay0>);
 
   // An additional "messenger" class for user diagnostics
   theDebugMessenger = new GLG4DebugMessenger(theDetectorConstruction);
