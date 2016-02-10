@@ -177,7 +177,7 @@ namespace RAT {
         std::size_t pos = grpname.find("gr") + 2;
         std::string sgrnumber = grpname.substr(pos);
         try{
-          grnumber = std::stoi(sgrnumber);
+          grnumber = std::atoi(sgrnumber.c_str());
         }
         catch (...){
           Log::Die("Group number " + sgrnumber + "is neither a positive integer nor zero");
@@ -198,7 +198,7 @@ namespace RAT {
           std::size_t pos = chname.find("ch") + 2;
           std::string schnumber = chname.substr (pos);
           try{
-            chnumber = std::stoi(schnumber);
+            chnumber = std::atoi(schnumber.c_str());
             chnumber = chnumber + grnumber*8; //8 channels per group
           }
           catch (...){
@@ -287,7 +287,7 @@ namespace RAT {
         std::size_t pos = chname.find("ch") + 2;
         std::string schnumber = chname.substr (pos);
         try{
-          chnumber = std::stoi(schnumber);
+          chnumber = std::atoi(schnumber.c_str());
         }
         catch (...){
           Log::Die("Channel number "+ schnumber +" is neither a positive integer nor zero");
