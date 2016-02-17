@@ -74,6 +74,11 @@ std::vector<TH1F*> h_mcpmt_charge; //MC charge
 std::vector<TH1F*> h_mcpmt_time; //MC FE time
 std::vector<TH1F*> h_mcpmt_fetime; //MC FE time
 
+//MC
+std::vector<TH1F*> h_mctime; //Measured time
+std::vector<TH1F*> h_mctime_res; //Measured time
+
+
 //Real data
 //std::vector<TH1F*> h_dt_charge; //Measured charge
 RAT::DS::PMTInfo *pmtInfo;
@@ -143,7 +148,7 @@ void GetPMTInfo(){
     pos_pmts.push_back(pmt_temp);
   }
 
-  Color_t mycolors[] = {1, 1, 1, 1, 1, 1, 1, 1, kBlue, kOrange, kRed, kRed, kOrange, kBlue, kBlue, kOrange, kRed, kRed, kOrange, kBlue};
+  Color_t mycolors[] = {1, 1, 1, 1, 1, 1, 1, 1, kBlue, kOrange, kRed, kRed, kOrange, kBlue, kBlue, kOrange, kRed, kRed, kOrange, kBlue, 1};
   pmtidtocolor.insert(pmtidtocolor.begin(), mycolors, mycolors + npmts );
 
 }
@@ -167,8 +172,8 @@ void GetHistos(){
     h_charge.push_back(new TH1F(Form("h_charge_%i",ih),"h_charge",300,-2,30));
     h_charge_res.push_back(new TH1F(Form("h_charge_res_%i",ih),"h_charge_res",50,0,50));
     h_charge_vs_trigq.push_back(new TH2F(Form("h_charge_vs_trigq_%i",ih),"h_charge_vs_trigq",200,0,100,200,0,100));
-    h_time.push_back(new TH1F(Form("h_time_%i",ih),"h_time",500,0,100));
-    h_time_res.push_back(new TH1F(Form("h_time_res_%i",ih),"h_time_res",500,0,100));
+    h_time.push_back(new TH1F(Form("h_time_%i",ih),"h_time",500,50,120));
+    h_time_res.push_back(new TH1F(Form("h_time_res_%i",ih),"h_time_res",500,50,120));
     h_time_diff.push_back(new TH1F(Form("h_time_diff_%i",ih),"h_time_diff",100,-100,100));
   }
   h_charge_muontrigs = new TH2F("h_charge_muontrigs","h_charge_muontrigs",200,0,700,200,0,700);
@@ -271,7 +276,9 @@ void GetHistos(){
           double pmttime = ev->GetPMT(ipmt)->GetTime();
           h_time[pmtid]->Fill(pmttime);
           double deltat = pmttime - lighttime;
-          h_time_res[pmtid]->Fill(deltat);
+
+          //          std::cout<<" time "<<pmttime<<" "<<deltat<<std::endl;
+          if(charge>5.0) h_time_res[pmtid]->Fill(deltat);
           if(deltat>-900) h_pmt_timevspos->Fill(pos_pmts[pmtid]->X(),pos_pmts[pmtid]->Y(),deltat);
           //Compute chi2 for cher/scint
           if(ev->GetPMT(ipmt)->GetType()==1){
@@ -353,7 +360,8 @@ void DrawHistos(){
   bool firstdrawn0 = false;
   bool firstdrawn1 = false;
   bool firstdrawn2 = false;
-  TCanvas *c_event = new TCanvas("c_event","c_event",900,900);
+  bool firstdrawn3 = false;
+  TCanvas *c_event = new TCanvas("c_event","c_event",900,1000);
   TCanvas *c_charge_total = new TCanvas("c_charge_total","c_charge_total",900,900);
   c_charge_total->cd();
   h_charge_total->Draw(); //Total charge in event
@@ -362,7 +370,12 @@ void DrawHistos(){
   c_charge[0] = new TCanvas("c_charge_0","c_charge_0",900,900);
   c_charge[1] = new TCanvas("c_charge_1","c_charge_1",900,900);
   c_charge[2] = new TCanvas("c_charge_2","c_charge_2",900,900);
-  c_event->Divide(3,3);
+  TCanvas *c_time[4];
+  c_time[0] = new TCanvas("c_time_0","c_time_0",900,900);
+  c_time[1] = new TCanvas("c_time_1","c_time_1",900,900);
+  c_time[2] = new TCanvas("c_time_2","c_time_2",900,900);
+  c_time[3] = new TCanvas("c_time_3","c_time_3",900,900);
+  c_event->Divide(3,4);
   c_event->cd(1);
   h_pmt_qresvspos->Draw("colz text"); //Average charge per pmt vs position
   c_event->cd(4);
@@ -375,7 +388,7 @@ void DrawHistos(){
       c_charge[0]->cd();
       h_charge[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
       h_charge[pmtid]->Draw(opt);
-      c_event->cd(3);
+      c_time[0]->cd();
       h_time_res[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
       h_time_res[pmtid]->Draw(opt);
       firstdrawn0 = true;
@@ -385,7 +398,7 @@ void DrawHistos(){
       c_charge[1]->cd();
       h_charge[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
       h_charge[pmtid]->Draw(opt);
-      c_event->cd(6);
+      c_time[1]->cd();
       h_time_res[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
       h_time_res[pmtid]->Draw(opt);
       firstdrawn1 = true;
@@ -395,18 +408,28 @@ void DrawHistos(){
       c_charge[2]->cd();
       h_charge[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
       h_charge[pmtid]->Draw(opt);
-      c_event->cd(9);
+      c_time[2]->cd();
       h_time_res[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
       h_time_res[pmtid]->Draw(opt);
       firstdrawn2 = true;
+    } else if(pmttype==0){ //Trigger tag
+      const char *opt = firstdrawn3 ? "sames" : "";
+      // c_event->cd(11);
+      // c_charge[2]->cd();
+      // h_charge[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
+      // h_charge[pmtid]->Draw(opt);
+      c_time[3]->cd();
+      h_time_res[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
+      h_time_res[pmtid]->Draw(opt);
+      firstdrawn3 = true;
     }
   }
 
   TCanvas *c_charge_muontrigs = new TCanvas("c_charge_muontrigs","c_charge_muontrigs",900,900);
   h_charge_muontrigs->Draw("colz");
 
-  TCanvas *c_mc = new TCanvas("c_mc","c_mc",900,600);
-  c_mc->Divide(3,2);
+  TCanvas *c_mc = new TCanvas("c_mc","c_mc",900,1000);
+  c_mc->Divide(3,3);
   for(int pmtid = 0; pmtid<npmts; pmtid++){
     for(int pmtid = 0; pmtid<npmts; pmtid++){
       int pmttype = pmtInfo->GetType(pmtid);
@@ -419,8 +442,8 @@ void DrawHistos(){
         h_mcpmt_npe[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
         h_mcpmt_npe[pmtid]->Draw(opt);
         c_mc->cd(3);
-        h_mcpmt_fetime[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
-        h_mcpmt_fetime[pmtid]->Draw(opt);
+        h_mcpmt_time[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
+        h_mcpmt_time[pmtid]->Draw(opt);
         firstdrawn0 = true;
       } else if(pmttype==2){ //Large tubes
         const char *opt = firstdrawn1 ? "sames" : "";
@@ -431,9 +454,21 @@ void DrawHistos(){
         h_mcpmt_npe[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
         h_mcpmt_npe[pmtid]->Draw(opt);
         c_mc->cd(6);
-        h_mcpmt_fetime[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
-        h_mcpmt_fetime[pmtid]->Draw(opt);
+        h_mcpmt_time[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
+        h_mcpmt_time[pmtid]->Draw(opt);
         firstdrawn1 = true;
+      } else if(pmttype==0){ //Trigger tube
+        const char *opt = firstdrawn2 ? "sames" : "";
+        // c_mc->cd(7);
+        // h_mcpmt_charge[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
+        // h_mcpmt_charge[pmtid]->Draw(opt);
+        // c_mc->cd(8);
+        // h_mcpmt_npe[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
+        // h_mcpmt_npe[pmtid]->Draw(opt);
+        c_mc->cd(9);
+        h_mcpmt_time[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
+        h_mcpmt_time[pmtid]->Draw(opt);
+        firstdrawn2 = true;
       }
     }
   }

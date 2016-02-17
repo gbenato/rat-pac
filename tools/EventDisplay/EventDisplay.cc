@@ -450,10 +450,10 @@ bool EventDisplay::LoadEvent(int ievt){
       double timeStep = 0;
       double timeDelay = 0;
 
-      if(pmtType==2 || pmtType==0){
+      if(pmtType==2){
         timeStep = daqHeaderV1730->GetDoubleAttribute("TIME_RES");
         //      timeDelay = daqHeaderV1730->GetDoubleAttribute("TIME_DELAY");
-      } else if(pmtType==1 || pmtType==3){
+      } else if(pmtType==1 || pmtType==3 || pmtType==0){
         timeStep = daqHeaderV1742->GetDoubleAttribute("TIME_RES");
         //      timeDelay = daqHeaderV1742->GetDoubleAttribute("TIME_DELAY");
       }
@@ -501,7 +501,7 @@ bool EventDisplay::LoadEvent(int ievt){
     #endif
 
   }
-  else if(debugLevel > 0) std::cout<<"EventDisplay::LoadEvent -- EV do not exist! "<<std::endl;
+  else if(debugLevel > 0) std::cout<<"EventDisplay::LoadEvent -- EV does not exist! "<<std::endl;
 
   if(debugLevel > 0) std::cout<<" EventDisplay::LoadEvent - DONE "<<std::endl;
 
@@ -768,7 +768,8 @@ void EventDisplay::DisplayEvent(int ievt){
       timeMarker.SetMarkerSize(1.);
       timeMarker.SetMarkerColor(ipmt+20);
       timeMarker.SetMarkerStyle(23);
-      timeMarker.DrawMarker(pmtTime[pmtID], PMTDigitizedWaveforms[ipmt].GetYaxis()->GetXmax());
+      timeMarker.DrawMarker(pmtTime[pmtID], 0);
+      timeMarker.DrawMarker(pmtTime[pmtID], PMTDigitizedWaveforms[ipmt].GetYaxis()->GetXmin());
 
       //      PMTDigitizedWaveforms[ipmt].ComputeRange(xmin_temp,xmax_temp,ymin_temp,ymax_temp);
     }

@@ -19,6 +19,7 @@ namespace RAT {
     anaV1730.peak_qthres = fLAnalysis->GetD("peak_qthres");
     anaV1730.ped_max_fluc = fLAnalysis->GetD("ped_max_fluc");
     anaV1730.time_thres = fLAnalysis->GetD("time_thres");
+    anaV1730.time_thres_frac = fLAnalysis->GetD("time_thres_frac");
 
     fLAnalysis = DB::Get()->GetLink("ANALYSIS","V1742");
     anaV1742.ped_start = fLAnalysis->GetD("ped_start");
@@ -30,6 +31,7 @@ namespace RAT {
     anaV1742.peak_qthres = fLAnalysis->GetD("peak_qthres");
     anaV1742.ped_max_fluc = fLAnalysis->GetD("ped_max_fluc");
     anaV1742.time_thres = fLAnalysis->GetD("time_thres");
+    anaV1742.time_thres_frac = fLAnalysis->GetD("time_thres_frac");
 
     gotDAQHeader = false;
 
@@ -66,13 +68,15 @@ namespace RAT {
         int pmtID = pmt->GetID();
         int pmtType = pmtInfo->GetType(pmtID);
         std::vector<UShort_t> dWaveform = pmt->GetWaveform();
-        if(pmtType==1 || pmtType==3){
-          //        pmt->SetTime(GetTimeAtPeak(dWaveform), daqHeaderV1742 );
-          pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1742, anaV1742) );
+        if(pmtType==1 || pmtType==3 || pmtType==0){
+          //          pmt->SetTime(GetTimeAtPeak(dWaveform), daqHeaderV1742 );
+          //          pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1742, anaV1742) );
+          pmt->SetTime( GetTimeAtFraction(dWaveform, daqHeaderV1742, anaV1742) );
           pmt->SetCharge(IntegrateCharge(dWaveform, daqHeaderV1742, anaV1742) );
-        } else if(pmtType==2 || pmtType==4){
+        } else if(pmtType==2){
           //        pmt->SetTime(GetTimeAtPeak(dWaveform), daqHeaderV1730 );
-          pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1730, anaV1730) );
+          //        pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1730, anaV1730) );
+          pmt->SetTime( GetTimeAtFraction(dWaveform, daqHeaderV1730, anaV1730) );
           pmt->SetCharge(IntegrateCharge(dWaveform, daqHeaderV1730, anaV1730) );
         }
       }//end PMT loop
@@ -82,6 +86,81 @@ namespace RAT {
     return Processor::OK;
 
   } //AnaProc::DSEvent
+
+  //Calculates the time at which the waveform crosses threshold
+  double AnaProc::GetTimeAtFraction(std::vector<UShort_t> dWaveform, RAT::DS::DAQHeader *daqHeader, AnaParams anaParams){
+
+    std::string daqName = daqHeader->GetStringAttribute("DAQ_NAME");
+    double fTimeStep = daqHeader->GetDoubleAttribute("TIME_RES");
+    double fTimeDelay = daqHeader->GetDoubleAttribute("TIME_DELAY");
+    fTimeDelay = 0.;
+    double fVHigh = daqHeader->GetDoubleAttribute("V_HIGH");
+    double fVLow = daqHeader->GetDoubleAttribute("V_LOW");
+    double fVOffSet = daqHeader->GetDoubleAttribute("V_OFFSET");
+    double fResistance = daqHeader->GetDoubleAttribute("RESISTANCE");
+    int fNBits = daqHeader->GetIntAttribute("NBITS");
+
+    int nADCs = 1 << fNBits; //Calculate the number of adc counts
+    double voltsperadc = (fVHigh - fVLow)/(double)nADCs;
+
+    //Compute pedestal charge
+    int s_ped_start = floor((anaParams.ped_start + fTimeDelay)/fTimeStep);
+    int s_ped_end = floor((anaParams.ped_end + fTimeDelay)/fTimeStep);
+
+    double ped_min,ped_max,ped_mean;
+    ped_min = ped_max = ped_mean = (dWaveform[s_ped_start]*voltsperadc + fVLow - fVOffSet)*fTimeStep/fResistance;
+    for (size_t isample = s_ped_start+1; isample < s_ped_end; isample++) {
+      double voltage = (dWaveform[s_ped_start]*voltsperadc + fVLow - fVOffSet)*fTimeStep/fResistance;
+      if (ped_min > voltage) ped_min = voltage;
+      if (ped_max < voltage) ped_max = voltage;
+      ped_mean += voltage;
+    }
+    ped_mean /= (double)(s_ped_end-s_ped_start);
+    if (ped_max - ped_min > anaParams.ped_max_fluc) {
+      std::cout<<" Pedestal above fluctuations "<<ped_max<<" "<<ped_min<<" "<<anaParams.ped_max_fluc<<std::endl;
+      return -9999.;
+    }
+
+    int s_int_start = floor((anaParams.int_start + fTimeDelay)/fTimeStep);
+    int s_int_end = floor((anaParams.int_end + fTimeDelay)/fTimeStep);
+
+    vector<double> values;
+    values.resize(s_int_end - s_int_start);
+    for (size_t isample = 0; isample < values.size(); isample++) {
+      values[isample] = (dWaveform[isample+s_int_start]*voltsperadc + fVLow - fVOffSet)*fTimeStep/fResistance - ped_mean;
+    }
+
+    //Find the max and define threshold given the fraction
+    double high_peak = 0.;
+    double sample_peak = 0.;
+    for(UShort_t isample=0; isample<values.size(); isample++){
+      //      std::cout<<" AnaProc::GetTimeAtThreshold: "<<isample<<"/"<<values.size()<<": "<<values[isample]<<" "<<Vthres<<std::endl;
+      //      std::cout<<" AnaProc::GetTimeAtThreshold: "<<isample<<"/"<<values.size()<<": "<<dWaveform[isample]<<std::endl;
+      if(values[isample]<high_peak) {
+        sample_peak = isample + s_int_start;
+        high_peak = values[isample];
+      }
+    }
+
+    double Vthres = high_peak*anaParams.time_thres_frac;
+    int sthres = 0;
+    for(UShort_t isample=0; isample<values.size(); isample++){
+      //      std::cout<<" AnaProc::GetTimeAtThreshold: "<<isample<<"/"<<values.size()<<": "<<values[isample]<<" "<<Vthres<<std::endl;
+      //      std::cout<<" AnaProc::GetTimeAtThreshold: "<<isample<<"/"<<values.size()<<": "<<dWaveform[isample]<<std::endl;
+      if(values[isample]<Vthres) {
+        sthres = isample + s_int_start;
+        break;
+      }
+    }
+    if(sthres == 0) {
+      //      std::cout<<" AnaProc::GetTimeAtThreshold: waveform did not cross threshold "<<std::endl;
+      return -9999;
+    }
+    else{
+      return sthres*fTimeStep - fTimeDelay;
+    }
+
+  }
 
   //Calculates the time at which the waveform crosses threshold
   double AnaProc::GetTimeAtThreshold(std::vector<UShort_t> dWaveform, RAT::DS::DAQHeader *daqHeader, AnaParams anaParams){
@@ -129,7 +208,7 @@ namespace RAT {
     double Vthres = anaParams.time_thres;
     int sthres = 0;
     for(UShort_t isample=0; isample<values.size(); isample++){
-      //      std::cout<<" AnaProc::GetTimeAtThreshold: "<<isample<<"/"<<values.size()<<": "<<values[isample]<<" "<<Vthres<<std::endl;
+      std::cout<<" AnaProc::GetTimeAtThreshold: "<<isample<<"/"<<values.size()<<": "<<values[isample]<<" "<<Vthres<<std::endl;
       //      std::cout<<" AnaProc::GetTimeAtThreshold: "<<isample<<"/"<<values.size()<<": "<<dWaveform[isample]<<std::endl;
       if(values[isample]<Vthres) {
         sthres = isample + s_int_start;

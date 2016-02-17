@@ -163,7 +163,7 @@
   r_max: 45.0, //LAB->35.0, WBLS->30.0
   size_z: 14.0,
   position: [0.0, 0.0, 1.0],
-  material: "water", //water, wbls_1pct_mod, wbls_1pct, wbls_5pct, wbls_10pct, labppo_scintillator
+  material: "labppo_scintillator", //water, wbls_1pct_mod, wbls_1pct, wbls_5pct, wbls_10pct, labppo_scintillator
   color: [0.5, 0.1, 0.5, 0.5],
 }
 

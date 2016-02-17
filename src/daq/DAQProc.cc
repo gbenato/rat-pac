@@ -154,11 +154,11 @@ namespace RAT {
           //for posterior analysis
           //          std::cout<<" CHARGE "<<mcpmt->GetCharge()<<" "<<-pmtwf.GetCharge(0.,200.)<<std::endl;
           mcpmt->SetWFCharge(pmtwf.GetCharge(0.,200.)); //for debugging
-          if(pmtType == 1 || pmtType == 3){
+          if(pmtType == 1 || pmtType == 3 || pmtType == 0){
             fDigitizerV1742->AddChannel(pmtID,pmtwf);
             mcpmt->SetWaveform(fDigitizerV1742->GetAnalogueWaveform(pmtID));
             mcpmt->SetDigitizedWaveform(fDigitizerV1742->GetDigitizedWaveform(pmtID));
-          } else if(pmtType == 2 || pmtType == 0){
+          } else if(pmtType == 2){
             fDigitizerV1730->AddChannel(pmtID,pmtwf);
             mcpmt->SetWaveform(fDigitizerV1730->GetAnalogueWaveform(pmtID));
             mcpmt->SetDigitizedWaveform(fDigitizerV1730->GetDigitizedWaveform(pmtID));
@@ -238,8 +238,8 @@ namespace RAT {
           int pmtID = mc->GetMCPMT(imcpmt)->GetID();
           int pmtType = pmtInfo->GetType(pmtID);
 
-          if(pmtType == 1 || pmtType == 3) digitizer = fDigitizerV1742;
-          else if(pmtType == 2 || pmtType == 0) digitizer = fDigitizerV1730;
+          if(pmtType == 1 || pmtType == 3 || pmtType == 0) digitizer = fDigitizerV1742;
+          else if(pmtType == 2) digitizer = fDigitizerV1730;
 
           //Sample digitized waveform and look for triggers
           std::vector<UShort_t> DigitizedWaveform = digitizer->GetDigitizedWaveform(pmtID);
@@ -282,8 +282,8 @@ namespace RAT {
           int pmtID = mc->GetMCPMT(imcpmt)->GetID();
           int pmtType = pmtInfo->GetType(pmtID);
 
-          if(pmtType == 1 || pmtType == 3) digitizer = fDigitizerV1742;
-          else if(pmtType == 2 || pmtType == 0) digitizer = fDigitizerV1730;
+          if(pmtType == 1 || pmtType == 3 || pmtType == 0) digitizer = fDigitizerV1742;
+          else if(pmtType == 2) digitizer = fDigitizerV1730;
 
           std::vector<UShort_t> DigitizedWaveform = digitizer->GetDigitizedWaveform(pmtID);
           DS::PMT* pmt = ev->AddNewPMT();
@@ -314,14 +314,16 @@ namespace RAT {
         //threshold
         if(triggerID>-1){ //means the trigger PMT exists in the event and hence we have a hit
 
-          std::vector<UShort_t> DigitizedTriggerWaveform = fDigitizerV1730->GetDigitizedWaveform(triggerID);
+          RAT::Digitizer *digitizer = fDigitizerV1742;
+
+          std::vector<UShort_t> DigitizedTriggerWaveform = digitizer->GetDigitizedWaveform(triggerID);
           //Sample the digitized waveform to look for triggers
           for(int isample=0; isample<DigitizedTriggerWaveform.size(); isample++){
-            // std::cout<<" SAMPLE "<<isample<<"/"<<DigitizedTriggerWaveform.size()<<" "<<DigitizedTriggerWaveform[isample]<<" "<<fDigitizerV1730->GetDigitizedThreshold()<<std::endl;
+            // std::cout<<" SAMPLE "<<isample<<"/"<<DigitizedTriggerWaveform.size()<<" "<<DigitizedTriggerWaveform[isample]<<" "<<digitizer->GetDigitizedThreshold()<<std::endl;
 
-            if (DigitizedTriggerWaveform[isample]<=fDigitizerV1730->GetDigitizedThreshold()){ //hit above threshold! (remember the pulses are negative)
+            if (DigitizedTriggerWaveform[isample]<=digitizer->GetDigitizedThreshold()){ //hit above threshold! (remember the pulses are negative)
 
-              double threstime = fDigitizerV1730->GetTimeAtSample(isample);
+              double threstime = digitizer->GetTimeAtSample(isample);
               // std::cout<<" Above threshold "<<isample<<"/"<<DigitizedTriggerWaveform.size()<<" "<<DigitizedTriggerWaveform[isample]<<" "<<fDigitizer->GetDigitizedThreshold()<<std::endl;
 
               //Create a new event
@@ -336,8 +338,8 @@ namespace RAT {
                 int pmtID = mc->GetMCPMT(imcpmt)->GetID();
                 int pmtType = pmtInfo->GetType(pmtID);
 
-                if(pmtType == 1 || pmtType ==3) digitizer = fDigitizerV1742;
-                else if(pmtType == 2 || pmtType == 0) digitizer = fDigitizerV1730;
+                if(pmtType == 1 || pmtType ==3 || pmtType == 0) digitizer = fDigitizerV1742;
+                else if(pmtType == 2) digitizer = fDigitizerV1730;
 
                 DS::PMT* pmt = ev->AddNewPMT();
                 pmt->SetID(pmtID);

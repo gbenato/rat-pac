@@ -26,10 +26,9 @@
     //Cuts
    "charge_cut_pmts": [6,7],   //PMT IDs to be applied the cuts
    "charge_cut_values": [-999.0,-999.0],  //Charge cut
-    "charge_cut_values": [0.0],  //Charge cut
-    "event_option": "triggered",       // Drawing options: "pe" -> only events with at least one PE,
+   "event_option": "",       // Drawing options: "pe" -> only events with at least one PE,
                                      //                    "cherenkov" -> only events with a cherenkov process
                                      //                    "triggered" -> only events triggered by the DAQ
-    "debug_level": 0,
+   "debug_level": 0,
 
 }
