@@ -26,21 +26,19 @@ namespace RAT {
       fDigitizerV1730 = new Digitizer("V1730");
       fDigitizerV1742 = new Digitizer("V1742");
 
-      //Pulses and waveforms features
-      //sampling time in ns --- this is the size of a PMT time window
+      //Pulses and waveforms
       fSamplingTime = fLdaq->GetD("sampling_time");
-      //width of a PMT pulse in ns
       fPulseWidth = fLdaq->GetD("pulse_width");
-      //offset of a PMT pulse in mV
       fPulseOffset = fLdaq->GetD("pulse_offset");
-      //Minimum pulse height to consider
       fPulseMin = fLdaq->GetD("pulse_min");
-      //Pulse type: 0=square pulses, 1=real pulses
       fPulseType = fLdaq->GetI("pulse_type");
-      //mean of a PMT pulse in ns
       fPulseMean = fLdaq->GetD("pulse_mean");
-      //pulse step time
       fPulseTimeStep = fLdaq->GetD("pulse_time_step");
+
+      //Trigger system
+      fTriggerDelay = fLdaq->GetD("trigger_delay");
+      fTriggerJitter = fLdaq->GetD("trigger_jitter");
+
 
       detail << "DAQProc: DAQ constants loaded" << newline;
       detail << "  PMT Pulse type: " << (fPulseType==0 ? "square" : "realistic") << newline;
@@ -276,6 +274,8 @@ namespace RAT {
         DS::EV *ev = ds->AddNewEV();
         ev->SetID(fEventCounter);
 
+        double init_time = fTriggerDelay + CLHEP::RandGauss::shoot()*fTriggerJitter;
+
         RAT::Digitizer *digitizer;
         for (int imcpmt=0; imcpmt < mc->GetMCPMTCount(); imcpmt++){
 
@@ -284,13 +284,11 @@ namespace RAT {
 
           if(pmtType == 1 || pmtType == 3 || pmtType == 0) digitizer = fDigitizerV1742;
           else if(pmtType == 2) digitizer = fDigitizerV1730;
+          int init_sample = digitizer->GetSampleAtTime(init_time);
 
-          std::vector<UShort_t> DigitizedWaveform = digitizer->GetDigitizedWaveform(pmtID);
           DS::PMT* pmt = ev->AddNewPMT();
           pmt->SetID(pmtID);
-          pmt->SetWaveform(digitizer->SampleWaveform(DigitizedWaveform)); //sample from the beggining of the signal window
-
-          DigitizedWaveform.clear(); //prune for next round of PMTs
+          pmt->SetWaveform(digitizer->SampleWaveform(digitizer->GetDigitizedWaveform(pmtID),0));
 
         }//end PMT loop
         fDigitizerV1730->Clear(); //Clear waveforms for the next round of hits

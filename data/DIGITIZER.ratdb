@@ -28,12 +28,12 @@ noise_amplitude: 1.0, //amplitude of high frequency noise in mV
 
 nbits: 12, //number of bits
 nsamples: 1024, //number of samples
-sampling_rate: 5.0, //sampling rate in GHz
+sampling_rate: 2.5, //sampling rate in GHz
 volt_high: 1000.0, //upper voltage limit in mV
 volt_low: -1000.0, //lower voltage limit in mV
 offset: -500.0, //voltage offset in mV
 resistance: 50.0, //resistance of the output circuit in Ohms
 trigger_threshold: -5.0, //PMT threshold to issue a trigger mV
-gate_delay: -100.0, //time before discriminator fires that sampling gate opens (in ns)
+gate_delay: -200.0, //time before discriminator fires that sampling gate opens (in ns: -100.0)
 
 }

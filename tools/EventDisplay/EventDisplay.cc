@@ -96,7 +96,7 @@ EventDisplay::EventDisplay(std::string _inputFileName){
   Double_t g[]    = {0.0, 1.0, 0.0};
   Double_t b[]    = {0.0, 1.0, 1.0};
   Double_t stop[] = {0.0, .55, 1.0};
-  Int_t FI = TColor::CreateGradientColorTable(3, stop, r, g, b, 100);
+  Int_t FI = TColor::CreateGradientColorTable(3, stop, b, g, r, 100);
 
   SetGeometry();
 
@@ -340,6 +340,7 @@ bool EventDisplay::LoadEvent(int ievt){
     chargeVsPosScint->SetStats(0);
     chargeVsPosCorr = new TH2F("chargeVsPosCorr", "chargeVsPosCorr", 1, 0., 1., 1, 0., 1.);
     chargeVsPosCorr->SetStats(0);
+    chargeVsPos->Reset();
     chargeVsR->Reset();
     chargeVsRScint->Reset();
     chargeVsRCorr->Reset();
@@ -362,11 +363,11 @@ bool EventDisplay::LoadEvent(int ievt){
     chargeVsPosCorr->SetBins(21, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 21, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
 
     //Fill with zeroes
-    for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
+    for (int ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
       TVector3 pmtpos = pmtInfo->GetPosition(ipmt);
-      timeVsPos->Fill(pmtpos.X(), pmtpos.Y(), 0.);
-      chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), 0.);
-      chargeVsPosCorr->Fill(pmtpos.X(), pmtpos.Y(), 0.);
+      timeVsPos->SetBinContent(pmtpos.X(), pmtpos.Y(), 0.);
+      chargeVsPos->SetBinContent(pmtpos.X(), pmtpos.Y(), 0.);
+      chargeVsPosCorr->SetBinContent(pmtpos.X(), pmtpos.Y(), 0.);
       pmtCharge[ipmt] = 0.;
       pmtTime[ipmt] = 0.;
     }

@@ -52,7 +52,8 @@ namespace RAT {
   //Add channel to digitizer and inmdediatly digitize analogue waveform
   void Digitizer::AddChannel(int ichannel, PMTWaveform pmtwf){
 
-    double starttime = fSampleDelay;
+    //    double starttime = fSampleDelay;
+    double starttime = 0;
     double endtime = starttime + GetTimeWindow();
     double timeres = GetTimeResolution();
     int nsamples = GetNSamples();
@@ -139,7 +140,7 @@ namespace RAT {
 
   //If init_sample it's not specified -> Sample WF from the defined time delay
   std::vector<UShort_t> Digitizer::SampleWaveform(std::vector<UShort_t> completewaveform){
-    return SampleWaveform(completewaveform, (int)fSampleDelay/GetTimeResolution());
+    return SampleWaveform(completewaveform, 0);
   }
 
   //Moves the sampling point towards the end of the sampling window defined by the
