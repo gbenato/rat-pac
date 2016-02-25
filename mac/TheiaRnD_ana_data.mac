@@ -1,0 +1,20 @@
+/glg4debug/glg4param omit_muon_processes  1.0
+/glg4debug/glg4param omit_hadronic_processes  1.0
+
+/rat/db/set DETECTOR experiment "TheiaRnD"
+/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD.geo"
+
+/run/initialize
+
+##### BEGIN EVENT LOOP ##################
+/rat/proc analysis
+/rat/proc count
+/rat/procset update 100
+
+#Output file
+/rat/proclast outroot
+/rat/procset file "../../results/muon-bot-trig-water-2.0.root"
+#########################################
+
+/rat/inhdf5/read ../../data/muon-bot-trig-water-2.0.h5
+exit

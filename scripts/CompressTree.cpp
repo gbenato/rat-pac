@@ -44,7 +44,7 @@ int main(int argc, char **argv){
   TFile *newfile = new TFile(Form("%s_cutlevel%d.root",filename,cutlevel),"recreate");
   TTree *newtree = oldtree->CloneTree(0); //clone an empty tree
   //  TTree *newtree = oldtree->CloneTree(); //clone the whole tree
-  
+
   for (Long64_t ient=0; ient<nentries; ient++) {
 
     if(ient%10000 == 0) std::cout<<"   Entry "<<ient<<std::endl;
@@ -59,9 +59,9 @@ int main(int argc, char **argv){
     } else if(cutlevel==1){
 
       for(int iev=0; iev<ds->GetEVCount(); iev++){
-	RAT::DS::EV *ev = ds->GetEV(iev);
-	if (ev->GetPMTCount()==0) continue;
-	newtree->Fill();
+        RAT::DS::EV *ev = ds->GetEV(iev);
+        if (ev->GetPMTCount()==0) continue;
+        newtree->Fill();
       }
 
     }

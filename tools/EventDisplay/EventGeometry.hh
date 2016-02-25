@@ -180,6 +180,9 @@ public:
       else if(type == 3){
         b = new TGeoTube(name.c_str(), 0, size[0]/2, size[1]);
       }
+      else if(type == 4){
+        b = new TGeoBBox(name.c_str(), size[0], size[1], size[2]);
+      }
       else{
         std::cout<<" EDGeoPMT::GetVolume: type "<<type<<" not defined!"<<std::endl;
         exit(0);

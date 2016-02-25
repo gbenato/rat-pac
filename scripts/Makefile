@@ -4,20 +4,9 @@ CC= g++
 
 #LOCAL
 INCLUDES= `root-config --cflags --glibs` -lGeom\
--Iinclude \
--Iinclude/RAT \
--I/Users/snoplus/Work/snoing/install/rat-pac/include \
--I/Users/snoplus/Work/snoing/install/rat-pac/include/RAT \
--I/Users/snoplus/Work/snoing/install/rat-pac/include/RAT/DS \
--lRATEvent
-
-#CLUSTER
-#INCLUDES= `root-config --cflags --glibs` -lGeom\
--Iinclude \
--Iinclude/RAT \
--I/data/snoplus/home/jcaravaca/install/rat-pac/include \
--I/data/snoplus/home/jcaravaca/install/rat-pac/include/RAT \
--I/data/snoplus/home/jcaravaca/install/rat-pac/include/RAT/DS \
+-I$(RATROOT)/include \
+-I$(RATROOT)/include/RAT \
+-I$(RATROOT)/include/RAT/DS \
 -lRATEvent
 
 .PHONY: all

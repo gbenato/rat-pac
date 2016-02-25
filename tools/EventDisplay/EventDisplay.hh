@@ -18,12 +18,13 @@
 #include<RAT/DSReader.hh>
 #include<RAT/DS/Root.hh>
 #include<RAT/DS/MC.hh>
+#include<RAT/DS/PMTInfo.hh>
 
 #include<RAT/DB.hh>
 
 #include"EventGeometry.hh"
 
-class EventDisplay{
+class EventDisplay {
 public:
   EventDisplay(std::string _inputFileName = "");
   ~EventDisplay(){};
@@ -31,15 +32,18 @@ public:
   void OpenFile(std::string);
   int GetNEvents(){return nevents;};
   void DisplayEvent(int);
-  void LoadEvent(int);
+  bool LoadEvent(int);
   void DumpEventInfo(int);
   void DumpDisplayInfo();
   void SetGeometry();
+  bool IsCut();
   bool IsCerenkov();
+  bool IsTriggered();
   bool IsPE();
   void CustomizeTrack(TPolyLine3D*,RAT::DS::MCTrack*);
 
   void SetParameters();
+  void SetIsCut(bool value){event_cut = value;};
 
 protected:
 
@@ -49,6 +53,7 @@ protected:
   int debugLevel;
   bool drawGeometry;
   bool drawPMTs;
+  bool event_cut;
   std::string geoFileName;
   std::string pmtInfoFileName;
   std::string inputFileName;
@@ -58,6 +63,8 @@ protected:
   int finalTrack;
   std::string event_option;
   int event_number;
+  std::vector<int> charge_cut_pmts;
+  std::vector<double> charge_cut_values;
   std::vector<double> intersection_zplane;
   RAT::DS::PMTInfo *pmtInfo;
 
@@ -85,6 +92,7 @@ protected:
   std::map< int, std::vector<double> > vMCPMTWaveforms;
   std::map< int, std::vector<UShort_t> > vMCPMTDigitizedWaveforms;
   std::map< int, std::vector<UShort_t> > vPMTDigitizedWaveforms;
+  std::map< int, std::vector<double> > vWaveformTimes;
   std::map<std::string,TH2F*> hxyplane;
   TCanvas *canvas_event;
   double elength;

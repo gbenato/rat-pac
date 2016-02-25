@@ -38,9 +38,15 @@ public:
   virtual void SetAboveThreshold(bool _AboveThreshold) { this->AboveThreshold=_AboveThreshold; }
   virtual bool IsAboveThreshold() { return AboveThreshold; }
 
-  /** Digitzed and sampled waveform */
-   virtual void SetWaveform(std::vector<UShort_t> _waveform) {waveform = _waveform; }
-   virtual std::vector<UShort_t> GetWaveform() { return waveform; }
+  /** Digitzed waveform */
+  virtual void SetWaveform(std::vector<UShort_t> _waveform) {waveform = _waveform; }
+  virtual std::vector<UShort_t> GetWaveform() { return waveform; }
+
+  /** Calibrated waveform time*/
+  virtual void SetWaveformTime(std::vector<double> _waveform_time) {waveform_time = _waveform_time; }
+  virtual std::vector<double> GetWaveformTime() { return waveform_time; }
+
+  
 
  ClassDef(PMT, 1);
 
@@ -51,6 +57,7 @@ protected:
   Float_t time;
   bool AboveThreshold;
   std::vector<UShort_t> waveform;
+  std::vector<double> waveform_time;
 };
 
   } // namespace DS

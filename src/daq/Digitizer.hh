@@ -46,7 +46,8 @@ namespace RAT {
     //Getters
     virtual double GetThreshold(){return fThreshold;};
     virtual int GetDigitizedThreshold(){return fDigitizedThreshold;};
-    virtual double GetTimeStep(){return fTimeStep;};
+    virtual double GetSamplingRate(){return fSamplingRate;};
+    virtual double GetTimeResolution();
     virtual int GetNBits(){return fNBits;};
     virtual double GetVHigh(){return fVhigh;};
     virtual double GetVLow(){return fVlow;};
@@ -54,15 +55,21 @@ namespace RAT {
     virtual double GetResistance(){return fResistance;};
     virtual double GetNoiseAmpl(){return fNoiseAmpl;};
     virtual double GetDigitThres(){return fDigitizedThreshold;};
-    virtual int GetSamplingWindow(){return fSamplingWindow;};
+    virtual int GetNSamples(){return fNSamples;};
+    virtual double GetTimeWindow();
     virtual double GetSampleDelay(){return fSampleDelay;};
+
+    //Methods
+    virtual double GetTimeAtSample(int sample);
+    virtual int GetSampleAtTime(double time);
+    virtual std::vector<double> GetWaveformTime(int pmtID);
 
   protected:
 
     DBLinkPtr fLdaq;
 
     std::string fDigitName; //Digitizer type
-    double fTimeStep; //Time resolution in ns
+    double fSamplingRate; //Time resolution in ns
     int fNBits; //N bits of the digitizer
     double fVhigh; //Higher voltage
     double fVlow; //Lower voltage
@@ -71,7 +78,7 @@ namespace RAT {
     double fNoiseAmpl; //Electronic noise amplitud
     double fThreshold; //Threshold in volts
     int fDigitizedThreshold; //Trigger threshold in ADC counts
-    int fSamplingWindow; //Width of the sampling windows in ns
+    int fNSamples; //Total number of samples per digitized trace
     double fSampleDelay; //Time delay before threshold for the sampling window
     std::map< int, std::vector<double> > fNoise; //Channel:Electronic noise non-digitized
     std::map< int, std::vector<double> > fAnalogueWaveForm; //Channel:Real waveform for each channel

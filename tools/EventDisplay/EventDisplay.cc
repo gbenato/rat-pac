@@ -36,6 +36,7 @@ bool fexists(const char *filename)
 EventDisplay::EventDisplay(std::string _inputFileName){
 
   //Init
+  event_cut = false;
   inputFileName = _inputFileName;
   SetParameters();
   OpenFile(inputFileName);
@@ -90,7 +91,12 @@ EventDisplay::EventDisplay(std::string _inputFileName){
   chargeVsRScint->GetYaxis()->SetLabelSize(.06);
   chargeVsRCorr->GetYaxis()->SetLabelSize(.06);
 
-
+  //Custom palette
+  Double_t r[]    = {1.0, 1.0, 0.0};
+  Double_t g[]    = {0.0, 1.0, 0.0};
+  Double_t b[]    = {0.0, 1.0, 1.0};
+  Double_t stop[] = {0.0, .55, 1.0};
+  Int_t FI = TColor::CreateGradientColorTable(3, stop, b, g, r, 100);
 
   SetGeometry();
 
@@ -126,19 +132,17 @@ void EventDisplay::CustomizeTrack(TPolyLine3D *track, RAT::DS::MCTrack *mctrack)
 
 }
 
-void EventDisplay::LoadEvent(int ievt){
+bool EventDisplay::LoadEvent(int ievt){
 
   if(debugLevel > 0) std::cout<<"EventDisplay::LoadEvent -- Loading event "<<ievt<<"......."<<std::endl;
 
   //Initialize
-  SetParameters();
+  //  SetParameters();
   //Objects
   rds = dsreader->GetEvent(ievt);
   mc = rds->GetMC();
-  if(rds->ExistEV()) ev = rds->GetEV(0); //FIXME: so far get only first event
-  else if(debugLevel > 0) std::cout<<"EventDisplay::LoadEvent -- EV do not exist! "<<std::endl;
 
-
+  //Load event
   /////////////////////////////////////
   // MC TRUTH
   /////////////////////////////////////
@@ -155,11 +159,10 @@ void EventDisplay::LoadEvent(int ievt){
   PMTDigitizedWaveforms.clear();
   for (std::map<std::string,TH2F*>::iterator it=hxyplane.begin();it!=hxyplane.end();it++) it->second->Reset();
   npe.clear();
-  if (finalTrack<=0 || finalTrack > mc->GetMCTrackCount()) finalTrack = mc->GetMCTrackCount();
   //Load tracks
-  for (int itr = initialTrack; itr < finalTrack; itr++) {
+  for (int itr = initialTrack; itr < (finalTrack<=0? mc->GetMCTrackCount() : TMath::Min(finalTrack,mc->GetMCTrackCount()) ); itr++) {
 
-    if(debugLevel > 1) std::cout<<"  Track "<<itr<<"/"<<finalTrack-1<<std::endl;
+    if(debugLevel > 1) std::cout<<"  Track "<<itr+1<<"/"<<finalTrack<<std::endl;
 
     RAT::DS::MCTrack *mctrack = mc->GetMCTrack(itr);
     //Create new track
@@ -244,6 +247,8 @@ void EventDisplay::LoadEvent(int ievt){
     }
   }
 
+  if(debugLevel > 1) std::cout<<"   EventDisplay::LoadEvent (Passed PMTs) "<<std::endl;
+
 
 #ifdef __WAVEFORMS_IN_DS__
 
@@ -258,6 +263,8 @@ void EventDisplay::LoadEvent(int ievt){
   UShort_t ymin_d2=99999.; //yaxis min limit digital
   UShort_t ymax_d3=0.; //yaxis max limit digital
   UShort_t ymin_d3=99999.; //yaxis min limit digital
+  UShort_t ymax_d4=0.; //yaxis max limit digital
+  UShort_t ymin_d4=99999.; //yaxis min limit digital
   double ymax_temp=0.;
   double ymin_temp=0.;
   double xmax_temp=0.;//dummy
@@ -294,182 +301,213 @@ void EventDisplay::LoadEvent(int ievt){
 
 #endif
 
-  /////////////////////////////////////
-  // DAQ EVENT
-  /////////////////////////////////////
-
-  if(!rds->ExistEV()) {
-    if(debugLevel > 0) std::cout<<" EventDisplay::LoadEvent - DONE (EV do not exist) "<<std::endl;
-    return;
-  }
-
-  TTree *runT = dsreader->GetRunT();
-  RAT::DS::Run *run = 0;
-  runT->SetBranchAddress("run",&run);
-  runT->GetEntry(0);
-  pmtInfo = run->GetPMTInfo();
-  RAT::DS::DAQHeader *daqHeaderV1730 = run->GetDAQHeader("V1730");
-  RAT::DS::DAQHeader *daqHeaderV1742 = run->GetDAQHeader("V1742");
-
-  timeVsPos = new TH2F("timeVsPos", "timeVsPos", 1, 0., 1., 1, 0., 1.);
-  timeVsPos->SetStats(0);
-  chargeVsPos = new TH2F("chargeVsPos", "chargeVsPos", 1, 0., 1., 1, 0., 1.);
-  chargeVsPos->SetStats(0);
-  chargeVsPosScint = new TH2F("chargeVsPosScint", "chargeVsPosScint", 1, 0., 1., 1, 0., 1.);
-  chargeVsPosScint->SetStats(0);
-  chargeVsPosCorr = new TH2F("chargeVsPosCorr", "chargeVsPosCorr", 1, 0., 1., 1, 0., 1.);
-  chargeVsPosCorr->SetStats(0);
-  chargeVsR->Reset();
-  chargeVsRScint->Reset();
-  chargeVsRCorr->Reset();
-
-  //Get center of the samll PMT array and locate
-  TVector3 centerpos(0,0,0);
-  int pmtTypeCount = 0;
-
-  for (int ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
-    TVector3 pmtpos = pmtInfo->GetPosition(ipmt);
-    if(pmtInfo->GetType(ipmt) == 1) {
-      centerpos = centerpos + pmtpos;
-      pmtTypeCount++;
-    }
-  }
-  centerpos = centerpos*(1./pmtTypeCount);
-  timeVsPos->SetBins(21, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 21, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
-  chargeVsPos->SetBins(21, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 21, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
-  chargeVsPosScint->SetBins(21, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 21, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
-  chargeVsPosCorr->SetBins(21, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 21, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
-
-  //Fill with zeroes
-  for (int ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
-    int pmtID = ev->GetPMT(ipmt)->GetID();
-    //    if(pmtInfo->GetType(pmtID)!=1) continue;
-    TVector3 pmtpos = pmtInfo->GetPosition(ipmt);
-    timeVsPos->Fill(pmtpos.X(), pmtpos.Y(), 0.);
-    chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), 0.);
-    chargeVsPosCorr->Fill(pmtpos.X(), pmtpos.Y(), 0.);
-    pmtCharge[ipmt] = 0.;
-    pmtTime[ipmt] = 0.;
-  }
-
-  //Collect charges and times
-  EDGeo->ResetHitPMTs();
-  for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
-    int pmtID = ev->GetPMT(ipmt)->GetID();
-    pmtCharge[pmtID] = ev->GetPMT(ipmt)->GetCharge();
-    pmtTime[pmtID] = ev->GetPMT(ipmt)->GetTime();
-    if(pmtTime[pmtID]<0){
-      pmtTime[pmtID] = -400.;
-    } else{
-      EDGeo->HitPMT(pmtID,1); //If time>0 means that the WF crossed threshold
-    }
-    hPmtTime->Fill(pmtTime[pmtID]);
-  }
-
-  //Centroid
-  centroid = ev->GetCentroid()->GetPosition();
-
-  //Fill 2D plot
-  for (int ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
-    if(pmtInfo->GetType(ipmt)!=1) continue;
-    TVector3 pmtpos = pmtInfo->GetPosition(ipmt);
-    // PMT distance
-    double XYdist = pow( (pmtpos.X()-centerpos.X()),2 ) + pow( (pmtpos.Y()-centerpos.Y()),2 );
-    XYdist = sqrt(XYdist);
-    // double dist = pow(70.,2) + pow(XYdist,2);
-    // dist = sqrt(dist);
-
-    // Geometry PMT charge correction
-    // chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtCharge[pmtID]*pow(dist,2) );
-    timeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtTime[ipmt]);
-    chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtCharge[ipmt]);
-    chargeVsPosScint->Fill(pmtpos.X(), pmtpos.Y(), pmtGeoCorr[ipmt]);
-
-    chargeVsPosCorr->Fill(pmtpos.X(), pmtpos.Y(), (pmtCharge[ipmt] - pmtGeoCorr[ipmt])/pmtGeoCorrErr[ipmt] );
-    chargeVsR->Fill(XYdist, pmtCharge[ipmt]);
-    chargeVsRScint->Fill(XYdist, pmtGeoCorr[ipmt]);
-    chargeVsRCorr->Fill(XYdist, (pmtCharge[ipmt] - pmtGeoCorr[ipmt])/pmtGeoCorrErr[ipmt] );
-
-  }
-
-  // chargeVsR->Scale(1./4.); //PMT average
-  // chargeVsRScint->Scale(1./4.); //PMT average
-  // chargeVsRCorr->Scale(1./4.); //PMT average
-
-  // chargeVsR->Scale(1./chargeVsR->Integral()); //Area norm
-  // chargeVsRScint->Scale(1./chargeVsRScint->Integral()); //Area norm
-  // chargeVsRCorr->Scale(1./chargeVsRCorr->Integral()); //Area norm
-
-  //Perform KS test against scintillation light only
-  double ks = chargeVsPos->KolmogorovTest(chargeVsPosScint);
-  std::cout<<" KS 1 "<<ks<<std::endl;
-  ks = chargeVsR->KolmogorovTest(chargeVsRScint);
-  std::cout<<" KS 2 "<<ks<<std::endl;
-  double chi2 = 0;
-  for(int ibin=1; ibin<4; ibin++){
-    //    chi2 += pow(chargeVsR->GetBinContent(ibin) - chargeVsRScint->GetBinContent(ibin),2)/chargeVsRScint->GetBinContent(ibin);
-    chi2 += pow(chargeVsRCorr->GetBinContent(ibin),2);
-  }
-  std::cout<<" CHI2 "<<chi2<<std::endl;
+  if(debugLevel > 1) std::cout<<"   EventDisplay::LoadEvent (Passed MC truth) "<<std::endl;
 
 
-#ifdef __WAVEFORMS_IN_DS__
 
-  PMTDigitizedWaveforms.resize(ev->GetPMTCount());
-  for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
+  if(rds->ExistEV()){
 
-    RAT::DS::PMT *pmt = ev->GetPMT(ipmt);
-    int pmtType = pmtInfo->GetType(ipmt);
-
-    double timeStep = 0;
-    double timeDelay = 0;
-
-    if(pmtType==2){
-      timeStep = daqHeaderV1730->GetDoubleAttribute("TIME_RES");
-      timeDelay = daqHeaderV1730->GetDoubleAttribute("TIME_DELAY");
-    } else if(pmtType==1 || pmtType==3){
-      timeStep = daqHeaderV1742->GetDoubleAttribute("TIME_RES");
-      timeDelay = daqHeaderV1742->GetDoubleAttribute("TIME_DELAY");
-    }
-
-    vPMTDigitizedWaveforms[ipmt] = pmt->GetWaveform();
-    if(debugLevel > 1) std::cout<<" EventDisplay::LoadEvent - DigitWF: PMT " << ipmt<<" nsamples "<<vPMTDigitizedWaveforms[ipmt].size()<<std::endl;
-
-    for(int isample=0; isample<vPMTDigitizedWaveforms[ipmt].size(); isample++){
-      PMTDigitizedWaveforms[ipmt].SetPoint(isample,isample*timeStep-timeDelay,vPMTDigitizedWaveforms[ipmt][isample]);
-
-      if(debugLevel > 1) std::cout<<" EventDisplay::LoadEvent - Digit WF: sample "<<isample<<" "<<vPMTDigitizedWaveforms[ipmt][isample]<<std::endl;
-
-      if(pmtType==1){
-        ymax_d1 = TMath::Max(ymax_d1,vPMTDigitizedWaveforms[ipmt][isample]);
-        ymin_d1 = TMath::Min(ymin_d1,vPMTDigitizedWaveforms[ipmt][isample]);
-      } else if(pmtType==2){
-        ymax_d2 = TMath::Max(ymax_d2,vPMTDigitizedWaveforms[ipmt][isample]);
-        ymin_d2 = TMath::Min(ymin_d2,vPMTDigitizedWaveforms[ipmt][isample]);
-      } else if(pmtType==3){
-        ymax_d3 = TMath::Max(ymax_d3,vPMTDigitizedWaveforms[ipmt][isample]);
-        ymin_d3 = TMath::Min(ymin_d3,vPMTDigitizedWaveforms[ipmt][isample]);
+    ev = rds->GetEV(0); //FIXME: so far get only first event
+    //Apply cuts before loading the whole event for speed
+    for (int ipmt = 0; ipmt < charge_cut_pmts.size(); ipmt++) {
+      int pmtID = charge_cut_pmts[ipmt];
+      RAT::DS::PMT *pmt = ev->GetPMTWithID(pmtID);
+      if(!pmt==NULL){
+        double charge = pmt->GetCharge();
+        if(charge<charge_cut_values[ipmt]) return false; //dont load event
       }
-      //Temporary
-      ymin_d2 = 14400.;
     }
-  }
 
-  //Set correct limits for drawing purposes
-  for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
-    int pmtType = pmtInfo->GetType(ipmt);
-    if(pmtType==1){
-      PMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.99*ymin_d1,1.01*ymax_d1);
-    } else if(pmtType==2){
-      PMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.999*ymin_d2,1.001*ymax_d2);
-    } else if(pmtType==3){
-      PMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.99*ymin_d3,1.01*ymax_d3);
+    /////////////////////////////////////
+    // DAQ EVENT
+    /////////////////////////////////////
+
+    TTree *runT = dsreader->GetRunT();
+    RAT::DS::Run *run = 0;
+    runT->SetBranchAddress("run",&run);
+    runT->GetEntry(0);
+    pmtInfo = run->GetPMTInfo();
+    RAT::DS::DAQHeader *daqHeaderV1730 = run->GetDAQHeader("V1730");
+    RAT::DS::DAQHeader *daqHeaderV1742 = run->GetDAQHeader("V1742");
+
+    if(debugLevel > 1) std::cout<<"   EventDisplay::LoadEvent (Got headers) "<<std::endl;
+
+    timeVsPos = new TH2F("timeVsPos", "timeVsPos", 1, 0., 1., 1, 0., 1.);
+    timeVsPos->SetStats(0);
+    chargeVsPos = new TH2F("chargeVsPos", "chargeVsPos", 1, 0., 1., 1, 0., 1.);
+    chargeVsPos->SetStats(0);
+    chargeVsPosScint = new TH2F("chargeVsPosScint", "chargeVsPosScint", 1, 0., 1., 1, 0., 1.);
+    chargeVsPosScint->SetStats(0);
+    chargeVsPosCorr = new TH2F("chargeVsPosCorr", "chargeVsPosCorr", 1, 0., 1., 1, 0., 1.);
+    chargeVsPosCorr->SetStats(0);
+    chargeVsPos->Reset();
+    chargeVsR->Reset();
+    chargeVsRScint->Reset();
+    chargeVsRCorr->Reset();
+
+    //Get center of the small PMT array and locate
+    TVector3 centerpos(0,0,0);
+    int pmtTypeCount = 0;
+
+    for (int ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
+      TVector3 pmtpos = pmtInfo->GetPosition(ipmt);
+      if(pmtInfo->GetType(ipmt) == 1) {
+        centerpos = centerpos + pmtpos;
+        pmtTypeCount++;
+      }
     }
+    centerpos = centerpos*(1./pmtTypeCount);
+    timeVsPos->SetBins(21, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 21, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
+    chargeVsPos->SetBins(21, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 21, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
+    chargeVsPosScint->SetBins(21, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 21, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
+    chargeVsPosCorr->SetBins(21, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 21, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
+
+    //Fill with zeroes
+    for (int ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
+      TVector3 pmtpos = pmtInfo->GetPosition(ipmt);
+      timeVsPos->SetBinContent(pmtpos.X(), pmtpos.Y(), 0.);
+      chargeVsPos->SetBinContent(pmtpos.X(), pmtpos.Y(), 0.);
+      chargeVsPosCorr->SetBinContent(pmtpos.X(), pmtpos.Y(), 0.);
+      pmtCharge[ipmt] = 0.;
+      pmtTime[ipmt] = 0.;
+    }
+
+    //Collect charges and times
+    EDGeo->ResetHitPMTs();
+    for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
+      int pmtID = ev->GetPMT(ipmt)->GetID();
+      pmtCharge[pmtID] = ev->GetPMT(ipmt)->GetCharge();
+      std::cout<<" pmtCharge "<<pmtID<<" "<<pmtCharge[pmtID]<<std::endl;
+      pmtTime[pmtID] = ev->GetPMT(ipmt)->GetTime();
+      std::cout<<" pmtTime "<<pmtID<<" "<<pmtTime[pmtID]<<std::endl;
+      // //Apply cut condition
+      // if(pmtID==charge_cut_pmts[0] && pmtCharge[pmtID]<charge_cut_values[0]) {
+      //   this->SetIsCut(true);
+      //   return;
+      // }
+      if(pmtTime[pmtID]<0){
+        pmtTime[pmtID] = -400.;
+      } else{
+        EDGeo->HitPMT(pmtID,1); //If time>0 means that the WF crossed threshold
+      }
+      hPmtTime->Fill(pmtTime[pmtID]);
+    }
+
+    if(debugLevel > 1) std::cout<<"   EventDisplay::LoadEvent (Collected charges and times) "<<std::endl;
+
+    //Fill 2D plot
+    for (int ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
+      if(pmtInfo->GetType(ipmt)!=1) continue;
+      TVector3 pmtpos = pmtInfo->GetPosition(ipmt);
+      // PMT distance
+      double XYdist = pow( (pmtpos.X()-centerpos.X()),2 ) + pow( (pmtpos.Y()-centerpos.Y()),2 );
+      XYdist = sqrt(XYdist);
+      // double dist = pow(70.,2) + pow(XYdist,2);
+      // dist = sqrt(dist);
+
+      // Geometry PMT charge correction
+      // chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtCharge[pmtID]*pow(dist,2) );
+      timeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtTime[ipmt]);
+      chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtCharge[ipmt]);
+      chargeVsPosScint->Fill(pmtpos.X(), pmtpos.Y(), pmtGeoCorr[ipmt]);
+
+      chargeVsPosCorr->Fill(pmtpos.X(), pmtpos.Y(), (pmtCharge[ipmt] - pmtGeoCorr[ipmt])/pmtGeoCorrErr[ipmt] );
+      chargeVsR->Fill(XYdist, pmtCharge[ipmt]);
+      chargeVsRScint->Fill(XYdist, pmtGeoCorr[ipmt]);
+      chargeVsRCorr->Fill(XYdist, (pmtCharge[ipmt] - pmtGeoCorr[ipmt])/pmtGeoCorrErr[ipmt] );
+
+    }
+
+    // chargeVsR->Scale(1./4.); //PMT average
+    // chargeVsRScint->Scale(1./4.); //PMT average
+    // chargeVsRCorr->Scale(1./4.); //PMT average
+
+    // chargeVsR->Scale(1./chargeVsR->Integral()); //Area norm
+    // chargeVsRScint->Scale(1./chargeVsRScint->Integral()); //Area norm
+    // chargeVsRCorr->Scale(1./chargeVsRCorr->Integral()); //Area norm
+
+    //Perform KS test against scintillation light only
+    double ks = chargeVsPos->KolmogorovTest(chargeVsPosScint);
+    std::cout<<" KS 1 "<<ks<<std::endl;
+    ks = chargeVsR->KolmogorovTest(chargeVsRScint);
+    std::cout<<" KS 2 "<<ks<<std::endl;
+    double chi2 = 0;
+    for(int ibin=1; ibin<4; ibin++){
+      //    chi2 += pow(chargeVsR->GetBinContent(ibin) - chargeVsRScint->GetBinContent(ibin),2)/chargeVsRScint->GetBinContent(ibin);
+      chi2 += pow(chargeVsRCorr->GetBinContent(ibin),2);
+    }
+    std::cout<<" CHI2 "<<chi2<<std::endl;
+
+
+    #ifdef __WAVEFORMS_IN_DS__
+
+    PMTDigitizedWaveforms.resize(ev->GetPMTCount());
+    for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
+
+      RAT::DS::PMT *pmt = ev->GetPMT(ipmt);
+      int pmtID = pmt->GetID();
+      int pmtType = pmtInfo->GetType(pmtID);
+
+      double timeStep = 0;
+      double timeDelay = 0;
+
+      if(pmtType==2){
+        timeStep = daqHeaderV1730->GetDoubleAttribute("TIME_RES");
+        //      timeDelay = daqHeaderV1730->GetDoubleAttribute("TIME_DELAY");
+      } else if(pmtType==1 || pmtType==3 || pmtType==0){
+        timeStep = daqHeaderV1742->GetDoubleAttribute("TIME_RES");
+        //      timeDelay = daqHeaderV1742->GetDoubleAttribute("TIME_DELAY");
+      }
+
+      vPMTDigitizedWaveforms[ipmt] = pmt->GetWaveform();
+      vWaveformTimes[ipmt] = pmt->GetWaveformTime();
+      if(debugLevel > 1) std::cout<<" EventDisplay::LoadEvent - DigitWF: PMT " << ipmt<<" nsamples "<<vPMTDigitizedWaveforms[ipmt].size()<<std::endl;
+
+      for(int isample=0; isample<vPMTDigitizedWaveforms[ipmt].size(); isample++){
+        PMTDigitizedWaveforms[ipmt].SetPoint(isample,vWaveformTimes[ipmt][isample],vPMTDigitizedWaveforms[ipmt][isample]);
+
+        if(debugLevel > 1) std::cout<<" EventDisplay::LoadEvent - Digit WF: sample "<<isample<<" "<<vPMTDigitizedWaveforms[ipmt][isample]<<std::endl;
+
+        if(pmtType==1){
+          ymax_d1 = TMath::Max(ymax_d1,vPMTDigitizedWaveforms[ipmt][isample]);
+          ymin_d1 = TMath::Min(ymin_d1,vPMTDigitizedWaveforms[ipmt][isample]);
+        } else if(pmtType==2){
+          ymax_d2 = TMath::Max(ymax_d2,vPMTDigitizedWaveforms[ipmt][isample]);
+          ymin_d2 = TMath::Min(ymin_d2,vPMTDigitizedWaveforms[ipmt][isample]);
+        } else if(pmtType==3){
+          ymax_d3 = TMath::Max(ymax_d3,vPMTDigitizedWaveforms[ipmt][isample]);
+          ymin_d3 = TMath::Min(ymin_d3,vPMTDigitizedWaveforms[ipmt][isample]);
+        } else if(pmtType==0){
+          ymax_d4 = TMath::Max(ymax_d4,vPMTDigitizedWaveforms[ipmt][isample]);
+          ymin_d4 = TMath::Min(ymin_d4,vPMTDigitizedWaveforms[ipmt][isample]);
+        }
+        //Temporary
+        ymin_d2 = 14400.;
+      }
+    }
+
+    //Set correct limits for drawing purposes
+    for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
+      int pmtID = ev->GetPMT(ipmt)->GetID();
+      int pmtType = pmtInfo->GetType(pmtID);
+      if(pmtType==1){
+        PMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.99*ymin_d1,1.01*ymax_d1);
+      } else if(pmtType==2){
+        PMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.99*ymin_d2,1.01*ymax_d2);
+      } else if(pmtType==3){
+        PMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.999*ymin_d3,1.001*ymax_d3);
+      } else if(pmtType==0){
+        PMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.999*ymin_d4,1.001*ymax_d4);
+      }
+    }
+    #endif
+
   }
+  else if(debugLevel > 0) std::cout<<"EventDisplay::LoadEvent -- EV does not exist! "<<std::endl;
 
-#endif
+  if(debugLevel > 0) std::cout<<" EventDisplay::LoadEvent - DONE "<<std::endl;
 
-if(debugLevel > 0) std::cout<<" EventDisplay::LoadEvent - DONE "<<std::endl;
+  return true;
 
 }
 
@@ -489,7 +527,13 @@ void EventDisplay::SetParameters(){
   finalTrack = dbED->GetI("final_track");
   event_option = dbED->GetS("event_option");
   event_number = dbED->GetI("event_number");
+
+  //XY plane
   intersection_zplane = dbED->GetDArray("intersection_zplane");
+
+  //Cuts
+  charge_cut_pmts = dbED->GetIArray("charge_cut_pmts");
+  charge_cut_values = dbED->GetDArray("charge_cut_values");
 
   //Analysis file
   if(inputFileName == "") inputFileName = dbED->GetS("input_file");
@@ -567,17 +611,12 @@ void EventDisplay::DumpEventInfo(int ievt){
 
 void EventDisplay::DisplayEvent(int ievt){
 
-  //Custom palette
-  Double_t r[]    = {1.0, 1.0, 0.0};
-  Double_t g[]    = {0.0, 1.0, 0.0};
-  Double_t b[]    = {0.0, 1.0, 1.0};
-  Double_t stop[] = {0.0, .55, 1.0};
-  Int_t FI = TColor::CreateGradientColorTable(3, stop, r, g, b, 100);
-
-  this->LoadEvent(ievt);
+  if(!LoadEvent(ievt)) return;
   if(debugLevel > 0) std::cout<<"Starting canvases "<<std::endl;
   if(event_option == "cherenkov" && !this->IsCerenkov()) return;
   if(event_option == "pe" && !this->IsPE()) return;
+  if(event_option == "triggered" && !this->IsTriggered()) return;
+  if(this->IsCut()) return;
   this->DumpEventInfo(ievt);
   if(event_number>=0) this->DumpDisplayInfo();
 
@@ -588,7 +627,7 @@ void EventDisplay::DisplayEvent(int ievt){
   //3D display
   canvas_event->cd(1);
   if(drawGeometry) EDGeo->DrawGeometry();
-  for (int itr = 0; itr < finalTrack - initialTrack; itr++) {
+  for (int itr = 0; itr < pl_tracks.size(); itr++) {
     if(itr==0) pl_tracks[itr].Draw("LINE");
     pl_tracks[itr].Draw("LINE same");
   }
@@ -693,15 +732,16 @@ void EventDisplay::DisplayEvent(int ievt){
   //   //      MCPMTDigitizedWaveforms[ipmt].ComputeRange(xmin_temp,xmax_temp,ymin_temp,ymax_temp);
   // }
   if(rds->ExistEV()){
-    bool drawRingPMTs=false, drawLightPMTs=false, drawMuonPMTs=false;
+    bool drawRingPMTs=false, drawLightPMTs=false, drawMuonPMTs=false, drawTriggerPMT=false;
     for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
       int pmtID = ev->GetPMT(ipmt)->GetID();
-      int pmtType = pmtInfo->GetType(ipmt);
+      int pmtType = pmtInfo->GetType(pmtID);
       // std::cout<<" PMT "<<pmtID<<" "<<pmtType<<std::endl;
       if(pmtType == 1) canvas_event->cd(5);
       if(pmtType == 2) canvas_event->cd(6);
       if(pmtType == 3) canvas_event->cd(7);
-      if(pmtType == 1 && drawRingPMTs==false || pmtType == 2 && drawLightPMTs==false || pmtType == 3 && drawMuonPMTs==false){
+      if(pmtType == 0) canvas_event->cd(8);
+      if( (pmtType == 1 && drawRingPMTs==false) || (pmtType == 2 && drawLightPMTs==false) || (pmtType == 3 && drawMuonPMTs==false)  || (pmtType == 0 && drawTriggerPMT==false)){
         PMTDigitizedWaveforms[ipmt].Draw("A LINE");
         PMTDigitizedWaveforms[ipmt].GetXaxis()->SetTitle("t(ns)");
         PMTDigitizedWaveforms[ipmt].GetYaxis()->SetTitle("ADC counts");
@@ -717,14 +757,21 @@ void EventDisplay::DisplayEvent(int ievt){
           PMTDigitizedWaveforms[ipmt].SetTitle("Triggered event - Muon Tags");
           drawMuonPMTs=true;
         }
+        if(pmtType == 0) {
+          PMTDigitizedWaveforms[ipmt].SetTitle("Triggered event - Trigger PMT");
+          drawTriggerPMT=true;
+        }
       }
       PMTDigitizedWaveforms[ipmt].SetLineColor(ipmt+20);
+      if(pmtID==6) PMTDigitizedWaveforms[ipmt].SetLineColor(kRed);
+      if(pmtID==7) PMTDigitizedWaveforms[ipmt].SetLineColor(kBlue);
       PMTDigitizedWaveforms[ipmt].Draw("LINE same");
       TMarker timeMarker;
       timeMarker.SetMarkerSize(1.);
       timeMarker.SetMarkerColor(ipmt+20);
       timeMarker.SetMarkerStyle(23);
-      timeMarker.DrawMarker(pmtTime[pmtID], PMTDigitizedWaveforms[ipmt].GetYaxis()->GetXmax());
+      timeMarker.DrawMarker(pmtTime[pmtID], 0);
+      timeMarker.DrawMarker(pmtTime[pmtID], PMTDigitizedWaveforms[ipmt].GetYaxis()->GetXmin());
 
       //      PMTDigitizedWaveforms[ipmt].ComputeRange(xmin_temp,xmax_temp,ymin_temp,ymax_temp);
     }
@@ -752,6 +799,12 @@ bool EventDisplay::IsCerenkov(){
 
 }
 
+bool EventDisplay::IsCut(){
+
+  return event_cut;
+
+}
+
 bool EventDisplay::IsPE(){
 
   int npe_total = 0;
@@ -759,6 +812,12 @@ bool EventDisplay::IsPE(){
   npe_total += npe[mc->GetMCPMT(ipmt)->GetID()];
 
   return npe_total>0;
+
+}
+
+bool EventDisplay::IsTriggered(){
+
+  return rds->ExistEV();
 
 }
 
@@ -779,7 +838,7 @@ void EventDisplay::Open(){
   //Display events
   if(event_number>=0) this->DisplayEvent(event_number);
   else{
-    for(int ievt=0; ievt<nevents ; ievt++){
+    for(int ievt=0; ievt<nevents; ievt++){
       this->DisplayEvent(ievt);
     }
   }

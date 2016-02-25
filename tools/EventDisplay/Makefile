@@ -3,17 +3,16 @@ LFLAGS = -L/usr/lib -L$(ROOTSYS)/lib -L$(RATROOT)/lib
 CC= g++
 
 INCLUDES= `root-config --cflags --glibs` -lGeom\
--Iinclude \
--Iinclude/RAT \
--I/Users/snoplus/Work/snoing/install/rat-pac/include \
--I/Users/snoplus/Work/snoing/install/rat-pac/include/RAT \
--I/Users/snoplus/Work/snoing/install/rat-pac/include/RAT/DS \
+-I$(RATROOT)/include \
+-I$(RATROOT)/include/RAT \
+-I$(RATROOT)/include/RAT/DS \
 -lRATEvent
 
 INCLUDES2= `root-config --cflags` \
--I/Users/snoplus/Work/snoing/install/rat-pac/include \
--I/Users/snoplus/Work/snoing/install/rat-pac/include/RAT \
--I/Users/snoplus/Work/snoing/install/rat-pac/include/RAT/DS \
+-I$(RATROOT)/include \
+-I$(RATROOT)/include/RAT \
+-I$(RATROOT)/include/RAT/DS \
+-lRATEvent
 
 SRCS= EventGeometry.cc EventDisplay.cc EventDisplayMain.cc
 OBJS=$(subst .cc,.o,$(SRCS))

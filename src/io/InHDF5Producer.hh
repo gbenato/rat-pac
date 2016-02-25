@@ -3,6 +3,7 @@
 
 #include <string>
 #include <RAT/Producer.hh>
+#include <RAT/DB.hh>
 #include <globals.hh>
 
 class G4UIcmdWithAString;
@@ -30,6 +31,9 @@ protected:
 
   G4UIcmdWithAString *readCmd;
   G4UIcommand *readDefaultCmd;
+
+  DBLinkPtr fLCalibV1742;
+
 };
 
 } // namespace RAT

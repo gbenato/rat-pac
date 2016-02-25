@@ -143,7 +143,7 @@ namespace RAT {
     for(int ivol=0; ivol<allVolumes.size(); ivol++){
       allVolumes[ivol] = util_strip_default(allVolumes[ivol]);
       std::vector<std::string> volume = util_split(allVolumes[ivol], " ");
-      sensiVolPos.push_back(new G4ThreeVector(atoi(volume[0].c_str()),atoi(volume[1].c_str()),atoi(volume[2].c_str())));
+      sensiVolPos.push_back(new G4ThreeVector(std::atoi(volume[0].c_str()),std::atoi(volume[1].c_str()),std::atoi(volume[2].c_str())));
       sensiVolName.push_back(volume[3]);
     }
 

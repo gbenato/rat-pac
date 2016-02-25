@@ -70,21 +70,22 @@
 //  position: [-400.0, -400.0, -180.0],
   material: "mirror",
   color: [0.5, 0.2, 0.1, 0.1],
-}
-
-{
-  name: "GEO",
-  index: "mirror",
-  valid_begin: [0, 0],
-  valid_end: [0, 0],
-  invisible: 0, // omitted for visualization
-  mother: "world", //not used
-  type: "border",
-  volume1: "inner",
-  volume2: "cover",
-  reverse: 1,
   surface: "mirror",
 }
+
+//{
+//  name: "GEO",
+//  index: "mirror",
+//  valid_begin: [0, 0],
+//  valid_end: [0, 0],
+//  invisible: 0, // omitted for visualization
+//  mother: "world", //not used
+//  type: "border",
+//  volume1: "inner",
+//  volume2: "cover",
+//  reverse: 1,
+//  surface: "mirror",
+//}
 
 {
   name: "GEO",
@@ -229,7 +230,7 @@
   mother: "inner",
 //  mother: "vessel",
   type: "pmtarray",
-  pmt_model: "h11934", //h11934
+  pmt_model: "h11934", //h11934, r7600u-20
   pmt_detector_type: "idpmt",
   sensitive_detector: "/mydet/pmt/inner",
   efficiency_correction: 1.0,
@@ -258,9 +259,9 @@
   index: "muon_pmts",
   valid_begin: [0, 0],
   valid_end: [0, 0],
-  mother: "inner",
+  mother: "world",
   type: "pmtarray",
-  pmt_model: "h11934", //r7081_hqe, r11780_hqe
+  pmt_model: "h11934", //h11934, r7081_hqe, r11780_hqe
   pmt_detector_type: "idpmt",
   sensitive_detector: "/mydet/pmt/inner",
   efficiency_correction: 1.0,
@@ -269,21 +270,21 @@
   orient_point: [-400.0, -400.0, -200.0],
 }
 
-// {
-//   name: "GEO",
-//   index: "trigger",
-//   valid_begin: [0, 0],
-//   valid_end: [0, 0],
-//   mother: "inner",
-//   type: "pmtarray",
-//   pmt_model: "fast_test", //r7081_hqe, r11780_hqe, fast_test
-//   pmt_detector_type: "idpmt",
-//   sensitive_detector: "/mydet/pmt/inner",
-//   efficiency_correction: 1.0,
-//   pos_table: "PMTINFO_TRIGGER",
-//   orientation: "point",
-//   orient_point: [0.0, 0.0, 400.0],
-// }
+{
+   name: "GEO",
+   index: "trigger_pmt",
+   valid_begin: [0, 0],
+   valid_end: [0, 0],
+   mother: "world",
+   type: "pmtarray",
+   pmt_model: "h11934", //h11934, r7081_hqe, r11780_hqe, fast_test
+   pmt_detector_type: "idpmt",
+   sensitive_detector: "/mydet/pmt/inner",
+   efficiency_correction: 1.0,
+   pos_table: "PMTINFO_TRIGGER",
+   orientation: "manual",
+   orient_point: [0.0, 0.0, 400.0],
+}
 
 /////////////////////////////
 // RADIACTIVE SOURCES
