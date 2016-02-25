@@ -49,6 +49,8 @@ std::vector<TVector3*> pos_pmts; //PMT positions by ID
 int npmts; // # PMTs
 std::map<int,int> npmts_type; // # PMTs per type
 std::vector<Color_t> pmtidtocolor;
+std::vector<int> pmtidtopos;
+std::vector<double> pmttime_delay;
 vector<double> qScintCorr; //Scintillation correction
 vector<double> qScintCorrErr; // Scintillation correction error
 
@@ -66,6 +68,7 @@ std::vector<TH1F*> h_charge; //Measured charge
 std::vector<TH1F*> h_charge_res; //Measured charge geometry corrected
 std::vector<TH1F*> h_time; //Measured time
 std::vector<TH1F*> h_time_res; //Measured time
+std::vector<TH1F*> h_time_final; //Measured time
 std::vector<TH1F*> h_time_diff; //Time diff between EV-MC
 std::vector<TH2F*> h_charge_vs_trigq; //PMT charge vs trigger charge
 TH2F* h_charge_muontrigs; //Muon trigger charges correlation
@@ -148,8 +151,26 @@ void GetPMTInfo(){
     pos_pmts.push_back(pmt_temp);
   }
 
-  Color_t mycolors[] = {1, 1, 1, 1, 1, 1, 1, 1, kBlue, kOrange, kRed, kRed, kOrange, kBlue, kBlue, kOrange, kRed, kRed, kOrange, kBlue, 1};
+  Color_t mycolors[] = {1, 1, 1, 1, 1, 1, 1, 1, kBlue-2, kOrange-2, kRed-2, kRed-1, kOrange-1, kBlue-1, kBlue, kOrange, kRed, kRed+1, kOrange+1, kBlue+1, 1};
+  int mypmtpos[] = {3, 3, 3, 3, 3, 3, 3, 3, 0, 1, 2, 2, 1, 0, 0, 1, 2, 2, 1, 0, 3};
   pmtidtocolor.insert(pmtidtocolor.begin(), mycolors, mycolors + npmts );
+  pmtidtopos.insert(pmtidtopos.begin(), mypmtpos, mypmtpos + npmts );
+  double mydelays[] = {.0, .0, .0, .0, .0, .0, .0, .0
+                    -20.57914449553667,
+                    -20.659866192027934,
+                    -20.827556184469994,
+                    -20.83027277200025,
+                    -20.41955157599053,
+                    -20.42802016610127,
+                    -20.565785808047142,
+                    -20.607075743765186,
+                    -20.628455171240507,
+                    -20.65168715965919,
+                    -20.70112435087266,
+                    -20.450410008571303,
+                    .0};
+
+  pmttime_delay.insert(pmttime_delay.begin(), mydelays, mydelays + npmts );
 
 }
 
@@ -174,9 +195,10 @@ void GetHistos(){
     h_charge_vs_trigq.push_back(new TH2F(Form("h_charge_vs_trigq_%i",ih),"h_charge_vs_trigq",200,0,100,200,0,100));
     h_time.push_back(new TH1F(Form("h_time_%i",ih),"h_time",400,200,240));
     h_time_res.push_back(new TH1F(Form("h_time_res_%i",ih),"h_time_res",400,200,240));
+    h_time_final.push_back(new TH1F(Form("h_time_final_%i",ih),"h_time_final",140,0,14));
     h_time_diff.push_back(new TH1F(Form("h_time_diff_%i",ih),"h_time_diff",100,-100,100));
   }
-  h_charge_muontrigs = new TH2F("h_charge_muontrigs","h_charge_muontrigs",200,0,700,200,0,700);
+  h_charge_muontrigs = new TH2F("h_charge_muontrigs","h_charge_muontrigs",200,0,400,200,0,400);
   h_charge_total = new TH1F("h_charge_total","h_charge_total",200,-20,500);
   h_chi2 = new TH1F("h_chi2","h_chi2",50,0,200);
 
@@ -236,8 +258,6 @@ void GetHistos(){
         double qtotal_smallpmts = 0.;
         double charge = 0.;
         double charge_trig = 0.;
-        double topmuon_charge = 0.;
-        double bottommuon_charge = 0.;
 
         //First PMT loop:
         // - Look for trigger PMT and save charge
@@ -249,24 +269,40 @@ void GetHistos(){
           if(pmtid==1){
             charge_trig = ev->GetPMT(ipmt)->GetCharge();
           }
-          if(pmtid==6){
-            topmuon_charge = ev->GetPMT(ipmt)->GetCharge();
-          }
-          else if(pmtid==7){
-            bottommuon_charge = ev->GetPMT(ipmt)->GetCharge();
-          }
+          // if(pmtid==6){
+          //   topmuon_charge = ev->GetPMT(ipmt)->GetCharge();
+          // }
+          // else if(pmtid==7){
+          //   bottommuon_charge = ev->GetPMT(ipmt)->GetCharge();
+          // }
           charge = ev->GetPMT(ipmt)->GetCharge();
           qtotal += charge;
           if(pmttype==1) qtotal_smallpmts += charge;
         }
 
+        //Get muon tags charge and time
+        double topmuon_charge = 0.;
+        double bottommuon_charge = 0.;
+        double bottommuon_time = -9999.;
+        double bottommuon_timeres = -9999.;
+        RAT::DS::PMT *pmt = ev->GetPMTWithID(6);
+        if(pmt!=NULL) topmuon_charge = pmt->GetCharge();
+        pmt = ev->GetPMTWithID(7);
+        if(pmt!=NULL) {
+          bottommuon_charge = pmt->GetCharge();
+          bottommuon_time = pmt->GetTime();
+          double bottom_dist = (*pos_pmts[7] - *target_pos).Mag();
+          double bottom_tof = bottom_dist/cspeed;
+          bottommuon_timeres = bottommuon_time - bottom_tof;
+        }
+
         //Cuts
-        //        if(bottommuon_charge<400.0 || topmuon_charge<400.0) continue;
+        if(bottommuon_charge<30.0 || topmuon_charge<30.0) continue;
 
         for(int ipmt=0; ipmt<ev->GetPMTCount(); ipmt++){
           int pmtid = ev->GetPMT(ipmt)->GetID();
           double dist = (*pos_pmts[pmtid] - *target_pos).Mag();
-          double lighttime = dist/cspeed;
+          double tof = dist/cspeed;
           charge = ev->GetPMT(ipmt)->GetCharge();
           h_charge[pmtid]->Fill(charge);
           double charge_res = charge/qScintCorr[pmtid]/20; //20cm (?)
@@ -275,9 +311,10 @@ void GetHistos(){
           h_charge_vs_trigq[pmtid]->Fill(charge,charge_trig);
           double pmttime = ev->GetPMT(ipmt)->GetTime();
           h_time[pmtid]->Fill(pmttime);
-          double timeres = pmttime - lighttime;
-          // std::cout<<" ToF "<<pmtid<<": "<<lighttime<<std::endl;
+          double timeres = pmttime - tof;
+          // std::cout<<" ToF "<<pmtid<<": "<<tof<<std::endl;
           h_time_res[pmtid]->Fill(timeres);
+          h_time_final[pmtidtopos[pmtid]]->Fill(timeres - bottommuon_time - pmttime_delay[pmtid]);
           if(timeres>-900) h_pmt_timevspos->Fill(pos_pmts[pmtid]->X(),pos_pmts[pmtid]->Y(),timeres);
           //Compute chi2 for cher/scint
           if(ev->GetPMT(ipmt)->GetType()==1){
@@ -423,6 +460,18 @@ void DrawHistos(){
       firstdrawn3 = true;
     }
   }
+
+  TCanvas *c_time_final = new TCanvas("c_time_final","c_time_final",900,900);
+  h_time_final[0]->SetLineColor(kBlue);
+  h_time_final[0]->Draw();
+  h_time_final[1]->SetLineColor(kOrange);
+  h_time_final[1]->Draw("same");
+  h_time_final[2]->SetLineColor(kRed);
+  h_time_final[2]->Draw("same");
+  // for(int pmtid = 0; pmtid<npmts; pmtid++){
+  //   h_time_final[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
+  //   h_time_final[pmtid]->Draw("sames");
+  // }
 
   TCanvas *c_charge_muontrigs = new TCanvas("c_charge_muontrigs","c_charge_muontrigs",900,900);
   h_charge_muontrigs->Draw("colz");

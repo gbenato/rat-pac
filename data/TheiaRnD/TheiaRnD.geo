@@ -275,13 +275,29 @@
    index: "trigger_pmt",
    valid_begin: [0, 0],
    valid_end: [0, 0],
-   mother: "world",
+   mother: "inner",
    type: "pmtarray",
    pmt_model: "h11934", //h11934, r7081_hqe, r11780_hqe, fast_test
    pmt_detector_type: "idpmt",
    sensitive_detector: "/mydet/pmt/inner",
    efficiency_correction: 1.0,
    pos_table: "PMTINFO_TRIGGER",
+   orientation: "manual",
+   orient_point: [0.0, 0.0, 400.0],
+}
+
+{
+   name: "GEO",
+   index: "panels_pmt",
+   valid_begin: [0, 0],
+   valid_end: [0, 0],
+   mother: "world",
+   type: "pmtarray",
+   pmt_model: "h11934", //h11934, r7081_hqe, r11780_hqe, fast_test
+   pmt_detector_type: "idpmt",
+   sensitive_detector: "/mydet/pmt/inner",
+   efficiency_correction: 1.0,
+   pos_table: "PMTINFO_PANELS",
    orientation: "manual",
    orient_point: [0.0, 0.0, 400.0],
 }

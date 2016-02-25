@@ -64,7 +64,8 @@ protected:
   std::string event_option;
   int event_number;
   std::vector<int> charge_cut_pmts;
-  std::vector<double> charge_cut_values;
+  std::vector<double> charge_cut_lower;
+  std::vector<double> charge_cut_higher;
   std::vector<double> intersection_zplane;
   RAT::DS::PMTInfo *pmtInfo;
 

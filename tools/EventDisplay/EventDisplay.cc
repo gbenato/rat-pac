@@ -58,15 +58,15 @@ EventDisplay::EventDisplay(std::string _inputFileName){
   //Time vs Pos
   canvas_event->cd(4)->SetPad(.33, .0, .66, .5);
   //Ring PMT traces
-  canvas_event->cd(5)->SetPad(.66, .75, .99, 1.);
+  canvas_event->cd(5)->SetPad(.66, .80, .99, 1.);
   //Light PMT traces
-  canvas_event->cd(6)->SetPad(.66, .5, .99, .75);
+  canvas_event->cd(6)->SetPad(.66, .60, .99, .80);
   //Muon PMT traces
-  canvas_event->cd(7)->SetPad(.66, .25, .99, .5);
-  //Spare
-  canvas_event->cd(8)->SetPad(.66, .0, .99, .25);
-  //Hidden
-  canvas_event->cd(10)->SetPad(.99, .99, 1., 1.);
+  canvas_event->cd(7)->SetPad(.66, .40, .99, .60);
+  //Source trigger PMT
+  canvas_event->cd(8)->SetPad(.66, .20, .99, .40);
+  //Muon panels traces
+  canvas_event->cd(10)->SetPad(.66, .0, .99, .20);
 
   //Particle maps
   ParticleColor[11]=kGreen;   ParticleWidth[11]=1;   ParticleName[11]="Electron";
@@ -265,6 +265,8 @@ bool EventDisplay::LoadEvent(int ievt){
   UShort_t ymin_d3=99999.; //yaxis min limit digital
   UShort_t ymax_d4=0.; //yaxis max limit digital
   UShort_t ymin_d4=99999.; //yaxis min limit digital
+  UShort_t ymax_d5=0.; //yaxis max limit digital
+  UShort_t ymin_d5=99999.; //yaxis min limit digital
   double ymax_temp=0.;
   double ymin_temp=0.;
   double xmax_temp=0.;//dummy
@@ -314,7 +316,8 @@ bool EventDisplay::LoadEvent(int ievt){
       RAT::DS::PMT *pmt = ev->GetPMTWithID(pmtID);
       if(!pmt==NULL){
         double charge = pmt->GetCharge();
-        if(charge<charge_cut_values[ipmt]) return false; //dont load event
+        if(charge<charge_cut_lower[ipmt]) return false; //dont load event
+        if(charge>charge_cut_higher[ipmt]) return false; //dont load event
       }
     }
 
@@ -327,6 +330,11 @@ bool EventDisplay::LoadEvent(int ievt){
     runT->SetBranchAddress("run",&run);
     runT->GetEntry(0);
     pmtInfo = run->GetPMTInfo();
+    //Check PMTInfo for debugging
+    for(int ipmt=0; ipmt<pmtInfo->GetPMTCount(); ipmt++){
+      std:cout<<" PMT ID: "<<ipmt<<" type "<<pmtInfo->GetType(ipmt)<<std::endl;
+    }
+
     RAT::DS::DAQHeader *daqHeaderV1730 = run->GetDAQHeader("V1730");
     RAT::DS::DAQHeader *daqHeaderV1742 = run->GetDAQHeader("V1742");
 
@@ -377,9 +385,9 @@ bool EventDisplay::LoadEvent(int ievt){
     for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
       int pmtID = ev->GetPMT(ipmt)->GetID();
       pmtCharge[pmtID] = ev->GetPMT(ipmt)->GetCharge();
-      std::cout<<" pmtCharge "<<pmtID<<" "<<pmtCharge[pmtID]<<std::endl;
+      // std::cout<<" pmtCharge "<<pmtID<<" "<<pmtCharge[pmtID]<<std::endl;
       pmtTime[pmtID] = ev->GetPMT(ipmt)->GetTime();
-      std::cout<<" pmtTime "<<pmtID<<" "<<pmtTime[pmtID]<<std::endl;
+      // std::cout<<" pmtTime "<<pmtID<<" "<<pmtTime[pmtID]<<std::endl;
       // //Apply cut condition
       // if(pmtID==charge_cut_pmts[0] && pmtCharge[pmtID]<charge_cut_values[0]) {
       //   this->SetIsCut(true);
@@ -451,7 +459,7 @@ bool EventDisplay::LoadEvent(int ievt){
       double timeStep = 0;
       double timeDelay = 0;
 
-      if(pmtType==2){
+      if(pmtType==2 || pmtType==4){
         timeStep = daqHeaderV1730->GetDoubleAttribute("TIME_RES");
         //      timeDelay = daqHeaderV1730->GetDoubleAttribute("TIME_DELAY");
       } else if(pmtType==1 || pmtType==3 || pmtType==0){
@@ -480,6 +488,9 @@ bool EventDisplay::LoadEvent(int ievt){
         } else if(pmtType==0){
           ymax_d4 = TMath::Max(ymax_d4,vPMTDigitizedWaveforms[ipmt][isample]);
           ymin_d4 = TMath::Min(ymin_d4,vPMTDigitizedWaveforms[ipmt][isample]);
+        } else if(pmtType==4){
+          ymax_d5 = TMath::Max(ymax_d5,vPMTDigitizedWaveforms[ipmt][isample]);
+          ymin_d5 = TMath::Min(ymin_d5,vPMTDigitizedWaveforms[ipmt][isample]);
         }
         //Temporary
         ymin_d2 = 14400.;
@@ -498,6 +509,8 @@ bool EventDisplay::LoadEvent(int ievt){
         PMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.999*ymin_d3,1.001*ymax_d3);
       } else if(pmtType==0){
         PMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.999*ymin_d4,1.001*ymax_d4);
+      } else if(pmtType==4){
+        PMTDigitizedWaveforms[ipmt].GetYaxis()->SetRangeUser(0.999*ymin_d5,1.001*ymax_d5);
       }
     }
     #endif
@@ -533,7 +546,8 @@ void EventDisplay::SetParameters(){
 
   //Cuts
   charge_cut_pmts = dbED->GetIArray("charge_cut_pmts");
-  charge_cut_values = dbED->GetDArray("charge_cut_values");
+  charge_cut_lower = dbED->GetDArray("charge_cut_lower");
+  charge_cut_higher = dbED->GetDArray("charge_cut_higher");
 
   //Analysis file
   if(inputFileName == "") inputFileName = dbED->GetS("input_file");
@@ -732,7 +746,7 @@ void EventDisplay::DisplayEvent(int ievt){
   //   //      MCPMTDigitizedWaveforms[ipmt].ComputeRange(xmin_temp,xmax_temp,ymin_temp,ymax_temp);
   // }
   if(rds->ExistEV()){
-    bool drawRingPMTs=false, drawLightPMTs=false, drawMuonPMTs=false, drawTriggerPMT=false;
+    bool drawRingPMTs=false, drawLightPMTs=false, drawMuonPMTs=false, drawTriggerPMT=false, drawPanels=false;
     for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
       int pmtID = ev->GetPMT(ipmt)->GetID();
       int pmtType = pmtInfo->GetType(pmtID);
@@ -741,7 +755,8 @@ void EventDisplay::DisplayEvent(int ievt){
       if(pmtType == 2) canvas_event->cd(6);
       if(pmtType == 3) canvas_event->cd(7);
       if(pmtType == 0) canvas_event->cd(8);
-      if( (pmtType == 1 && drawRingPMTs==false) || (pmtType == 2 && drawLightPMTs==false) || (pmtType == 3 && drawMuonPMTs==false)  || (pmtType == 0 && drawTriggerPMT==false)){
+      if(pmtType == 4) canvas_event->cd(10);
+      if( (pmtType == 1 && drawRingPMTs==false) || (pmtType == 2 && drawLightPMTs==false) || (pmtType == 3 && drawMuonPMTs==false) || (pmtType == 0 && drawTriggerPMT==false) || (pmtType == 4 && drawPanels==false) ){
         PMTDigitizedWaveforms[ipmt].Draw("A LINE");
         PMTDigitizedWaveforms[ipmt].GetXaxis()->SetTitle("t(ns)");
         PMTDigitizedWaveforms[ipmt].GetYaxis()->SetTitle("ADC counts");
@@ -760,6 +775,10 @@ void EventDisplay::DisplayEvent(int ievt){
         if(pmtType == 0) {
           PMTDigitizedWaveforms[ipmt].SetTitle("Triggered event - Trigger PMT");
           drawTriggerPMT=true;
+        }
+        if(pmtType == 4) {
+          PMTDigitizedWaveforms[ipmt].SetTitle("Triggered event - Muon panels");
+          drawPanels=true;
         }
       }
       PMTDigitizedWaveforms[ipmt].SetLineColor(ipmt+20);
