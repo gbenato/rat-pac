@@ -161,7 +161,7 @@ namespace RAT {
     // fLCalibV1742 = DB::Get()->GetLink("CALIB","V1742");
     // json::Value fTimeCalibV1742 = fLCalibV1742->GetJSON("2.5GHz");
 
-    ifstream calibfile("../data/CALIB.ratdb");
+    ifstream calibfile(Form("%s/data/CALIB.ratdb", getenv("RATROOT") ) ) ;
     json::Reader reader(calibfile);
     json::Value calib;
     reader.getValue(calib);
