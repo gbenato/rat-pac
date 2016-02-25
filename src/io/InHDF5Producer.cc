@@ -18,6 +18,7 @@
 
 #include <assert.h>
 #include <regex>
+#include <fstream>
 
 typedef std::map< int, std::vector< std::vector<UShort_t> > > mw_t; //channel:[event,waveform]
 
@@ -52,6 +53,7 @@ namespace RAT {
 
     readDefaultCmd = new G4UIcommand("/rat/inhdf5/read_default", this);
     readDefaultCmd->SetGuidance("read from IO.default_input_filename");
+
   }
 
   G4String InHDF5Producer::GetCurrentValue(G4UIcommand * /*command*/)
@@ -99,6 +101,7 @@ namespace RAT {
       return 0;
     }
 
+    //Fill map digitizer channel - pmtID. FIXME: eventually this should go in a ratdb table
     bool DEBUG = false;
     std::map<int,int> FastChtoID;
     std::map<int,int> SlowChtoID;
@@ -151,7 +154,18 @@ namespace RAT {
     SlowChtoID[14]=999;
     SlowChtoID[15]=999;
 
+
     if(DEBUG) info<<"Opening FAST group..... \n";
+
+    //Get calibration from ratdb
+    // fLCalibV1742 = DB::Get()->GetLink("CALIB","V1742");
+    // json::Value fTimeCalibV1742 = fLCalibV1742->GetJSON("2.5GHz");
+
+    ifstream calibfile("../data/CALIB.ratdb");
+    json::Reader reader(calibfile);
+    json::Value calib;
+    reader.getValue(calib);
+    json::Value fTimeCalibV1742 = calib["2.5GHz"];
 
     //Get waveforms from FAST group
     H5::H5File *h5file = new H5::H5File(filename, H5F_ACC_RDONLY);
@@ -165,6 +179,7 @@ namespace RAT {
     //Loop over groups (each group should be a different channel)
     //and fill the waveforms in event order and the DAQHeader.
     mw_t waveforms;
+    std::map< int, std::vector<double> > waveformTimes;//ID to calibrated times
     bool daqHeaderV1742_filled = false;
     DS::DAQHeader *daqHeaderV1742 = new DS::DAQHeader();
     int ngroups = h5fastgr->getNumObjs();
@@ -259,6 +274,7 @@ namespace RAT {
           }
           waveforms[FastChtoID[chnumber]].push_back( (std::vector<UShort_t>) waveform);
         }
+        waveformTimes[FastChtoID[chnumber]] = fTimeCalibV1742[grpname]["cell_delay"].toVector<double>();
       }//end channels loop
     }//end groups loop
 
@@ -319,7 +335,9 @@ namespace RAT {
         daqHeaderV1730->SetAttribute("V_LOW",-1000.);
         daqHeaderV1730->SetAttribute("RESISTANCE",50.);
         daqHeaderV1730_filled = true;
+
       }
+
       //Now retrieve the samples
       H5::DataSet *dataset;
       try{
@@ -346,6 +364,14 @@ namespace RAT {
         }
         waveforms[SlowChtoID[chnumber]].push_back( (std::vector<UShort_t>) waveform);
       }
+
+      //Set sample times FIXME: need calibrated times
+      std::vector<double> waveformTimesV1730;
+      for(int isample=0; isample<nsamples; isample++){
+        waveformTimesV1730.push_back( isample*daqHeaderV1730->GetDoubleAttribute("TIME_RES") );
+      }
+
+      waveformTimes[SlowChtoID[chnumber]] = waveformTimesV1730;
     }//end channels loop
 
     int nevents = waveforms.begin()->second.size(); //FIXME: deal with different number of events...
@@ -363,6 +389,7 @@ namespace RAT {
         RAT::DS::PMT *pmt = ev->AddNewPMT();
         pmt->SetID(iwaveform->first);
         pmt->SetWaveform(iwaveform->second.at(iev));
+        pmt->SetWaveformTime(waveformTimes[pmt->GetID()]);
         // info<<"Waveforms "<<pmt->GetWaveform().size()<<"\n";
         // for(int isample=0; isample<iwaveform->second.at(iev).size();isample++){
         //   info<<"   "<<isample<<" "<<pmt->GetWaveform()[isample]<<" "<<iwaveform->second.at(iev)[isample]<<"\n";

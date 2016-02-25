@@ -255,6 +255,7 @@ namespace RAT {
               DS::PMT* pmt = ev->AddNewPMT();
               pmt->SetID(pmtID);
               pmt->SetWaveform(digitizer->SampleWaveform(DigitizedWaveform,isample)); //it is defined by the sample that crosses threshold
+              pmt->SetWaveformTime(digitizer->GetWaveformTime(pmtID));
 
               isample = digitizer->GoToEndOfSample(isample); //go forward towards the end of the sampling window
 
@@ -289,6 +290,7 @@ namespace RAT {
           DS::PMT* pmt = ev->AddNewPMT();
           pmt->SetID(pmtID);
           pmt->SetWaveform(digitizer->SampleWaveform(digitizer->GetDigitizedWaveform(pmtID),0));
+          pmt->SetWaveformTime(digitizer->GetWaveformTime(pmtID));
 
         }//end PMT loop
         fDigitizerV1730->Clear(); //Clear waveforms for the next round of hits
@@ -343,6 +345,7 @@ namespace RAT {
                 pmt->SetID(pmtID);
                 int thressample = digitizer->GetSampleAtTime(threstime);
                 pmt->SetWaveform(digitizer->SampleWaveform(digitizer->GetDigitizedWaveform(pmtID), thressample));
+                pmt->SetWaveformTime(digitizer->GetWaveformTime(pmtID));
               } //end reading PMTs
 
               isample = digitizer->GoToEndOfSample(isample); //go forward towards the end of the sampling window

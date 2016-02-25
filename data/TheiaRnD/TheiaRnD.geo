@@ -230,7 +230,7 @@
   mother: "inner",
 //  mother: "vessel",
   type: "pmtarray",
-  pmt_model: "h11934", //h11934
+  pmt_model: "h11934", //h11934, r7600u-20
   pmt_detector_type: "idpmt",
   sensitive_detector: "/mydet/pmt/inner",
   efficiency_correction: 1.0,
@@ -261,7 +261,7 @@
   valid_end: [0, 0],
   mother: "world",
   type: "pmtarray",
-  pmt_model: "h11934", //r7081_hqe, r11780_hqe
+  pmt_model: "h11934", //h11934, r7081_hqe, r11780_hqe
   pmt_detector_type: "idpmt",
   sensitive_detector: "/mydet/pmt/inner",
   efficiency_correction: 1.0,
@@ -277,7 +277,7 @@
    valid_end: [0, 0],
    mother: "world",
    type: "pmtarray",
-   pmt_model: "h11934", //r7081_hqe, r11780_hqe, fast_test
+   pmt_model: "h11934", //h11934, r7081_hqe, r11780_hqe, fast_test
    pmt_detector_type: "idpmt",
    sensitive_detector: "/mydet/pmt/inner",
    efficiency_correction: 1.0,

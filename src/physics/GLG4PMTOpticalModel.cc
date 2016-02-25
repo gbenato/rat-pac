@@ -373,7 +373,7 @@ GLG4PMTOpticalModel::DoIt(const G4FastTrack& fastTrack, G4FastStep& fastStep)
     A= 1.0 - (T+R);
     An= 1.0 - (fT_n+fR_n); //The absorption at normal incidence
     collection_eff= _efficiency/An; // net QE = _efficiency for normal inc.
-    
+
 # ifdef G4DEBUG
     if (A < 0.0 || A > 1.0 || collection_eff < 0.0 || collection_eff > 1.0) {
       G4cerr << "GLG4PMTOpticalModel::DoIt(): Strange coefficients!\n";

@@ -172,8 +172,8 @@ void GetHistos(){
     h_charge.push_back(new TH1F(Form("h_charge_%i",ih),"h_charge",300,-2,30));
     h_charge_res.push_back(new TH1F(Form("h_charge_res_%i",ih),"h_charge_res",50,0,50));
     h_charge_vs_trigq.push_back(new TH2F(Form("h_charge_vs_trigq_%i",ih),"h_charge_vs_trigq",200,0,100,200,0,100));
-    h_time.push_back(new TH1F(Form("h_time_%i",ih),"h_time",200,200,220));
-    h_time_res.push_back(new TH1F(Form("h_time_res_%i",ih),"h_time_res",200,200,220));
+    h_time.push_back(new TH1F(Form("h_time_%i",ih),"h_time",400,200,240));
+    h_time_res.push_back(new TH1F(Form("h_time_res_%i",ih),"h_time_res",400,200,240));
     h_time_diff.push_back(new TH1F(Form("h_time_diff_%i",ih),"h_time_diff",100,-100,100));
   }
   h_charge_muontrigs = new TH2F("h_charge_muontrigs","h_charge_muontrigs",200,0,700,200,0,700);
@@ -276,9 +276,8 @@ void GetHistos(){
           double pmttime = ev->GetPMT(ipmt)->GetTime();
           h_time[pmtid]->Fill(pmttime);
           double timeres = pmttime - lighttime;
-
-          //          std::cout<<" time "<<pmttime<<" "<<timeres<<std::endl;
-          if(charge>5.0) h_time_res[pmtid]->Fill(timeres);
+          // std::cout<<" ToF "<<pmtid<<": "<<lighttime<<std::endl;
+          h_time_res[pmtid]->Fill(timeres);
           if(timeres>-900) h_pmt_timevspos->Fill(pos_pmts[pmtid]->X(),pos_pmts[pmtid]->Y(),timeres);
           //Compute chi2 for cher/scint
           if(ev->GetPMT(ipmt)->GetType()==1){

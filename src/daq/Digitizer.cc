@@ -175,7 +175,19 @@ namespace RAT {
   }
 
   int Digitizer::GetSampleAtTime(double utime){
-    return floor((utime - fSampleDelay)/GetTimeResolution());
+    //    return floor((utime - fSampleDelay)/GetTimeResolution());
+    return floor((utime)/GetTimeResolution());
+  }
+
+  std::vector<double> Digitizer::GetWaveformTime(int pmtID){
+
+    std::vector<double> waveformTime;
+    for(int isample=0; isample<GetNSamples(); isample++){
+      waveformTime.push_back(GetTimeAtSample(isample));
+    }
+
+    return waveformTime;
+
   }
 
   void Digitizer::Clear(){

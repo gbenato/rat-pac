@@ -62,6 +62,7 @@ namespace RAT {
     //Methods
     virtual double GetTimeAtSample(int sample);
     virtual int GetSampleAtTime(double time);
+    virtual std::vector<double> GetWaveformTime(int pmtID);
 
   protected:
 

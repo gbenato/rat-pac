@@ -460,10 +460,11 @@ bool EventDisplay::LoadEvent(int ievt){
       }
 
       vPMTDigitizedWaveforms[ipmt] = pmt->GetWaveform();
+      vWaveformTimes[ipmt] = pmt->GetWaveformTime();
       if(debugLevel > 1) std::cout<<" EventDisplay::LoadEvent - DigitWF: PMT " << ipmt<<" nsamples "<<vPMTDigitizedWaveforms[ipmt].size()<<std::endl;
 
       for(int isample=0; isample<vPMTDigitizedWaveforms[ipmt].size(); isample++){
-        PMTDigitizedWaveforms[ipmt].SetPoint(isample,isample*timeStep-timeDelay,vPMTDigitizedWaveforms[ipmt][isample]);
+        PMTDigitizedWaveforms[ipmt].SetPoint(isample,vWaveformTimes[ipmt][isample],vPMTDigitizedWaveforms[ipmt][isample]);
 
         if(debugLevel > 1) std::cout<<" EventDisplay::LoadEvent - Digit WF: sample "<<isample<<" "<<vPMTDigitizedWaveforms[ipmt][isample]<<std::endl;
 

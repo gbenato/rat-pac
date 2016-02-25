@@ -92,6 +92,7 @@ protected:
   std::map< int, std::vector<double> > vMCPMTWaveforms;
   std::map< int, std::vector<UShort_t> > vMCPMTDigitizedWaveforms;
   std::map< int, std::vector<UShort_t> > vPMTDigitizedWaveforms;
+  std::map< int, std::vector<double> > vWaveformTimes;
   std::map<std::string,TH2F*> hxyplane;
   TCanvas *canvas_event;
   double elength;

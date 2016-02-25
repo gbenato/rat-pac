@@ -68,16 +68,17 @@ namespace RAT {
         int pmtID = pmt->GetID();
         int pmtType = pmtInfo->GetType(pmtID);
         std::vector<UShort_t> dWaveform = pmt->GetWaveform();
+        std::vector<double> dWaveformTime = pmt->GetWaveformTime();
         if(pmtType==1 || pmtType==3 || pmtType==0){
           //          pmt->SetTime(GetTimeAtPeak(dWaveform), daqHeaderV1742 );
           //          pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1742, anaV1742) );
-          pmt->SetTime( GetTimeAtFraction(dWaveform, daqHeaderV1742, anaV1742) );
-          pmt->SetCharge(IntegrateCharge(dWaveform, daqHeaderV1742, anaV1742) );
+          pmt->SetTime( GetTimeAtFraction(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
+          pmt->SetCharge(IntegrateCharge(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
         } else if(pmtType==2){
           //        pmt->SetTime(GetTimeAtPeak(dWaveform), daqHeaderV1730 );
           //        pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1730, anaV1730) );
-          pmt->SetTime( GetTimeAtFraction(dWaveform, daqHeaderV1730, anaV1730) );
-          pmt->SetCharge(IntegrateCharge(dWaveform, daqHeaderV1730, anaV1730) );
+          pmt->SetTime( GetTimeAtFraction(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730) );
+          pmt->SetCharge(IntegrateCharge(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730) );
         }
       }//end PMT loop
 
@@ -88,7 +89,7 @@ namespace RAT {
   } //AnaProc::DSEvent
 
   //Calculates the time at which the waveform crosses threshold
-  double AnaProc::GetTimeAtFraction(std::vector<UShort_t> dWaveform, RAT::DS::DAQHeader *daqHeader, AnaParams anaParams){
+  double AnaProc::GetTimeAtFraction(std::vector<UShort_t> dWaveform, std::vector<double> dWaveformTime, RAT::DS::DAQHeader *daqHeader, AnaParams anaParams){
 
     std::string daqName = daqHeader->GetStringAttribute("DAQ_NAME");
     double fTimeStep = daqHeader->GetDoubleAttribute("TIME_RES");
@@ -132,38 +133,39 @@ namespace RAT {
 
     //Find the max and define threshold given the fraction
     double high_peak = 0.;
-    double sample_peak = 0.;
     for(UShort_t isample=0; isample<values.size(); isample++){
       //      std::cout<<" AnaProc::GetTimeAtThreshold: "<<isample<<"/"<<values.size()<<": "<<values[isample]<<" "<<Vthres<<std::endl;
       //      std::cout<<" AnaProc::GetTimeAtThreshold: "<<isample<<"/"<<values.size()<<": "<<dWaveform[isample]<<std::endl;
       if(values[isample]<high_peak) {
-        sample_peak = isample + s_int_start;
         high_peak = values[isample];
       }
     }
 
-    double Vthres = high_peak*anaParams.time_thres_frac;
-    int sthres = 0;
+    double Vthres = anaParams.time_thres;
+    double VthresFrac = high_peak*anaParams.time_thres_frac;
+    int s_af_thres = -1;
     for(UShort_t isample=0; isample<values.size(); isample++){
-      //      std::cout<<" AnaProc::GetTimeAtThreshold: "<<isample<<"/"<<values.size()<<": "<<values[isample]<<" "<<Vthres<<std::endl;
-      //      std::cout<<" AnaProc::GetTimeAtThreshold: "<<isample<<"/"<<values.size()<<": "<<dWaveform[isample]<<std::endl;
-      if(values[isample]<Vthres) {
-        sthres = isample + s_int_start;
+      //      std::cout<<" AnaProc::GetTimeAtThreshold: "<<isample<<"/"<<values.size()<<": "<<values[isample]<<" "<<Vthres<<" "<<VthresFrac<<std::endl;
+      if(values[isample]<Vthres && values[isample]<VthresFrac) {
+        s_af_thres = isample;
         break;
       }
     }
-    if(sthres == 0) {
+    if(s_af_thres == -1) {
       //      std::cout<<" AnaProc::GetTimeAtThreshold: waveform did not cross threshold "<<std::endl;
       return -9999;
     }
     else{
-      return sthres*fTimeStep - fTimeDelay;
+      //Interpolate to get the right time at threshold
+      return dWaveformTime[s_int_start + s_af_thres] + ( (VthresFrac - values[s_af_thres-1])/(values[s_af_thres] - values[s_af_thres-1]) ) * (dWaveformTime[s_af_thres] - dWaveformTime[s_af_thres-1]);
+      //      return s_after_thres*fTimeStep - fTimeDelay;
     }
+
 
   }
 
   //Calculates the time at which the waveform crosses threshold
-  double AnaProc::GetTimeAtThreshold(std::vector<UShort_t> dWaveform, RAT::DS::DAQHeader *daqHeader, AnaParams anaParams){
+  double AnaProc::GetTimeAtThreshold(std::vector<UShort_t> dWaveform, std::vector<double> dWaveformTime, RAT::DS::DAQHeader *daqHeader, AnaParams anaParams){
 
     std::string daqName = daqHeader->GetStringAttribute("DAQ_NAME");
     double fTimeStep = daqHeader->GetDoubleAttribute("TIME_RES");
@@ -226,7 +228,7 @@ namespace RAT {
   }
 
   //Calculates the time at which the peak of the digitized waveform occurs
-  double AnaProc::GetTimeAtPeak(std::vector<UShort_t> dWaveform, RAT::DS::DAQHeader *daqHeader, AnaParams anaParams){
+  double AnaProc::GetTimeAtPeak(std::vector<UShort_t> dWaveform, std::vector<double> dWaveformTime, RAT::DS::DAQHeader *daqHeader, AnaParams anaParams){
 
     double fTimeStep = daqHeader->GetDoubleAttribute("TIME_RES");
     double fTimeDelay = daqHeader->GetDoubleAttribute("TIME_DELAY");
@@ -320,7 +322,7 @@ namespace RAT {
   }
 
 
-  double AnaProc::IntegrateCharge(std::vector<UShort_t> dWaveform, RAT::DS::DAQHeader *daqHeader, AnaParams anaParams){
+  double AnaProc::IntegrateCharge(std::vector<UShort_t> dWaveform, std::vector<double> dWaveformTime, RAT::DS::DAQHeader *daqHeader, AnaParams anaParams){
 
     double fTimeStep = daqHeader->GetDoubleAttribute("TIME_RES");
     double fTimeDelay = daqHeader->GetDoubleAttribute("TIME_DELAY");

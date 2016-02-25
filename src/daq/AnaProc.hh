@@ -29,10 +29,10 @@ public:
   AnaProc();
   virtual ~AnaProc();
   virtual Processor::Result DSEvent(DS::Root *ds);
-  virtual double GetTimeAtPeak(std::vector<UShort_t>, RAT::DS::DAQHeader*, AnaParams);
-  virtual double GetTimeAtThreshold(std::vector<UShort_t>, RAT::DS::DAQHeader*, AnaParams);
-  virtual double GetTimeAtFraction(std::vector<UShort_t>, RAT::DS::DAQHeader*, AnaParams);
-  virtual double IntegrateCharge(std::vector<UShort_t>, RAT::DS::DAQHeader*, AnaParams);
+  virtual double GetTimeAtPeak(std::vector<UShort_t>, std::vector<double>, RAT::DS::DAQHeader*, AnaParams);
+  virtual double GetTimeAtThreshold(std::vector<UShort_t>, std::vector<double>, RAT::DS::DAQHeader*, AnaParams);
+  virtual double GetTimeAtFraction(std::vector<UShort_t>, std::vector<double>, RAT::DS::DAQHeader*, AnaParams);
+  virtual double IntegrateCharge(std::vector<UShort_t>, std::vector<double>, RAT::DS::DAQHeader*, AnaParams);
 
 protected:
 

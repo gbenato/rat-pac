@@ -13,7 +13,7 @@ int_end: 600.0,    //end time of integration window in ns
 peak_window: 10.0,  //width in ns of the sampling window to look for a peak
 peak_qthres: 0.5,   //charge threshold in 'peak_window' for looking for a peak
 ped_max_fluc: 10.0, //maximum allowed pedestal fluctuation in mV
-time_thres: -0.3,  //threshold from pedestal to define a pulse time (dt: -0.3)
+time_thres: -1.5,  //threshold from pedestal to define a pulse time (dt: -0.3)
 time_thres_frac: 0.5,    //threshold from pedestal in fraction of max pulse high
 
 }
@@ -26,14 +26,14 @@ valid_end: [0, 0],
 
 //Pulse analysis
 ped_start: 150.0,     //start time of pedestal window in ns
-ped_end: 200.0,      //end time of pedestal window in ns (100.0)
+ped_end: 180.0,      //end time of pedestal window in ns (100.0)
 max_spread: 3.0,     //
-int_start: 200.0,    //start time of integration window in ns (100.0)
+int_start: 180.0,    //start time of integration window in ns (100.0)
 int_end: 250.0,      //end time of integration window in ns
 peak_window: 10.0,   //width in ns of the sampling window to look for a peak
 peak_qthres: 0.5,    //charge threshold in 'peak_window' for looking for a peak
 ped_max_fluc: 5.0,   //maximum allowed pedestal fluctuation in mV
-time_thres: -0.04,    //threshold from pedestal to define a pulse time (dt: -0.3)
+time_thres: -0.3,    //threshold from pedestal to define a pulse time (dt: -0.3, mc:-0.04)
 time_thres_frac: 0.5,    //threshold from pedestal in fraction of max pulse high
 
 }
