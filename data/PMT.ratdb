@@ -243,6 +243,8 @@ glass_thickness: 1.0, // mm
 pmt_width: 15.0, //mm
 photocathode_width: 11.5, //mm
 
+efficiency_correction: 1.0,
+
 }
 
 {

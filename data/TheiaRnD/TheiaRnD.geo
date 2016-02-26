@@ -163,7 +163,7 @@
   r_max: 45.0, //LAB->35.0, WBLS->30.0
   size_z: 14.0,
   position: [0.0, 0.0, 1.0],
-  material: "labppo_scintillator", //water, wbls_1pct_mod, wbls_1pct, wbls_5pct, wbls_10pct, labppo_scintillator
+  material: "water", //water, wbls_1pct_mod, wbls_1pct, wbls_5pct, wbls_10pct, labppo_scintillator
   color: [0.5, 0.1, 0.5, 0.5],
 }
 
@@ -224,23 +224,22 @@
 
 {
   name: "GEO",
-  index: "small_pmts",
+  index: "ring_pmts",
   valid_begin: [0, 0],
   valid_end: [0, 0],
   mother: "inner",
-//  mother: "vessel",
   type: "pmtarray",
   pmt_model: "h11934", //h11934, r7600u-20
   pmt_detector_type: "idpmt",
   sensitive_detector: "/mydet/pmt/inner",
-  efficiency_correction: 1.0,
+  efficiency_correction: 0.0001,
   pos_table: "PMTINFO_CROSS_SIDE",
   orientation: "manual",
 }
 
 {
   name: "GEO",
-  index: "big_pmts",
+  index: "light_pmts",
   valid_begin: [0, 0],
   valid_end: [0, 0],
   mother: "inner",
@@ -248,7 +247,7 @@
   pmt_model: "r7081_hqe", //r7081_hqe, r11780_hqe
   pmt_detector_type: "idpmt",
   sensitive_detector: "/mydet/pmt/inner",
-  efficiency_correction: 1.0,
+  efficiency_correction: 0.5,
   pos_table: "PMTINFO_FAR",
   orientation: "point",
   orient_point: [-400.0, -400.0, -200.0],
@@ -264,7 +263,7 @@
   pmt_model: "h11934", //h11934, r7081_hqe, r11780_hqe
   pmt_detector_type: "idpmt",
   sensitive_detector: "/mydet/pmt/inner",
-  efficiency_correction: 1.0,
+  efficiency_correction: 0.3,
   pos_table: "PMTINFO_MUON_TAGS",
   orientation: "manual",
   orient_point: [-400.0, -400.0, -200.0],
@@ -280,7 +279,7 @@
    pmt_model: "h11934", //h11934, r7081_hqe, r11780_hqe, fast_test
    pmt_detector_type: "idpmt",
    sensitive_detector: "/mydet/pmt/inner",
-   efficiency_correction: 1.0,
+   efficiency_correction: 0.2,
    pos_table: "PMTINFO_TRIGGER",
    orientation: "manual",
    orient_point: [0.0, 0.0, 400.0],

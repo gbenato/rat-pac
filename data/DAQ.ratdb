@@ -19,7 +19,7 @@ pulse_time_step: 0.1, //time step in ns (0.1ns is reasonable to get a fast simul
 sampling_time: 500.0, //for Analogue WF drawing
 
 //External trigger
-trigger_delay: 9.0,   // ns
+trigger_delay: 24.0,   // ns
 trigger_jitter: 0.25, // ns
 
 

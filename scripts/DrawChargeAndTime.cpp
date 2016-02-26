@@ -151,11 +151,12 @@ void GetPMTInfo(){
     pos_pmts.push_back(pmt_temp);
   }
 
-  Color_t mycolors[] = {1, 1, 1, 1, 1, 1, 1, 1, kBlue-2, kOrange-2, kRed-2, kRed-1, kOrange-1, kBlue-1, kBlue, kOrange, kRed, kRed+1, kOrange+1, kBlue+1, 1};
-  int mypmtpos[] = {3, 3, 3, 3, 3, 3, 3, 3, 0, 1, 2, 2, 1, 0, 0, 1, 2, 2, 1, 0, 3};
+//  Color_t mycolors[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, kBlue-2, kOrange-2, kRed-2, kRed-1, kOrange-1, kBlue-1, kBlue, kOrange, kRed, kRed+1, kOrange+1, kBlue+1, 1};
+  Color_t mycolors[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, kBlue, kOrange, kRed, kCyan, kBlack, kGray, kGreen, kTeal, kAzure, kViolet, kPink, kYellow, 1};
+  int mypmtpos[] = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 1, 2, 2, 1, 0, 0, 1, 2, 2, 1, 0, 3};
   pmtidtocolor.insert(pmtidtocolor.begin(), mycolors, mycolors + npmts );
   pmtidtopos.insert(pmtidtopos.begin(), mypmtpos, mypmtpos + npmts );
-  double mydelays[] = {.0, .0, .0, .0, .0, .0, .0, .0
+  double mydelays[] = {.0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0,
                     -20.57914449553667,
                     -20.659866192027934,
                     -20.827556184469994,
@@ -171,6 +172,7 @@ void GetPMTInfo(){
                     .0};
 
   pmttime_delay.insert(pmttime_delay.begin(), mydelays, mydelays + npmts );
+  //pmttime_delay = std::vector<double>(25,-20.);
 
 }
 
@@ -195,10 +197,10 @@ void GetHistos(){
     h_charge_vs_trigq.push_back(new TH2F(Form("h_charge_vs_trigq_%i",ih),"h_charge_vs_trigq",200,0,100,200,0,100));
     h_time.push_back(new TH1F(Form("h_time_%i",ih),"h_time",400,200,240));
     h_time_res.push_back(new TH1F(Form("h_time_res_%i",ih),"h_time_res",400,200,240));
-    h_time_final.push_back(new TH1F(Form("h_time_final_%i",ih),"h_time_final",140,0,14));
+    h_time_final.push_back(new TH1F(Form("h_time_final_%i",ih),"h_time_final",150,-1.0,14));
     h_time_diff.push_back(new TH1F(Form("h_time_diff_%i",ih),"h_time_diff",100,-100,100));
   }
-  h_charge_muontrigs = new TH2F("h_charge_muontrigs","h_charge_muontrigs",200,0,400,200,0,400);
+  h_charge_muontrigs = new TH2F("h_charge_muontrigs","h_charge_muontrigs",200,0,8000,200,0,8000);
   h_charge_total = new TH1F("h_charge_total","h_charge_total",200,-20,500);
   h_chi2 = new TH1F("h_chi2","h_chi2",50,0,200);
 
@@ -285,6 +287,7 @@ void GetHistos(){
         double bottommuon_charge = 0.;
         double bottommuon_time = -9999.;
         double bottommuon_timeres = -9999.;
+        double panel_charge[] = {0., 0., 0., 0.};
         RAT::DS::PMT *pmt = ev->GetPMTWithID(6);
         if(pmt!=NULL) topmuon_charge = pmt->GetCharge();
         pmt = ev->GetPMTWithID(7);
@@ -295,9 +298,17 @@ void GetHistos(){
           double bottom_tof = bottom_dist/cspeed;
           bottommuon_timeres = bottommuon_time - bottom_tof;
         }
+        pmt = ev->GetPMTWithID(8);
+        if(pmt!=NULL) panel_charge[0] = pmt->GetCharge();
+        pmt = ev->GetPMTWithID(9);
+        if(pmt!=NULL) panel_charge[1] = pmt->GetCharge();
+        pmt = ev->GetPMTWithID(10);
+        if(pmt!=NULL) panel_charge[2] = pmt->GetCharge();
+        pmt = ev->GetPMTWithID(11);
+        if(pmt!=NULL) panel_charge[3] = pmt->GetCharge();
 
         //Cuts
-        if(bottommuon_charge<30.0 || topmuon_charge<30.0) continue;
+        // if(bottommuon_charge<30.0 || topmuon_charge<30.0 || panel_charge[0]>10.0 || panel_charge[1]>10.0 || panel_charge[2]>10.0 || panel_charge[3]>10.0) continue;
 
         for(int ipmt=0; ipmt<ev->GetPMTCount(); ipmt++){
           int pmtid = ev->GetPMT(ipmt)->GetID();
@@ -312,9 +323,10 @@ void GetHistos(){
           double pmttime = ev->GetPMT(ipmt)->GetTime();
           h_time[pmtid]->Fill(pmttime);
           double timeres = pmttime - tof;
-          // std::cout<<" ToF "<<pmtid<<": "<<tof<<std::endl;
+          // std::cout<<" ToF "<<pmtid<<": "<<tof<<" "<<dist<<std::endl;
           h_time_res[pmtid]->Fill(timeres);
           h_time_final[pmtidtopos[pmtid]]->Fill(timeres - bottommuon_time - pmttime_delay[pmtid]);
+          //h_time_final[pmtid]->Fill(timeres - bottommuon_time - pmttime_delay[pmtid]);
           if(timeres>-900) h_pmt_timevspos->Fill(pos_pmts[pmtid]->X(),pos_pmts[pmtid]->Y(),timeres);
           //Compute chi2 for cher/scint
           if(ev->GetPMT(ipmt)->GetType()==1){
