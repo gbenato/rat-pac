@@ -112,6 +112,7 @@ namespace RAT {
       // Only for !simple triggering cases
       if(fTriggerType!="simple"){
         //Loop through the PMTs in the MC generated event
+
         for (int imcpmt=0; imcpmt < mc->GetMCPMTCount(); imcpmt++){
 
           DS::MCPMT *mcpmt = mc->GetMCPMT(imcpmt);
@@ -163,6 +164,34 @@ namespace RAT {
           }
 
         } //end pmt loop
+
+        //Simulate pulse in muon tags PMT
+        if(fTriggerType=="external"){
+
+          PMTWaveform pmtwf;
+          pmtwf.SetStepTime(fPulseTimeStep);
+          pmtwf.SetSamplingWindow(fSamplingTime);
+
+          PMTPulse *pmtpulse;
+          pmtpulse = new RealPMTPulse; //real PMT pulses shape
+
+          //Apply external trigger jitter
+          double triggerTime = fTriggerDelay + CLHEP::RandGauss::shoot()*fTriggerJitter;
+
+          pmtpulse->SetPulseMean(fPulseMean);
+          pmtpulse->SetStepTime(fPulseTimeStep);
+          pmtpulse->SetPulseMin(fPulseMin);
+          pmtpulse->SetPulseCharge(40.); //FIXME: handwaivy
+          pmtpulse->SetPulseWidth(fPulseWidth);
+          pmtpulse->SetPulseOffset(fPulseOffset);
+          pmtpulse->SetPulseStartTime(triggerTime); //also sets end time according to the pulse width and the pulse mean
+          pmtwf.fPulse.push_back(pmtpulse);
+
+          fDigitizerV1742->AddChannel(6,pmtwf);
+          fDigitizerV1742->AddChannel(7,pmtwf);
+
+        }
+
       }
 
       //////////////////////////////////////////////////////////
@@ -275,8 +304,6 @@ namespace RAT {
         DS::EV *ev = ds->AddNewEV();
         ev->SetID(fEventCounter);
 
-        double init_time = fTriggerDelay + CLHEP::RandGauss::shoot()*fTriggerJitter;
-
         RAT::Digitizer *digitizer;
         for (int imcpmt=0; imcpmt < mc->GetMCPMTCount(); imcpmt++){
 
@@ -285,7 +312,6 @@ namespace RAT {
 
           if(pmtType == 1 || pmtType == 3 || pmtType == 0) digitizer = fDigitizerV1742;
           else if(pmtType == 2) digitizer = fDigitizerV1730;
-          int init_sample = digitizer->GetSampleAtTime(init_time);
 
           DS::PMT* pmt = ev->AddNewPMT();
           pmt->SetID(pmtID);
@@ -293,6 +319,17 @@ namespace RAT {
           pmt->SetWaveformTime(digitizer->GetWaveformTime(pmtID));
 
         }//end PMT loop
+
+        //Add muon tags FIXME: loop over digitizer channels
+        DS::PMT* pmt = ev->AddNewPMT();
+        pmt->SetID(6);
+        pmt->SetWaveform(fDigitizerV1742->SampleWaveform(fDigitizerV1742->GetDigitizedWaveform(6),0));
+        pmt->SetWaveformTime(fDigitizerV1742->GetWaveformTime(6));
+        pmt = ev->AddNewPMT();
+        pmt->SetID(7);
+        pmt->SetWaveform(fDigitizerV1742->SampleWaveform(fDigitizerV1742->GetDigitizedWaveform(7),0));
+        pmt->SetWaveformTime(fDigitizerV1742->GetWaveformTime(7));
+
         fDigitizerV1730->Clear(); //Clear waveforms for the next round of hits
         fDigitizerV1742->Clear(); //Clear waveforms for the next round of hits
         fEventCounter++;

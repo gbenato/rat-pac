@@ -98,7 +98,7 @@ namespace RAT {
     double fVHigh = daqHeader->GetDoubleAttribute("V_HIGH");
     double fVLow = daqHeader->GetDoubleAttribute("V_LOW");
     double fVOffSet = daqHeader->GetDoubleAttribute("V_OFFSET");
-    double fResistance = daqHeader->GetDoubleAttribute("RESISTANCE");
+    double fResistance = 1.;//daqHeader->GetDoubleAttribute("RESISTANCE");
     int fNBits = daqHeader->GetIntAttribute("NBITS");
 
     int nADCs = 1 << fNBits; //Calculate the number of adc counts
@@ -157,7 +157,7 @@ namespace RAT {
     }
     else{
       //Interpolate to get the right time at threshold
-      return dWaveformTime[s_int_start + s_af_thres] + ( (VthresFrac - values[s_af_thres-1])/(values[s_af_thres] - values[s_af_thres-1]) ) * (dWaveformTime[s_af_thres] - dWaveformTime[s_af_thres-1]);
+      return dWaveformTime[s_int_start + s_af_thres - 1] + ( (dWaveformTime[s_af_thres] - dWaveformTime[s_af_thres-1])/(values[s_af_thres] - values[s_af_thres-1]) ) * (VthresFrac - values[s_af_thres-1]);
       //      return s_after_thres*fTimeStep - fTimeDelay;
     }
 
@@ -174,7 +174,7 @@ namespace RAT {
     double fVHigh = daqHeader->GetDoubleAttribute("V_HIGH");
     double fVLow = daqHeader->GetDoubleAttribute("V_LOW");
     double fVOffSet = daqHeader->GetDoubleAttribute("V_OFFSET");
-    double fResistance = daqHeader->GetDoubleAttribute("RESISTANCE");
+    double fResistance = 1.;//daqHeader->GetDoubleAttribute("RESISTANCE");
     int fNBits = daqHeader->GetIntAttribute("NBITS");
 
     int nADCs = 1 << fNBits; //Calculate the number of adc counts
@@ -236,7 +236,7 @@ namespace RAT {
     double fVHigh = daqHeader->GetDoubleAttribute("V_HIGH");
     double fVLow = daqHeader->GetDoubleAttribute("V_LOW");
     double fVOffSet = daqHeader->GetDoubleAttribute("V_OFFSET");
-    double fResistance = daqHeader->GetDoubleAttribute("RESISTANCE");
+    double fResistance = 1.;//daqHeader->GetDoubleAttribute("RESISTANCE");
     int fNBits = daqHeader->GetIntAttribute("NBITS");
 
     int nADCs = 1 << fNBits; //Calculate the number of adc counts
@@ -330,7 +330,7 @@ namespace RAT {
     double fVHigh = daqHeader->GetDoubleAttribute("V_HIGH");
     double fVLow = daqHeader->GetDoubleAttribute("V_LOW");
     double fVOffSet = daqHeader->GetDoubleAttribute("V_OFFSET");
-    double fResistance = daqHeader->GetDoubleAttribute("RESISTANCE");
+    double fResistance = 1.;//daqHeader->GetDoubleAttribute("RESISTANCE");
     int fNBits = daqHeader->GetIntAttribute("NBITS");
 
     int nADCs = 1 << fNBits; //Calculate the number of adc counts
