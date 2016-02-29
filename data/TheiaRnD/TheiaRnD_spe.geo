@@ -67,7 +67,6 @@
   type: "box",
   size: [160.0,160.0,0.5],
   position: [0.0,0.0,32.0],
-//  position: [-400.0, -400.0, -180.0],
   material: "mirror",
   color: [0.5, 0.2, 0.1, 0.1],
   surface: "mirror",
@@ -225,11 +224,10 @@
 
 {
   name: "GEO",
-  index: "small_pmts",
+  index: "ring_pmts",
   valid_begin: [0, 0],
   valid_end: [0, 0],
   mother: "inner",
-//  mother: "vessel",
   type: "pmtarray",
   pmt_model: "h11934", //h11934
   pmt_detector_type: "idpmt",
@@ -285,4 +283,20 @@
   pos_table: "PMTINFO_MUON_TAGS",
   orientation: "manual",
   orient_point: [-400.0, -400.0, -200.0],
+}
+
+{
+   name: "GEO",
+   index: "panels_pmt",
+   valid_begin: [0, 0],
+   valid_end: [0, 0],
+   mother: "world",
+   type: "pmtarray",
+   pmt_model: "h11934", //h11934, r7081_hqe, r11780_hqe, fast_test
+   pmt_detector_type: "idpmt",
+   sensitive_detector: "/mydet/pmt/inner",
+   efficiency_correction: 1.0,
+   pos_table: "PMTINFO_PANELS",
+   orientation: "manual",
+   orient_point: [0.0, 0.0, 400.0],
 }

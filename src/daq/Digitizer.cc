@@ -171,7 +171,7 @@ namespace RAT {
   }
 
   double Digitizer::GetTimeAtSample(int sample){
-    return (double)sample*GetTimeResolution() + fSampleDelay;
+    return (double)sample*GetTimeResolution();// + fSampleDelay;
   }
 
   int Digitizer::GetSampleAtTime(double utime){

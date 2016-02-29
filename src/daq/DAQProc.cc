@@ -351,17 +351,16 @@ namespace RAT {
         //threshold
         if(triggerID>-1){ //means the trigger PMT exists in the event and hence we have a hit
 
-          RAT::Digitizer *digitizer = fDigitizerV1742;
-
-          std::vector<UShort_t> DigitizedTriggerWaveform = digitizer->GetDigitizedWaveform(triggerID);
+          std::vector<UShort_t> DigitizedTriggerWaveform = fDigitizerV1742->GetDigitizedWaveform(triggerID);
           //Sample the digitized waveform to look for triggers
           for(int isample=0; isample<DigitizedTriggerWaveform.size(); isample++){
             // std::cout<<" SAMPLE "<<isample<<"/"<<DigitizedTriggerWaveform.size()<<" "<<DigitizedTriggerWaveform[isample]<<" "<<digitizer->GetDigitizedThreshold()<<std::endl;
 
-            if (DigitizedTriggerWaveform[isample]<=digitizer->GetDigitizedThreshold()){ //hit above threshold! (remember the pulses are negative)
+            if (DigitizedTriggerWaveform[isample]<=fDigitizerV1742->GetDigitizedThreshold()){ //hit above threshold! (remember the pulses are negative)
 
-              double threstime = digitizer->GetTimeAtSample(isample);
-              // std::cout<<" Above threshold "<<isample<<"/"<<DigitizedTriggerWaveform.size()<<" "<<DigitizedTriggerWaveform[isample]<<" "<<fDigitizer->GetDigitizedThreshold()<<std::endl;
+              double threstime = fDigitizerV1742->GetTimeAtSample(isample);
+              //  std::cout<<" Above threshold "<<isample<<"/"<<DigitizedTriggerWaveform.size()<<" "<<DigitizedTriggerWaveform[isample]<<" "<<fDigitizer->GetDigitizedThreshold()<<std::endl;
+              std::cout<<" Above threshold "<<threstime<<" "<<fDigitizerV1742->GetSampleAtTime(threstime)<<std::endl;
 
               //Create a new event
               DS::EV *ev = ds->AddNewEV();
@@ -376,7 +375,7 @@ namespace RAT {
                 int pmtType = pmtInfo->GetType(pmtID);
 
                 if(pmtType == 1 || pmtType ==3 || pmtType == 0) digitizer = fDigitizerV1742;
-                else if(pmtType == 2) digitizer = fDigitizerV1730;
+                else if(pmtType == 2 || pmtType == 4) digitizer = fDigitizerV1730;
 
                 DS::PMT* pmt = ev->AddNewPMT();
                 pmt->SetID(pmtID);
@@ -385,7 +384,7 @@ namespace RAT {
                 pmt->SetWaveformTime(digitizer->GetWaveformTime(pmtID));
               } //end reading PMTs
 
-              isample = digitizer->GoToEndOfSample(isample); //go forward towards the end of the sampling window
+              isample = fDigitizerV1742->GoToEndOfSample(isample); //go forward towards the end of the sampling window
             } //end if: trigger above threshold
 
           }//end sampling

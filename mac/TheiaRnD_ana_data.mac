@@ -13,8 +13,8 @@
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "../../results/muon-bot-trig-water-2.0.root"
+/rat/procset file "../../results/spe-feb-10.0.root"
 #########################################
 
-/rat/inhdf5/read ../../data/muon-bot-trig-water-2.0.h5
+/rat/inhdf5/read ../../data/spe-feb-10.0.h5
 exit

@@ -21,6 +21,7 @@
 #include <fstream>
 
 typedef std::map< int, std::vector< std::vector<UShort_t> > > mw_t; //channel:[event,waveform]
+typedef std::map< int, std::vector< std::vector<double> > > mwt_t; //channel:[event,waveformtime]
 
 namespace RAT {
 
@@ -179,7 +180,7 @@ namespace RAT {
     //Loop over groups (each group should be a different channel)
     //and fill the waveforms in event order and the DAQHeader.
     mw_t waveforms;
-    std::map< int, std::vector<double> > waveformTimes;//ID to calibrated times
+    mwt_t waveformTimes;
     bool daqHeaderV1742_filled = false;
     DS::DAQHeader *daqHeaderV1742 = new DS::DAQHeader();
     int ngroups = h5fastgr->getNumObjs();
@@ -207,7 +208,7 @@ namespace RAT {
       //Channels groups loop
       for (int i = 0; i < nch; i++){
         H5std_string chname = daqgroup->getObjnameByIdx(i);
-        if(DEBUG) std::cout<<"   |-> Group name "<<i<<" "<<chname<<std::endl;
+        if(DEBUG) std::cout<<"   |-> Channel name "<<i<<" "<<chname<<std::endl;
         int chnumber = -9999;
         if ( std::regex_match (chname, std::regex("(ch)(.*)")) ){
           std::size_t pos = chname.find("ch") + 2;
@@ -273,11 +274,10 @@ namespace RAT {
             waveform.push_back(data[iev*nsamples + isample]);
           }
           waveforms[FastChtoID[chnumber]].push_back( (std::vector<UShort_t>) waveform);
+          waveformTimes[FastChtoID[chnumber]].push_back( fTimeCalibV1742[grpname]["cell_delay"].toVector<double>() );
         }
-        waveformTimes[FastChtoID[chnumber]] = fTimeCalibV1742[grpname]["cell_delay"].toVector<double>();
       }//end channels loop
     }//end groups loop
-
 
     if(DEBUG) info<<"Opening MASTER group..... \n";
 
@@ -363,15 +363,14 @@ namespace RAT {
           waveform.push_back(data[iev*nsamples + isample]);
         }
         waveforms[SlowChtoID[chnumber]].push_back( (std::vector<UShort_t>) waveform);
+        //Set sample times FIXME: need calibrated times
+        std::vector<double> waveformTimesV1730;
+        for(int isample=0; isample<nsamples; isample++){
+          waveformTimesV1730.push_back( isample*daqHeaderV1730->GetDoubleAttribute("TIME_RES") );
+        }
+        waveformTimes[SlowChtoID[chnumber]].push_back( waveformTimesV1730 );
       }
 
-      //Set sample times FIXME: need calibrated times
-      std::vector<double> waveformTimesV1730;
-      for(int isample=0; isample<nsamples; isample++){
-        waveformTimesV1730.push_back( isample*daqHeaderV1730->GetDoubleAttribute("TIME_RES") );
-      }
-
-      waveformTimes[SlowChtoID[chnumber]] = waveformTimesV1730;
     }//end channels loop
 
     int nevents = waveforms.begin()->second.size(); //FIXME: deal with different number of events...
@@ -383,16 +382,20 @@ namespace RAT {
       ds->SetRunID(1);
       RAT::DS::EV *ev = ds->AddNewEV();
       for(mw_t::iterator iwaveform = waveforms.begin(); iwaveform != waveforms.end(); iwaveform++){
-        if(DEBUG) std::cout<<" Events for CH"<<iwaveform->first<<" "<<iwaveform->second.size()<<std::endl;
+        // if(DEBUG) std::cout<<" Events for CH"<<iwaveform->first<<" "<<iwaveform->second.size()<<std::endl;
         if(iwaveform->first == 999) continue;
         if(iwaveform->second.size()-1 < iev) continue; //FIXME: deal with different number of events...
         RAT::DS::PMT *pmt = ev->AddNewPMT();
         pmt->SetID(iwaveform->first);
         pmt->SetWaveform(iwaveform->second.at(iev));
-        pmt->SetWaveformTime(waveformTimes[pmt->GetID()]);
+        pmt->SetWaveformTime(waveformTimes[iwaveform->first].at(iev));
         // info<<"Waveforms "<<pmt->GetWaveform().size()<<"\n";
         // for(int isample=0; isample<iwaveform->second.at(iev).size();isample++){
         //   info<<"   "<<isample<<" "<<pmt->GetWaveform()[isample]<<" "<<iwaveform->second.at(iev)[isample]<<"\n";
+        // }
+        // info<<"Waveform Times "<<pmt->GetWaveformTime().size()<<"\n";
+        // for(int isample=0; isample<waveformTimes[iwaveform->first].at(iev).size();isample++){
+        //   info<<"  "<<"WF times: PMT "<<iwaveform->first<<" "<<isample<<" "<<pmt->GetWaveformTime()[isample]<<" "<<waveformTimes[iwaveform->first].at(iev)[isample]<<"\n";
         // }
       }
 

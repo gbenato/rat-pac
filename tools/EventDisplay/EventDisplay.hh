@@ -124,6 +124,20 @@ protected:
   std::vector<double> pmtGeoCorrErr; //Error
   TVector3 centroid;
 
+  //Plot Limits
+  UShort_t ymax_d;
+  UShort_t ymin_d;
+  UShort_t ymax_d1;
+  UShort_t ymin_d1;
+  UShort_t ymax_d2;
+  UShort_t ymin_d2;
+  UShort_t ymax_d3;
+  UShort_t ymin_d3;
+  UShort_t ymax_d4;
+  UShort_t ymin_d4;
+  UShort_t ymax_d5;
+  UShort_t ymin_d5;
+
 };
 
 #endif

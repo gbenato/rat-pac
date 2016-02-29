@@ -14,6 +14,8 @@
 #include<TStyle.h>
 #include<TColor.h>
 #include<TMarker.h>
+#include<TFrame.h>
+#include<TPad.h>
 
 //RAT Stuff
 #include<RAT/DS/MC.hh>
@@ -255,18 +257,18 @@ bool EventDisplay::LoadEvent(int ievt){
   MCPMTWaveforms.resize(mc->GetMCPMTCount());
   MCPMTDigitizedWaveforms.resize(mc->GetMCPMTCount());
   double ymin=99999.; //yaxis min limit analogue
-  UShort_t ymax_d=0.; //yaxis max limit digital
-  UShort_t ymin_d=99999.; //yaxis min limit digital
-  UShort_t ymax_d1=0.; //yaxis max limit digital
-  UShort_t ymin_d1=99999.; //yaxis min limit digital
-  UShort_t ymax_d2=0.; //yaxis max limit digital
-  UShort_t ymin_d2=99999.; //yaxis min limit digital
-  UShort_t ymax_d3=0.; //yaxis max limit digital
-  UShort_t ymin_d3=99999.; //yaxis min limit digital
-  UShort_t ymax_d4=0.; //yaxis max limit digital
-  UShort_t ymin_d4=99999.; //yaxis min limit digital
-  UShort_t ymax_d5=0.; //yaxis max limit digital
-  UShort_t ymin_d5=99999.; //yaxis min limit digital
+  ymax_d=0.; //yaxis max limit digital
+  ymin_d=99999.; //yaxis min limit digital
+  ymax_d1=0.; //yaxis max limit digital
+  ymin_d1=99999.; //yaxis min limit digital
+  ymax_d2=0.; //yaxis max limit digital
+  ymin_d2=99999.; //yaxis min limit digital
+  ymax_d3=0.; //yaxis max limit digital
+  ymin_d3=99999.; //yaxis min limit digital
+  ymax_d4=0.; //yaxis max limit digital
+  ymin_d4=99999.; //yaxis min limit digital
+  ymax_d5=0.; //yaxis max limit digital
+  ymin_d5=99999.; //yaxis min limit digital
   double ymax_temp=0.;
   double ymin_temp=0.;
   double xmax_temp=0.;//dummy
@@ -387,7 +389,7 @@ bool EventDisplay::LoadEvent(int ievt){
       pmtCharge[pmtID] = ev->GetPMT(ipmt)->GetCharge();
       // std::cout<<" pmtCharge "<<pmtID<<" "<<pmtCharge[pmtID]<<std::endl;
       pmtTime[pmtID] = ev->GetPMT(ipmt)->GetTime();
-      // std::cout<<" pmtTime "<<pmtID<<" "<<pmtTime[pmtID]<<std::endl;
+      if(pmtID == 24) std::cout<<" pmtTime "<<pmtID<<" "<<pmtTime[pmtID]<<std::endl;
       // //Apply cut condition
       // if(pmtID==charge_cut_pmts[0] && pmtCharge[pmtID]<charge_cut_values[0]) {
       //   this->SetIsCut(true);
@@ -788,9 +790,10 @@ void EventDisplay::DisplayEvent(int ievt){
       TMarker timeMarker;
       timeMarker.SetMarkerSize(1.);
       timeMarker.SetMarkerColor(ipmt+20);
-      timeMarker.SetMarkerStyle(23);
+      timeMarker.SetMarkerStyle(22);
       timeMarker.DrawMarker(pmtTime[pmtID], 0);
-      timeMarker.DrawMarker(pmtTime[pmtID], PMTDigitizedWaveforms[ipmt].GetYaxis()->GetXmin());
+      gPad->Update();
+      timeMarker.DrawMarker(pmtTime[pmtID], gPad->GetFrame()->GetY1());
 
       //      PMTDigitizedWaveforms[ipmt].ComputeRange(xmin_temp,xmax_temp,ymin_temp,ymax_temp);
     }
