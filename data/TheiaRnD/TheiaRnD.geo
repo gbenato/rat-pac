@@ -300,21 +300,3 @@
    orientation: "manual",
    orient_point: [0.0, 0.0, 400.0],
 }
-
-/////////////////////////////
-// RADIACTIVE SOURCES
-/////////////////////////////
-// {
-//   name: "GEO",
-//   index: "source",
-//   valid_begin: [0, 0],
-//   valid_end: [0, 0],
-//   invisible: 0, // omitted for visualization
-//   mother: "inner",
-//   type: "tube",
-//   position: [0.0, 0.0, 423.0],
-//   r_max: 12.7,
-//   size_z: 1.5, //half-height
-//   material: "strontium", //strontium
-//   color: [0.1, 1.0, 0.3, 0.8],
-// }
