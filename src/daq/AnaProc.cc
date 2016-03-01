@@ -70,8 +70,6 @@ namespace RAT {
         std::vector<UShort_t> dWaveform = pmt->GetWaveform();
         std::vector<double> dWaveformTime = pmt->GetWaveformTime();
 
-//        std::cout<<" AnaProc: dWaveformTime "<<pmtID<<" "<<dWaveformTime.size()<<" "<<dWaveformTime[1]<<std::endl;
-
         if(pmtType==1 || pmtType==3 || pmtType==0){
           //          pmt->SetTime(GetTimeAtPeak(dWaveform), daqHeaderV1742 );
           //          pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1742, anaV1742) );

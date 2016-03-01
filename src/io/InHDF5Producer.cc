@@ -103,7 +103,7 @@ namespace RAT {
     }
 
     //Fill map digitizer channel - pmtID. FIXME: eventually this should go in a ratdb table
-    bool DEBUG = true;
+    bool DEBUG = false;
     std::map<int,int> FastChtoID;
     std::map<int,int> SlowChtoID;
     FastChtoID[0]=12;
