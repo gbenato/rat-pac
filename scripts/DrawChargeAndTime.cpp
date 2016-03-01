@@ -197,7 +197,7 @@ void GetHistos(){
     h_mcpmt_charge.push_back(new TH1F(Form("h_mcpmt_charge_%i",ih),"h_mcpmt_charge",200,0,100));
     h_mcpmt_time.push_back(new TH1F(Form("h_mcpmt_time_%i",ih),"h_mcpmt_time",500,0,100));
     h_mcpmt_fetime.push_back(new TH1F(Form("h_mcpmt_fetime_%i",ih),"h_mcpmt_fetime",500,0,100));
-    h_charge.push_back(new TH1F(Form("h_charge_%i",ih),"h_charge",300,-2,30));
+    h_charge.push_back(new TH1F(Form("h_charge_%i",ih),"h_charge",600,-1000,3000));
     h_charge_res.push_back(new TH1F(Form("h_charge_res_%i",ih),"h_charge_res",50,0,50));
     h_charge_vs_trigq.push_back(new TH2F(Form("h_charge_vs_trigq_%i",ih),"h_charge_vs_trigq",200,0,100,200,0,100));
     h_time.push_back(new TH1F(Form("h_time_%i",ih),"h_time",400,200,240));
@@ -318,7 +318,7 @@ void GetHistos(){
           bottommuon_timeres = bottommuon_time - bottom_tof;
         }
 
-        std::cout<<" muon_charges "<<bottommuon_charge<<" "<<topmuon_charge<<std::endl;
+//        std::cout<<" muon_charges "<<bottommuon_charge<<" "<<topmuon_charge<<std::endl;
 
         pmt = ev->GetPMTWithID(8);
         if(pmt!=NULL) panel_charge[0] = pmt->GetCharge();
@@ -333,7 +333,7 @@ void GetHistos(){
 
         //Cuts
         //        if(bottommuon_charge<30.0 || topmuon_charge<30.0 || panel_charge[0]>10.0 || panel_charge[1]>10.0 || panel_charge[2]>10.0 || panel_charge[3]>10.0) continue;
-        //        if(ring_time < -9000) continue;
+        //if(ring_time < -9000) continue;
 
         for(int ipmt=0; ipmt<ev->GetPMTCount(); ipmt++){
           int pmtid = ev->GetPMT(ipmt)->GetID();

@@ -111,7 +111,7 @@ namespace RAT {
     double ped_min,ped_max,ped_mean;
     ped_min = ped_max = ped_mean = (dWaveform[s_ped_start]*voltsperadc + fVLow - fVOffSet)*fTimeStep/fResistance;
     for (size_t isample = s_ped_start+1; isample < s_ped_end; isample++) {
-      double voltage = (dWaveform[s_ped_start]*voltsperadc + fVLow - fVOffSet)*fTimeStep/fResistance;
+      double voltage = (dWaveform[isample]*voltsperadc + fVLow - fVOffSet)*fTimeStep/fResistance;
       if (ped_min > voltage) ped_min = voltage;
       if (ped_max < voltage) ped_max = voltage;
       ped_mean += voltage;
@@ -342,14 +342,14 @@ namespace RAT {
     double ped_min,ped_max,ped_mean;
     ped_min = ped_max = ped_mean = (dWaveform[s_ped_start]*voltsperadc + fVLow - fVOffSet)*fTimeStep/fResistance;
     for (size_t isample = s_ped_start+1; isample < s_ped_end; isample++) {
-      double voltage = (dWaveform[s_ped_start]*voltsperadc + fVLow - fVOffSet)*fTimeStep/fResistance;
-      if (ped_min > voltage) ped_min = voltage;
-      if (ped_max < voltage) ped_max = voltage;
+      double voltage = (dWaveform[isample]*voltsperadc + fVLow - fVOffSet)*fTimeStep/fResistance;
+      if (ped_min < voltage) ped_min = voltage;
+      if (ped_max > voltage) ped_max = voltage;
       ped_mean += voltage;
     }
     ped_mean /= (double)(s_ped_end-s_ped_start);
     if (ped_max - ped_min > anaParams.ped_max_fluc) {
-      std::cout<<" Charge: Pedestal above fluctuations "<<ped_max<<" "<<ped_min<<" "<<anaParams.ped_max_fluc<<std::endl;
+      std::cout<<" Charge: Pedestal above fluctuations "<<ped_max<<" "<<ped_min<<" "<<ped_max-ped_min<<" "<<anaParams.ped_max_fluc<<std::endl;
       return -9999.;
     }
 
