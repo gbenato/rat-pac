@@ -103,7 +103,7 @@ namespace RAT {
     }
 
     //Fill map digitizer channel - pmtID. FIXME: eventually this should go in a ratdb table
-    bool DEBUG = false;
+    bool DEBUG = true;
     std::map<int,int> FastChtoID;
     std::map<int,int> SlowChtoID;
     FastChtoID[0]=12;
@@ -291,8 +291,18 @@ namespace RAT {
           waveforms[FastChtoID[chnumber]].push_back( (std::vector<UShort_t>) waveform);
           std::rotate(waveformTimeShifted.begin(),waveformTimeShifted.begin() + start_cell[FastChtoID[chnumber]][iev],waveformTimeShifted.end());
           waveformTimes[FastChtoID[chnumber]].push_back( waveformTimeShifted );
+          std::vector<UShort_t>().swap(waveform);
+          std::vector<double>().swap(waveformTime);
+          std::vector<double>().swap(waveformTimeShifted);
         }
+
+        delete channel;
+        delete dataset;
+        delete[] dims;
+        delete[] data;
       }//end channels loop
+
+      delete daqgroup;
     }//end groups loop
 
     if(DEBUG) info<<"Opening MASTER group..... \n";
@@ -385,9 +395,17 @@ namespace RAT {
           waveformTimesV1730.push_back( isample*daqHeaderV1730->GetDoubleAttribute("TIME_RES") );
         }
         waveformTimes[SlowChtoID[chnumber]].push_back( waveformTimesV1730 );
+        std::vector<UShort_t>().swap(waveform);
+        std::vector<double>().swap(waveformTimesV1730);
       }
 
+      delete channel;
+      delete dataset;
+      delete[] dims;
+      delete[] data;
     }//end channels loop
+
+    delete h5mastergr;
 
     int nevents = waveforms.begin()->second.size(); //FIXME: deal with different number of events...
 
@@ -446,6 +464,15 @@ namespace RAT {
       mainBlock->DSEvent(ds);
 
     } //end event loop
+
+    //Delete
+    delete h5file;
+    delete h5fastgr;
+    mw_t().swap(waveforms);
+    mwt_t().swap(waveformTimes);
+    std::map< int, uint16_t* >().swap(start_cell);
+    // delete daqHeaderV1742;
+    // delete daqHeaderV1730;
 
     return true;
 
