@@ -127,12 +127,12 @@ namespace RAT {
 
     vector<double> dWaveformPedCorr;
     for (size_t isample = 0; isample < dWaveform.size(); isample++) {
-      dWaveformPedCorr.push_back( (dWaveform[isample+s_int_start]*voltsperadc + fVLow - fVOffSet)*fTimeStep/fResistance - ped_mean );
+      dWaveformPedCorr.push_back( (dWaveform[isample]*voltsperadc + fVLow - fVOffSet)*fTimeStep/fResistance - ped_mean );
     }
 
     //Find the max and define threshold given the fraction
     double high_peak = 99999.;
-    for(UShort_t isample=0; isample<dWaveformPedCorr.size(); isample++){
+    for(UShort_t isample=s_int_start; isample<s_int_end; isample++){
       //      std::cout<<" AnaProc::GetTimeAtThreshold: "<<isample<<"/"<<values.size()<<": "<<values[isample]<<" "<<Vthres<<std::endl;
       //      std::cout<<" AnaProc::GetTimeAtThreshold: "<<isample<<"/"<<values.size()<<": "<<dWaveform[isample]<<std::endl;
       if(dWaveformPedCorr[isample] < high_peak) {
@@ -143,7 +143,7 @@ namespace RAT {
     double Vthres = anaParams.time_thres;
     double VthresFrac = high_peak*anaParams.time_thres_frac;
     int s_af_thres = -1;
-    for(UShort_t isample=0; isample<dWaveformPedCorr.size(); isample++){
+    for(UShort_t isample=s_int_start; isample<s_int_end; isample++){
       //      std::cout<<" AnaProc::GetTimeAtThreshold: "<<isample<<"/"<<values.size()<<": "<<values[isample]<<" "<<Vthres<<" "<<VthresFrac<<std::endl;
       if(dWaveformPedCorr[isample]<Vthres && dWaveformPedCorr[isample]<VthresFrac) {
         s_af_thres = isample;
