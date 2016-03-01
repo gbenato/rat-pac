@@ -11,11 +11,11 @@ namespace RAT {
 
 struct AnaParams {
 
-  double ped_start;
-  double ped_end;
+  int ped_start;
+  int ped_end;
   double max_spread;
-  double int_start;
-  double int_end;
+  int int_start;
+  int int_end;
   double peak_window;
   double peak_qthres;
   double ped_max_fluc;

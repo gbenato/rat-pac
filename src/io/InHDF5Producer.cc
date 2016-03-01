@@ -103,7 +103,7 @@ namespace RAT {
     }
 
     //Fill map digitizer channel - pmtID. FIXME: eventually this should go in a ratdb table
-    bool DEBUG = false;
+    bool DEBUG = true;
     std::map<int,int> FastChtoID;
     std::map<int,int> SlowChtoID;
     FastChtoID[0]=12;
@@ -181,6 +181,7 @@ namespace RAT {
     //and fill the waveforms in event order and the DAQHeader.
     mw_t waveforms;
     mwt_t waveformTimes;
+    std::map< int, uint16_t* > start_cell; //For time calibrations (PMTID:[EV:CELL])
     bool daqHeaderV1742_filled = false;
     DS::DAQHeader *daqHeaderV1742 = new DS::DAQHeader();
     int ngroups = h5fastgr->getNumObjs();
@@ -205,6 +206,7 @@ namespace RAT {
 
       H5::Group *daqgroup = new H5::Group(h5file->openGroup("/fast/"+grpname));
       int nch = daqgroup->getNumObjs();
+
       //Channels groups loop
       for (int i = 0; i < nch; i++){
         H5std_string chname = daqgroup->getObjnameByIdx(i);
@@ -262,19 +264,33 @@ namespace RAT {
         int rank = dataspace.getSimpleExtentNdims();
         hsize_t *dims = new hsize_t[rank];
         dataspace.getSimpleExtentDims(dims);
+        const int nevents = dims[0], nsamples = dims[1];
+
+        //Get initial cell index for time calibration
+        H5::DataSet sidataset = daqgroup->openDataSet("start_index");
+        start_cell[FastChtoID[chnumber]] = new uint16_t[nevents];
+        sidataset.read(start_cell[FastChtoID[chnumber]],H5::PredType::NATIVE_UINT16);
+
+        if(DEBUG) info<<"Got start_index \n";
 
         //Get traces
-        const int nevents = dims[0], nsamples = dims[1];
         UShort_t *data = new UShort_t[nevents*nsamples];
         dataset->read(data,H5::PredType::NATIVE_UINT16,dataspace);
         for(int iev=0; iev<nevents; iev++){
           std::vector<UShort_t> waveform;
+          //Get calibrated time
+          std::vector<double> waveformTime = fTimeCalibV1742[grpname]["cell_delay"].toVector<double>();
+          double t0 = waveformTime[start_cell[FastChtoID[chnumber]][iev]];
+          std::vector<double> waveformTimeShifted(waveformTime.size(),0.);
           for(int isample=0; isample<nsamples; isample++){
             if(data[iev*nsamples + isample]>65000) data[iev*nsamples + isample] = 0; //correction
             waveform.push_back(data[iev*nsamples + isample]);
+            waveformTimeShifted[isample] = waveformTime[isample] - t0;
+            if(waveformTimeShifted[isample]<0) waveformTimeShifted[isample] += waveformTime[nsamples-1];
           }
           waveforms[FastChtoID[chnumber]].push_back( (std::vector<UShort_t>) waveform);
-          waveformTimes[FastChtoID[chnumber]].push_back( fTimeCalibV1742[grpname]["cell_delay"].toVector<double>() );
+          std::rotate(waveformTimeShifted.begin(),waveformTimeShifted.begin() + start_cell[FastChtoID[chnumber]][iev],waveformTimeShifted.end());
+          waveformTimes[FastChtoID[chnumber]].push_back( waveformTimeShifted );
         }
       }//end channels loop
     }//end groups loop
