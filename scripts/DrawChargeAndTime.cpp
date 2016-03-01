@@ -317,6 +317,9 @@ void GetHistos(){
           double bottom_tof = bottom_dist/cspeed;
           bottommuon_timeres = bottommuon_time - bottom_tof;
         }
+
+        std::cout<<" muon_charges "<<bottommuon_charge<<" "<<topmuon_charge<<std::endl;
+
         pmt = ev->GetPMTWithID(8);
         if(pmt!=NULL) panel_charge[0] = pmt->GetCharge();
         pmt = ev->GetPMTWithID(9);
@@ -330,7 +333,7 @@ void GetHistos(){
 
         //Cuts
         //        if(bottommuon_charge<30.0 || topmuon_charge<30.0 || panel_charge[0]>10.0 || panel_charge[1]>10.0 || panel_charge[2]>10.0 || panel_charge[3]>10.0) continue;
-        if(ring_time < -9000) continue;
+        //        if(ring_time < -9000) continue;
 
         for(int ipmt=0; ipmt<ev->GetPMTCount(); ipmt++){
           int pmtid = ev->GetPMT(ipmt)->GetID();

@@ -107,8 +107,6 @@ namespace RAT {
     double voltsperadc = (fVHigh - fVLow)/(double)nADCs;
 
     //Compute pedestal charge
-    //    int s_ped_start = floor((anaParams.ped_start + fTimeDelay)/fTimeStep);
-    //    int s_ped_end = floor((anaParams.ped_end + fTimeDelay)/fTimeStep);
     int s_ped_start = anaParams.ped_start;
     int s_ped_end = anaParams.ped_end;
 
@@ -126,8 +124,6 @@ namespace RAT {
       //      return -9999.;
     }
 
-    // int s_int_start = floor((anaParams.int_start + fTimeDelay)/fTimeStep);
-    // int s_int_end = floor((anaParams.int_end + fTimeDelay)/fTimeStep);
     int s_int_start = anaParams.int_start;
     int s_int_end = anaParams.int_end;
 
@@ -163,8 +159,6 @@ namespace RAT {
     else{
       //Interpolate to get the right time at threshold
       double inttime = dWaveformTime[s_af_thres - 1] + ( (dWaveformTime[s_af_thres] - dWaveformTime[s_af_thres-1])/(dWaveformPedCorr[s_af_thres] - dWaveformPedCorr[s_af_thres -1]) ) * (VthresFrac - dWaveformPedCorr[s_af_thres-1]);
-      // std::cout<<"AnaProc "<<inttime<<std::endl;
-
       return inttime;
     }
 
@@ -344,8 +338,8 @@ namespace RAT {
     double voltsperadc = (fVHigh - fVLow)/(double)nADCs;
 
     //Compute pedestal charge
-    int s_ped_start = floor((anaParams.ped_start + fTimeDelay)/fTimeStep);
-    int s_ped_end = floor((anaParams.ped_end + fTimeDelay)/fTimeStep);
+    int s_ped_start = anaParams.ped_start;
+    int s_ped_end = anaParams.ped_end;
 
     double ped_min,ped_max,ped_mean;
     ped_min = ped_max = ped_mean = (dWaveform[s_ped_start]*voltsperadc + fVLow - fVOffSet)*fTimeStep/fResistance;
@@ -362,8 +356,8 @@ namespace RAT {
     }
 
     //Integrate charge and sustract pedestal
-    int s_int_start = floor((anaParams.int_start + fTimeDelay)/fTimeStep);
-    int s_int_end = floor((anaParams.int_end + fTimeDelay)/fTimeStep);
+    int s_int_start = anaParams.int_start;
+    int s_int_end = anaParams.int_end;
     double charge = 0.;
     for (size_t isample = s_int_start; isample < s_int_end; isample++) {
       charge += ((double)dWaveform[isample]*voltsperadc + fVLow - fVOffSet)*fTimeStep/fResistance - ped_mean; //ADC to charge
