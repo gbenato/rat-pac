@@ -153,9 +153,9 @@ void GetPMTInfo(){
     pos_pmts.push_back(pmt_temp);
   }
 
-  Color_t mycolors[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, kBlue, kOrange, kRed, kRed, kOrange, kBlue, kBlue, kOrange, kRed, kRed, kOrange, kBlue, 1}; //By Position
+  //  Color_t mycolors[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, kBlue, kOrange, kRed, kRed, kOrange, kBlue, kBlue, kOrange, kRed, kRed, kOrange, kBlue, 1}; //By Position
   //  Color_t mycolors[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, kBlue-2, kOrange-2, kRed-2, kRed-1, kOrange-1, kBlue-1, kBlue, kOrange, kRed, kRed+1, kOrange+1, kBlue+1, 1}; //By Position
-  //  Color_t mycolors[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, kBlue, kBlue, kBlue, kBlue, kOrange, kOrange, kOrange, kOrange, kRed, kRed, kRed, kRed, 1}; //By Digitizer group
+  Color_t mycolors[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, kBlue, kBlue, kBlue, kBlue, kOrange, kOrange, kOrange, kOrange, kRed, kRed, kRed, kRed, 1}; //By Digitizer group
   //  Color_t mycolors[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, kBlue, kOrange, kRed, kCyan, kBlack, kGray, kGreen, kTeal, kAzure, kViolet, kPink, kYellow, 1}; //Individual
   int mypmtpos[] = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 1, 2, 2, 1, 0, 0, 1, 2, 2, 1, 0, 3};
   pmtidtocolor.insert(pmtidtocolor.begin(), mycolors, mycolors + npmts );
@@ -299,11 +299,11 @@ void GetHistos(){
         double bottommuon_time = -9999.;
         double bottommuon_timeres = -9999.;
         double panel_charge[] = {0., 0., 0., 0.};
-        RAT::DS::PMT *pmt = ev->GetPMTWithID(14);
+        RAT::DS::PMT *pmt = ev->GetPMTWithID(20);
         if(pmt!=NULL) {
           ring_charge = pmt->GetCharge();
           ring_time = pmt->GetTime();
-          double ring_dist = (*pos_pmts[14] - *target_pos).Mag();
+          double ring_dist = (*pos_pmts[20] - *target_pos).Mag();
           double ring_tof = ring_dist/cspeed;
           ring_timeres = ring_time - ring_tof;
         }
