@@ -125,28 +125,27 @@ namespace RAT {
     int s_int_start = floor((anaParams.int_start + fTimeDelay)/fTimeStep);
     int s_int_end = floor((anaParams.int_end + fTimeDelay)/fTimeStep);
 
-    vector<double> values;
-    values.resize(s_int_end - s_int_start);
-    for (size_t isample = 0; isample < values.size(); isample++) {
-      values[isample] = (dWaveform[isample+s_int_start]*voltsperadc + fVLow - fVOffSet)*fTimeStep/fResistance - ped_mean;
+    vector<double> dWaveformPedCorr;
+    for (size_t isample = 0; isample < dWaveform.size(); isample++) {
+      dWaveformPedCorr.push_back( (dWaveform[isample+s_int_start]*voltsperadc + fVLow - fVOffSet)*fTimeStep/fResistance - ped_mean );
     }
 
     //Find the max and define threshold given the fraction
-    double high_peak = 0.;
-    for(UShort_t isample=0; isample<values.size(); isample++){
+    double high_peak = 99999.;
+    for(UShort_t isample=0; isample<dWaveformPedCorr.size(); isample++){
       //      std::cout<<" AnaProc::GetTimeAtThreshold: "<<isample<<"/"<<values.size()<<": "<<values[isample]<<" "<<Vthres<<std::endl;
       //      std::cout<<" AnaProc::GetTimeAtThreshold: "<<isample<<"/"<<values.size()<<": "<<dWaveform[isample]<<std::endl;
-      if(values[isample]<high_peak) {
-        high_peak = values[isample];
+      if(dWaveformPedCorr[isample] < high_peak) {
+        high_peak = dWaveformPedCorr[isample];
       }
     }
 
     double Vthres = anaParams.time_thres;
     double VthresFrac = high_peak*anaParams.time_thres_frac;
     int s_af_thres = -1;
-    for(UShort_t isample=0; isample<values.size(); isample++){
+    for(UShort_t isample=0; isample<dWaveformPedCorr.size(); isample++){
       //      std::cout<<" AnaProc::GetTimeAtThreshold: "<<isample<<"/"<<values.size()<<": "<<values[isample]<<" "<<Vthres<<" "<<VthresFrac<<std::endl;
-      if(values[isample]<Vthres && values[isample]<VthresFrac) {
+      if(dWaveformPedCorr[isample]<Vthres && dWaveformPedCorr[isample]<VthresFrac) {
         s_af_thres = isample;
         break;
       }
@@ -157,7 +156,7 @@ namespace RAT {
     }
     else{
       //Interpolate to get the right time at threshold
-      return dWaveformTime[s_int_start + s_af_thres - 1] + ( (dWaveformTime[s_af_thres] - dWaveformTime[s_af_thres-1])/(values[s_af_thres] - values[s_af_thres-1]) ) * (VthresFrac - values[s_af_thres-1]);
+      return dWaveformTime[s_af_thres - 1] + ( (dWaveformTime[s_af_thres] - dWaveformTime[s_af_thres-1])/(dWaveformPedCorr[s_af_thres] - dWaveformPedCorr[s_af_thres -1]) ) * (VthresFrac - dWaveformPedCorr[s_af_thres-1]);
       //      return s_after_thres*fTimeStep - fTimeDelay;
     }
 
