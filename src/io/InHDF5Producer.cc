@@ -106,6 +106,7 @@ namespace RAT {
     bool DEBUG = true;
     std::map<int,int> FastChtoID;
     std::map<int,int> SlowChtoID;
+    std::map<int,int> IDToDAQ;
     FastChtoID[0]=12;
     FastChtoID[1]=999;
     FastChtoID[2]=13;
@@ -155,6 +156,12 @@ namespace RAT {
     SlowChtoID[14]=999;
     SlowChtoID[15]=999;
 
+    for(std::map<int,int>::iterator ich = SlowChtoID.begin(); ich != SlowChtoID.end(); ich++){
+      IDToDAQ[ich->second] = 0;
+    }
+    for(std::map<int,int>::iterator ich = FastChtoID.begin(); ich != FastChtoID.end(); ich++){
+      IDToDAQ[ich->second] = 1;
+    }
 
     if(DEBUG) info<<"Opening FAST group..... \n";
 
@@ -409,20 +416,42 @@ namespace RAT {
 
     int nevents = waveforms.begin()->second.size(); //FIXME: deal with different number of events...
 
+    std::string file_map = filename;
+
+    TTree *event_map = new TTree("event_map","event_map");
+    event_map->ReadFile("../../data/spe-feb-10/spe-feb-10.map.csv","event_id:master_file:master_index:fast_file:fast_index");
+    float event_id, master_file, master_index, fast_file, fast_index;
+    event_map->SetBranchAddress("event_id", &event_id);
+    event_map->SetBranchAddress("master_file", &master_file);
+    event_map->SetBranchAddress("master_index", &master_index);
+    event_map->SetBranchAddress("fast_file", &fast_file);
+    event_map->SetBranchAddress("fast_index", &fast_index);
+
+
     //Loop over events and waveforms and fill the DS
     for(int iev=0; iev<nevents; iev++){
+
+      event_map->GetEntry(iev);
+      if(master_file != fast_file) continue;
 
       DS::Root* ds = new DS::Root();
       ds->SetRunID(1);
       RAT::DS::EV *ev = ds->AddNewEV();
+      ev->SetID((int)event_id);
       for(mw_t::iterator iwaveform = waveforms.begin(); iwaveform != waveforms.end(); iwaveform++){
         // if(DEBUG) std::cout<<" Events for CH"<<iwaveform->first<<" "<<iwaveform->second.size()<<std::endl;
         if(iwaveform->first == 999) continue;
         if(iwaveform->second.size()-1 < iev) continue; //FIXME: deal with different number of events...
         RAT::DS::PMT *pmt = ev->AddNewPMT();
         pmt->SetID(iwaveform->first);
-        pmt->SetWaveform(iwaveform->second.at(iev));
-        pmt->SetWaveformTime(waveformTimes[iwaveform->first].at(iev));
+        if(IDToDAQ[iwaveform->first] == 0) {
+          pmt->SetWaveform(iwaveform->second.at((int)master_index));
+          pmt->SetWaveformTime(waveformTimes[iwaveform->first].at((int)master_index));
+        }
+        if(IDToDAQ[iwaveform->first] == 1) {
+          pmt->SetWaveform(iwaveform->second.at((int)fast_index));
+          pmt->SetWaveformTime(waveformTimes[iwaveform->first].at((int)fast_index));
+        }
         // info<<"Waveforms "<<pmt->GetWaveform().size()<<"\n";
         // for(int isample=0; isample<iwaveform->second.at(iev).size();isample++){
         //   info<<"   "<<isample<<" "<<pmt->GetWaveform()[isample]<<" "<<iwaveform->second.at(iev)[isample]<<"\n";
@@ -466,6 +495,7 @@ namespace RAT {
     } //end event loop
 
     //Delete
+    delete event_map;
     delete h5file;
     delete h5fastgr;
     mw_t().swap(waveforms);

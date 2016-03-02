@@ -334,7 +334,7 @@ bool EventDisplay::LoadEvent(int ievt){
     pmtInfo = run->GetPMTInfo();
     //Check PMTInfo for debugging
     for(int ipmt=0; ipmt<pmtInfo->GetPMTCount(); ipmt++){
-      std:cout<<" PMT ID: "<<ipmt<<" type "<<pmtInfo->GetType(ipmt)<<std::endl;
+      // std:cout<<" PMT ID: "<<ipmt<<" type "<<pmtInfo->GetType(ipmt)<<std::endl;
     }
 
     RAT::DS::DAQHeader *daqHeaderV1730 = run->GetDAQHeader("V1730");
@@ -387,7 +387,7 @@ bool EventDisplay::LoadEvent(int ievt){
     for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
       int pmtID = ev->GetPMT(ipmt)->GetID();
       pmtCharge[pmtID] = ev->GetPMT(ipmt)->GetCharge();
-      // std::cout<<" pmtCharge "<<pmtID<<" "<<pmtCharge[pmtID]<<std::endl;
+      std::cout<<" pmtCharge "<<pmtID<<" "<<pmtCharge[pmtID]<<std::endl;
       pmtTime[pmtID] = ev->GetPMT(ipmt)->GetTime();
       if(pmtID == 24) std::cout<<" pmtTime "<<pmtID<<" "<<pmtTime[pmtID]<<std::endl;
       // //Apply cut condition
