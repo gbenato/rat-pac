@@ -353,7 +353,7 @@ void GetHistos(){
         if(pmt!=NULL) trigger_time = pmt->GetTime();
 
         //Cuts
-        //        if(panel_charge[0]>1e4 || panel_charge[1]>1e4 || panel_charge[2]>1e4 || panel_charge[3]>1e4) continue;
+        if(panel_charge[0]>1e4 || panel_charge[1]>1e4 || panel_charge[2]>1e4 || panel_charge[3]>1e4) continue;
         // if(bottommuon_charge<30.0 || topmuon_charge<30.0 || panel_charge[0]>10.0 || panel_charge[1]>10.0 || panel_charge[2]>10.0 || panel_charge[3]>10.0) continue;
         // if(ring_time < -9000) continue;
 

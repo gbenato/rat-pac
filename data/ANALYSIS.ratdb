@@ -11,9 +11,9 @@ max_spread: 3.0,   //
 int_start: 200,    //start time of integration window in samples
 int_end: 450,      //end time of integration window in samples
 peak_window: 10.0,  //width in ns of the sampling window to look for a peak
-peak_qthres: 0.5,   //charge threshold in 'peak_window' for looking for a peak
-ped_max_fluc: 10.0, //maximum allowed pedestal fluctuation in mV
-time_thres: -1.5,  //threshold from pedestal to define a pulse time (dt: -0.3)
+peak_qthres: 5.0,   //charge threshold in 'peak_window' for looking for a peak
+ped_max_fluc: 50.0, //maximum allowed pedestal fluctuation in mV
+time_thres: -5.0,  //threshold from pedestal to define a pulse time (dt: -0.3)
 time_thres_frac: 0.5,    //threshold from pedestal in fraction of max pulse high
 
 }
