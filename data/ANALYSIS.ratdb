@@ -16,6 +16,8 @@ ped_max_fluc: 50.0, //maximum allowed pedestal fluctuation in mV
 time_thres: -5.0,  //threshold from pedestal to define a pulse time (dt: -0.3)
 time_thres_frac: 0.5,    //threshold from pedestal in fraction of max pulse high
 
+prune_wf: true,
+
 }
 
 {
@@ -35,5 +37,7 @@ peak_qthres: 5.0,    //charge threshold in 'peak_window' for looking for a peak
 ped_max_fluc: 50.0,  //maximum allowed pedestal fluctuation in mV
 time_thres: -5.0,    //threshold from pedestal to define a pulse time (dt: -0.3, mc:-0.04)
 time_thres_frac: 0.5,    //threshold from pedestal in fraction of max pulse high
+
+prune_wf: true,
 
 }

@@ -10,6 +10,7 @@ namespace RAT {
   AnaProc::AnaProc() : Processor("analysis") {
 
     fLAnalysis = DB::Get()->GetLink("ANALYSIS","V1730");
+    anaV1730.prune_wf = fLAnalysis->GetZ("prune_wf");
     anaV1730.ped_start = fLAnalysis->GetI("ped_start");
     anaV1730.ped_end = fLAnalysis->GetI("ped_end");
     anaV1730.max_spread = fLAnalysis->GetD("max_spread");
@@ -22,6 +23,7 @@ namespace RAT {
     anaV1730.time_thres_frac = fLAnalysis->GetD("time_thres_frac");
 
     fLAnalysis = DB::Get()->GetLink("ANALYSIS","V1742");
+    anaV1742.prune_wf = fLAnalysis->GetZ("prune_wf");
     anaV1742.ped_start = fLAnalysis->GetI("ped_start");
     anaV1742.ped_end = fLAnalysis->GetI("ped_end");
     anaV1742.max_spread = fLAnalysis->GetD("max_spread");
@@ -75,12 +77,29 @@ namespace RAT {
           //          pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1742, anaV1742) );
           pmt->SetTime( GetTimeAtFraction(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
           pmt->SetCharge(IntegrateCharge(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
+
+          if(anaV1742.prune_wf){
+            std::vector<uint16_t> wf_dummy(1,0);
+            std::vector<double> wft_dummy(1,0);
+            pmt->SetWaveform(wf_dummy);
+            pmt->SetWaveformTime(wft_dummy);
+          }
+
         } else if(pmtType==2 || pmtType==4){
           //        pmt->SetTime(GetTimeAtPeak(dWaveform), daqHeaderV1730 );
           //        pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1730, anaV1730) );
           pmt->SetTime( GetTimeAtFraction(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730) );
           pmt->SetCharge(IntegrateCharge(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730) );
+
+          if(anaV1730.prune_wf){
+            std::vector<uint16_t> wf_dummy(1,0);
+            std::vector<double> wft_dummy(1,0);
+            pmt->SetWaveform(wf_dummy);
+            pmt->SetWaveformTime(wft_dummy);
+          }
+
         }
+
       }//end PMT loop
 
     }

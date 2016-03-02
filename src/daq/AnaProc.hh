@@ -11,6 +11,7 @@ namespace RAT {
 
 struct AnaParams {
 
+  bool prune_wf;
   int ped_start;
   int ped_end;
   double max_spread;
