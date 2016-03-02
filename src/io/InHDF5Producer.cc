@@ -414,43 +414,75 @@ namespace RAT {
 
     delete h5mastergr;
 
-    int nevents = waveforms.begin()->second.size(); //FIXME: deal with different number of events...
+    // int nevents = waveforms.begin()->second.size(); //FIXME: deal with different number of events...
 
-    std::string file_map = filename;
+    //Get event mapping file and opened file index
+    std::cmatch sm;
+    std::stringstream sopened_file, sevent_map;
+    std::regex_match( filename.c_str(), sm, std::regex("(.*)(.)(.*)(.h5)") );
+    sevent_map<<sm[1];
+    sopened_file<<sm[2];
+    std::string filename_map = sevent_map.str() + "map.csv";
+    int opened_file = std::atoi(sopened_file.str().c_str());
 
     TTree *event_map = new TTree("event_map","event_map");
-    event_map->ReadFile("../../data/spe-feb-10/spe-feb-10.map.csv","event_id:master_file:master_index:fast_file:fast_index");
+    event_map->ReadFile(filename_map.c_str(),"event_id:master_file:master_index:fast_file:fast_index");
     float event_id, master_file, master_index, fast_file, fast_index;
     event_map->SetBranchAddress("event_id", &event_id);
     event_map->SetBranchAddress("master_file", &master_file);
     event_map->SetBranchAddress("master_index", &master_index);
     event_map->SetBranchAddress("fast_file", &fast_file);
     event_map->SetBranchAddress("fast_index", &fast_index);
-
+    int nevents = event_map->GetEntries();
 
     //Loop over events and waveforms and fill the DS
     for(int iev=0; iev<nevents; iev++){
 
       event_map->GetEntry(iev);
-      if(master_file != fast_file) continue;
+      if(master_file != fast_file || fast_file != opened_file) continue;
+
+      if(DEBUG) info<<" Ordering events: "<<iev<<" "<<event_id<<" "<<master_file<<" "<<master_index<<" "<<fast_file<<" "<<fast_index<<" \n";
 
       DS::Root* ds = new DS::Root();
       ds->SetRunID(1);
       RAT::DS::EV *ev = ds->AddNewEV();
       ev->SetID((int)event_id);
       for(mw_t::iterator iwaveform = waveforms.begin(); iwaveform != waveforms.end(); iwaveform++){
-        // if(DEBUG) std::cout<<" Events for CH"<<iwaveform->first<<" "<<iwaveform->second.size()<<std::endl;
         if(iwaveform->first == 999) continue;
-        if(iwaveform->second.size()-1 < iev) continue; //FIXME: deal with different number of events...
-        RAT::DS::PMT *pmt = ev->AddNewPMT();
-        pmt->SetID(iwaveform->first);
+        // if(DEBUG) std::cout<<" Events for CH"<<iwaveform->first<<" "<<iwaveform->second.size()<<std::endl;
+        // if(iwaveform->second.size()-1 < iev) continue; //FIXME: deal with different number of events...
+        if(DEBUG) info<<" WF "<<iwaveform->first<<"\n";
+
         if(IDToDAQ[iwaveform->first] == 0) {
+          try{
+            iwaveform->second.at((int)master_index);
+          } catch (...){
+            if(DEBUG) info<<" V1730 event: "<<event_id<<" "<<master_index<<" "<<" not in file "<<master_file<<"\n";
+            continue;
+          }
+          if(DEBUG) info<<" Passed check V1730 \n";
+          RAT::DS::PMT *pmt = ev->AddNewPMT();
+          pmt->SetID(iwaveform->first);
+          if(DEBUG) info<<" Passed set ID \n";
           pmt->SetWaveform(iwaveform->second.at((int)master_index));
+          if(DEBUG) info<<" Passed Set wf \n";
           pmt->SetWaveformTime(waveformTimes[iwaveform->first].at((int)master_index));
+          if(DEBUG) info<<" Passed Set wft \n";
         }
         if(IDToDAQ[iwaveform->first] == 1) {
+          try{
+            iwaveform->second.at((int)fast_index);
+          } catch (...){
+            if(DEBUG) info<<" V1742 event: "<<event_id<<" "<<fast_index<<" "<<" not in file "<<fast_file<<"\n";
+          }
+          if(DEBUG) info<<" Passed check V1742 \n";
+          RAT::DS::PMT *pmt = ev->AddNewPMT();
+          pmt->SetID(iwaveform->first);
+          if(DEBUG) info<<" Passed set ID \n";
           pmt->SetWaveform(iwaveform->second.at((int)fast_index));
+          if(DEBUG) info<<" Passed Set wf \n";
           pmt->SetWaveformTime(waveformTimes[iwaveform->first].at((int)fast_index));
+          if(DEBUG) info<<" Passed Set wft \n";
         }
         // info<<"Waveforms "<<pmt->GetWaveform().size()<<"\n";
         // for(int isample=0; isample<iwaveform->second.at(iev).size();isample++){

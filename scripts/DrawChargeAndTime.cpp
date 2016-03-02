@@ -189,14 +189,14 @@ void GetPMTInfo(){
                     -20.450410008571303,
                     .0};
 
-  //pmttime_delay.insert(pmttime_delay.begin(), mydelays, mydelays + npmts );
-  //  pmttime_delay = std::vector<double>(25,-20.);
-  pmttime_delay = std::vector<double>(25,0.);
+  pmttime_delay.insert(pmttime_delay.begin(), mydelays, mydelays + npmts );
+  // pmttime_delay = std::vector<double>(25,-20.);
+  // pmttime_delay = std::vector<double>(25,0.);
 
   //Plot axis limits
   double myqxmins[] = {-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000};
   q_xmin.insert(q_xmin.begin(), myqxmins, myqxmins + npmts );
-  double myqxmaxs[] = {3000,3000,3000,3000,3000,3000,3000,3000,500000,500000,500000,500000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000};
+  double myqxmaxs[] = {3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000};
   q_xmax.insert(q_xmax.begin(), myqxmaxs, myqxmaxs + npmts );
 
 }
@@ -353,7 +353,7 @@ void GetHistos(){
         if(pmt!=NULL) trigger_time = pmt->GetTime();
 
         //Cuts
-        if(panel_charge[0]>1e4 || panel_charge[1]>1e4 || panel_charge[2]>1e4 || panel_charge[3]>1e4) continue;
+        if(panel_charge[0]>200 || panel_charge[1]>200 || panel_charge[2]>200 || panel_charge[3]>200) continue;
         // if(bottommuon_charge<30.0 || topmuon_charge<30.0 || panel_charge[0]>10.0 || panel_charge[1]>10.0 || panel_charge[2]>10.0 || panel_charge[3]>10.0) continue;
         // if(ring_time < -9000) continue;
 
@@ -372,8 +372,8 @@ void GetHistos(){
           double timeres = pmttime - tof;
           // std::cout<<" ToF "<<pmtid<<": "<<tof<<" "<<dist<<std::endl;
           h_time_res[pmtid]->Fill(timeres);
-          //h_time_bottom[pmtidtopos[pmtid]]->Fill(timeres - bottommuon_time - pmttime_delay[pmtid]);
-          h_time_bottom[pmtid]->Fill(timeres - bottommuon_time - pmttime_delay[pmtid]);
+          h_time_bottom[pmtidtopos[pmtid]]->Fill(timeres - bottommuon_time - pmttime_delay[pmtid]);
+          //h_time_bottom[pmtid]->Fill(timeres - bottommuon_time - pmttime_delay[pmtid]);
           h_time_trigger[pmtid]->Fill(timeres - trigger_time - pmttime_delay[pmtid]);
           h_time_ring[pmtid]->Fill(timeres - ring_timeres - pmttime_delay[pmtid]);
           if(timeres>-900) h_pmt_timevspos->Fill(pos_pmts[pmtid]->X(),pos_pmts[pmtid]->Y(),timeres);
@@ -460,7 +460,7 @@ void ExtractSPE(){
     f_spe[ipmt]->SetParLimits(5.,0.,100.); //SPE sigma
     f_spe[ipmt]->SetParLimits(6.,0.,100.); //2PE norm
 
-    h_charge[ipmt]->Fit(Form("f_spe_%i",ipmt),"Q","Q",-60,200);
+    h_charge[ipmt]->Fit(Form("f_spe_%i",ipmt),"Q","Q",-60,300);
     f_spe[ipmt]->GetParameters(params);
 
     std::cout<<" SPE "<<ipmt<<":"<<std::endl;
@@ -470,6 +470,7 @@ void ExtractSPE(){
     std::cout<<"  |-> SPE norm: "<<params[3]<<std::endl;
     std::cout<<"  |-> SPE mean: "<<params[4]<<std::endl;
     std::cout<<"  |-> SPE sigma: "<<params[5]<<std::endl;
+    std::cout<<"  |-> 2PE norm: "<<params[6]<<std::endl;
 
   }
 
@@ -579,16 +580,16 @@ void DrawHistos(){
   }
 
   TCanvas *c_time_bottom = new TCanvas("c_time_bottom","c_time_bottom",900,900);
-  // h_time_bottom[0]->SetLineColor(kBlue);
-  // h_time_bottom[0]->Draw();
-  // h_time_bottom[1]->SetLineColor(kOrange);
-  // h_time_bottom[1]->Draw("same");
-  // h_time_bottom[2]->SetLineColor(kRed);
-  // h_time_bottom[2]->Draw("same");
-  for(int pmtid = 0; pmtid<npmts; pmtid++){
-    h_time_bottom[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
-    h_time_bottom[pmtid]->Draw("sames");
-  }
+  h_time_bottom[0]->SetLineColor(kBlue);
+  h_time_bottom[0]->Draw();
+  h_time_bottom[1]->SetLineColor(kOrange);
+  h_time_bottom[1]->Draw("same");
+  h_time_bottom[2]->SetLineColor(kRed);
+  h_time_bottom[2]->Draw("same");
+  // for(int pmtid = 0; pmtid<npmts; pmtid++){
+  //   h_time_bottom[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
+  //   h_time_bottom[pmtid]->Draw("sames");
+  // }
 
   TCanvas *c_time_trigger = new TCanvas("c_time_trigger","c_time_trigger",900,900);
   for(int pmtid = 0; pmtid<npmts; pmtid++){
