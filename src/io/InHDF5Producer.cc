@@ -68,37 +68,37 @@ namespace RAT {
   {
     // readCmd
     if (command == readCmd || command == readDefaultCmd) {
-      std::string filename;
+      std::string infilename;
 
       if (command == readDefaultCmd) {
         DBLinkPtr lIO = DB::Get()->GetLink("IO");
-        filename = lIO->GetS("default_input_filename");
+        infilename = lIO->GetS("default_input_filename");
       } else {
         size_t size = newValue.size();
 
         // Trim extraneous quotation marks to avoid confusing people
         if (size >= 2 && newValue[(size_t)0] == '\"' && newValue[size-1] == '\"')
-        filename = newValue.substr(1, size-2);
+        infilename = newValue.substr(1, size-2);
         else
-        filename = newValue;
+        infilename = newValue;
       }
 
       if (!mainBlock)
       Log::Die("inhdf5: No main block declared! (should never happen)");
-      else if (!ReadEvents(filename))
-      Log::Die("inhdf5: Could not read from " + filename);
+      else if (!ReadEvents(infilename))
+      Log::Die("inhdf5: Could not read from " + infilename);
 
     } else
     Log::Die("invalid inhdf5 \"set\" command");
   }
 
-  bool InHDF5Producer::ReadEvents(G4String filename)
+  bool InHDF5Producer::ReadEvents(G4String inputfilename)
   {
 
-    if (!H5::H5File::isHdf5(filename.c_str()))
+    if (!H5::H5File::isHdf5(inputfilename.c_str()))
     {
       // Invalid HDF5 file
-      std::cout<<" Invalid HDF5 file "<<filename<<std::endl;
+      std::cout<<" Invalid HDF5 file "<<inputfilename<<std::endl;
       return 0;
     }
 
@@ -176,7 +176,7 @@ namespace RAT {
     json::Value fTimeCalibV1742 = calib["2.5GHz"];
 
     //Get waveforms from FAST group
-    H5::H5File *h5file = new H5::H5File(filename, H5F_ACC_RDONLY);
+    H5::H5File *h5file = new H5::H5File(inputfilename, H5F_ACC_RDONLY);
     H5::Group *h5fastgr;
     try{
       h5fastgr = new H5::Group(h5file->openGroup("/fast"));
@@ -417,13 +417,14 @@ namespace RAT {
     // int nevents = waveforms.begin()->second.size(); //FIXME: deal with different number of events...
 
     //Get event mapping file and opened file index
-    std::cmatch sm;
     std::stringstream sopened_file, sevent_map;
-    std::regex_match( filename.c_str(), sm, std::regex("(.*)(.)(.*)(.h5)") );
-    sevent_map<<sm[1];
-    sopened_file<<sm[2];
-    std::string filename_map = sevent_map.str() + "map.csv";
-    int opened_file = std::atoi(sopened_file.str().c_str());
+
+    std::size_t pos1 = inputfilename.find_first_of(".")+1;
+    std::size_t pos2 = inputfilename.find_last_of(".");
+    std::string filename = inputfilename.substr(0,pos1-1);
+    std::string runnumber = inputfilename.substr(pos1,pos2-pos1);
+    int opened_file = std::atoi(runnumber.c_str());
+    std::string filename_map = filename + ".map.csv";
 
     TTree *event_map = new TTree("event_map","event_map");
     event_map->ReadFile(filename_map.c_str(),"event_id:master_file:master_index:fast_file:fast_index");
@@ -436,11 +437,16 @@ namespace RAT {
     int nevents = event_map->GetEntries();
 
     //Loop over events and waveforms and fill the DS
+    int skippedEvents = 0;
     for(int iev=0; iev<nevents; iev++){
 
       event_map->GetEntry(iev);
-      if(master_file != fast_file || fast_file != opened_file) continue;
-
+      if(fast_file != opened_file) continue;
+      if(master_file != fast_file) {
+	//	info<<" V1730and V1742 events are in different files. Skipping event "<<event_id<<"! \n";
+	skippedEvents++;
+	//continue;
+      }
       if(DEBUG) info<<" Ordering events: "<<iev<<" "<<event_id<<" "<<master_file<<" "<<master_index<<" "<<fast_file<<" "<<fast_index<<" \n";
 
       DS::Root* ds = new DS::Root();
@@ -525,6 +531,9 @@ namespace RAT {
       mainBlock->DSEvent(ds);
 
     } //end event loop
+
+    std::cout<<" Skipped events: "<<skippedEvents<<std::endl;
+
 
     //Delete
     delete event_map;
