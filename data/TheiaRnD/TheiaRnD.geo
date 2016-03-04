@@ -45,7 +45,7 @@
 /////////////////////
 {
   name: "GEO",
-  index: "outer_vessel",
+  index: "block",
   valid_begin: [0, 0],
   valid_end: [0, 0],
   invisible: 0, // omitted for visualization
@@ -63,14 +63,14 @@
   valid_begin: [0, 0],
   valid_end: [0, 0],
   invisible: 0, // omitted for visualization
-  mother: "outer_vessel",
+  mother: "block",
   type: "box",
   size: [160.0,160.0,0.5],
   position: [0.0,0.0,32.0],
 //  position: [-400.0, -400.0, -180.0],
-  material: "mirror",
+  material: "acrylic_berkeley", //mirror
   color: [0.5, 0.2, 0.1, 0.1],
-  surface: "mirror",
+//  surface: "mirror",
 }
 
 //{
@@ -125,12 +125,28 @@
   valid_begin: [0, 0],
   valid_end: [0, 0],
   invisible: 0, // omitted for visualization
-  mother: "outer_vessel",
+  mother: "block",
   type: "tube",
   position: [0.0, 0.0, -0.5],
   r_max: 6.0,
   size_z: 32.0,
   material: "acrylic_black", // acrylic_black
+  color: [0.0, 0.0, 0.0, 0.1],
+}
+
+{
+  name: "GEO",
+  index: "chip",
+  valid_begin: [0, 0],
+  valid_end: [0, 0],
+  invisible: 0, // omitted for visualization
+  mother: "block",
+  type: "tube",
+  position: [0.0, 0.0, -31.5],
+  r_max: 10.0,
+  r_min: 6.0,
+  size_z: 1.0,
+  material: "air",
   color: [0.0, 0.0, 0.0, 0.1],
 }
 
@@ -143,7 +159,7 @@
   valid_begin: [0, 0],
   valid_end: [0, 0],
   invisible: 0, // omitted for visualization
-  mother: "inner", //inner_vessel
+  mother: "inner",
   type: "tube",
   r_max: 50.0,
   size_z: 15.0,
@@ -232,7 +248,7 @@
   pmt_model: "h11934", //h11934, r7600u-20
   pmt_detector_type: "idpmt",
   sensitive_detector: "/mydet/pmt/inner",
-  efficiency_correction: 0.0001,
+  efficiency_correction: 1.0,
   pos_table: "PMTINFO_CROSS_SIDE",
   orientation: "manual",
 }
@@ -247,7 +263,7 @@
   pmt_model: "r7081_hqe", //r7081_hqe, r11780_hqe
   pmt_detector_type: "idpmt",
   sensitive_detector: "/mydet/pmt/inner",
-  efficiency_correction: 0.5,
+  efficiency_correction: 1.0,
   pos_table: "PMTINFO_FAR",
   orientation: "point",
   orient_point: [-400.0, -400.0, -200.0],
@@ -263,7 +279,7 @@
   pmt_model: "h11934", //h11934, r7081_hqe, r11780_hqe
   pmt_detector_type: "idpmt",
   sensitive_detector: "/mydet/pmt/inner",
-  efficiency_correction: 0.3,
+  efficiency_correction: 1.0,
   pos_table: "PMTINFO_MUON_TAGS",
   orientation: "manual",
   orient_point: [-400.0, -400.0, -200.0],
@@ -279,7 +295,7 @@
    pmt_model: "h11934", //h11934, r7081_hqe, r11780_hqe, fast_test
    pmt_detector_type: "idpmt",
    sensitive_detector: "/mydet/pmt/inner",
-   efficiency_correction: 0.2,
+   efficiency_correction: 1.0,
    pos_table: "PMTINFO_TRIGGER",
    orientation: "manual",
    orient_point: [0.0, 0.0, 400.0],

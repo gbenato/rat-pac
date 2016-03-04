@@ -27,6 +27,10 @@
 #include<RAT/DB.hh>
 #include<RAT/DS/Run.hh>
 
+//Constants
+double cspeed = 300/1.4; // (mm/ns)/rindex
+TVector3* target_pos = new TVector3(-400.,-400.,-200.);
+
 #include "EventDisplay.hh"
 
 bool fexists(const char *filename)
@@ -49,16 +53,17 @@ EventDisplay::EventDisplay(std::string _inputFileName){
   //Set canvas
   gStyle->SetGridWidth(1);
   canvas_event = new TCanvas("canvas_event", "Event", 1600, 1000);
-  canvas_event->Divide(2,5);
+  canvas_event->Divide(2,6);
   //MC tracks and geometry
   canvas_event->cd(1)->SetPad(.0, .5, .33, 1.);
   //2D Ring plane
   canvas_event->cd(2)->SetPad(.33, .5, .66, 1.);
   //Charge vs Pos
   canvas_event->cd(3)->SetPad(.0, .0, .33, .5);
-  canvas_event->cd(9)->SetPad(.05, .27, .15, .45);
+  canvas_event->cd(9)->SetPad(.05, .29, .14, .45);
   //Time vs Pos
   canvas_event->cd(4)->SetPad(.33, .0, .66, .5);
+  canvas_event->cd(11)->SetPad(.33, .29, .47, .5);
   //Ring PMT traces
   canvas_event->cd(5)->SetPad(.66, .80, .99, 1.);
   //Light PMT traces
@@ -69,6 +74,8 @@ EventDisplay::EventDisplay(std::string _inputFileName){
   canvas_event->cd(8)->SetPad(.66, .20, .99, .40);
   //Muon panels traces
   canvas_event->cd(10)->SetPad(.66, .0, .99, .20);
+  //Spare
+  canvas_event->cd(12)->SetPad(.001, .001, .002, .002);
 
   //Particle maps
   ParticleColor[11]=kGreen;   ParticleWidth[11]=1;   ParticleName[11]="Electron";
@@ -85,7 +92,7 @@ EventDisplay::EventDisplay(std::string _inputFileName){
   hxyplane["Scintillation"] = new TH2F("hxyplane_scint","Track intersections with XY plane: Scintillation",1000,intersection_zplane[0],intersection_zplane[1],1000,intersection_zplane[0],intersection_zplane[1]);
 
   //DAQ event
-  hPmtTime = new TH1F("hPmtTime", "hPmtTime", 500, -500., 500.);
+  hTime = new TH1F("hTime", "hTime", 60, -10., 20.);
   chargeVsR = new TH1F("chargeVsR", "chargeVsR", 3, 0., 100.);
   chargeVsRScint = new TH1F("chargeVsRScint", "chargeVsRScint", 3, 0., 100.);
   chargeVsRCorr = new TH1F("chargeVsRCorr", "chargeVsRCorr", 3, 0., 100.);
@@ -99,6 +106,24 @@ EventDisplay::EventDisplay(std::string _inputFileName){
   Double_t b[]    = {0.0, 1.0, 1.0};
   Double_t stop[] = {0.0, .55, 1.0};
   Int_t FI = TColor::CreateGradientColorTable(3, stop, b, g, r, 100);
+
+  //Cable delays
+  double mydelays[] = {.0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0,
+                    -20.57914449553667,
+                    -20.659866192027934,
+                    -20.827556184469994,
+                    -20.83027277200025,
+                    -20.41955157599053,
+                    -20.42802016610127,
+                    -20.565785808047142,
+                    -20.607075743765186,
+                    -20.628455171240507,
+                    -20.65168715965919,
+                    -20.70112435087266,
+                    -20.450410008571303,
+                    .0};
+
+  pmttime_delay.insert(pmttime_delay.begin(), mydelays, mydelays + 25 );
 
   SetGeometry();
 
@@ -344,6 +369,10 @@ bool EventDisplay::LoadEvent(int ievt){
 
     timeVsPos = new TH2F("timeVsPos", "timeVsPos", 1, 0., 1., 1, 0., 1.);
     timeVsPos->SetStats(0);
+    // timeVsPos->SetMaximum(TMath::Max( timeVsPos->GetMaximum(),timeVsPos->GetMinimum() ) );
+    // timeVsPos->SetMinimum(-timeVsPos->GetMaximum());
+    timeVsPos->SetMaximum(2.);
+    timeVsPos->SetMinimum(-0.5);
     chargeVsPos = new TH2F("chargeVsPos", "chargeVsPos", 1, 0., 1., 1, 0., 1.);
     chargeVsPos->SetStats(0);
     chargeVsPosScint = new TH2F("chargeVsPosScint", "chargeVsPosScint", 1, 0., 1., 1, 0., 1.);
@@ -354,6 +383,8 @@ bool EventDisplay::LoadEvent(int ievt){
     chargeVsR->Reset();
     chargeVsRScint->Reset();
     chargeVsRCorr->Reset();
+    timeVsPos->Reset();
+    hTime->Reset();
 
     //Get center of the small PMT array and locate
     TVector3 centerpos(0,0,0);
@@ -367,15 +398,20 @@ bool EventDisplay::LoadEvent(int ievt){
       }
     }
     centerpos = centerpos*(1./pmtTypeCount);
-    timeVsPos->SetBins(21, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 21, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
-    chargeVsPos->SetBins(21, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 21, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
-    chargeVsPosScint->SetBins(21, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 21, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
-    chargeVsPosCorr->SetBins(21, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 21, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
+    timeVsPos->SetBins(7, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 7, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
+    chargeVsPos->SetBins(7, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 7, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
+    chargeVsPosScint->SetBins(7, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 7, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
+    chargeVsPosCorr->SetBins(7, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 7, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
 
     //Fill with zeroes
+    for (int ibin = 1; ibin < timeVsPos->GetXaxis()->GetNbins()+1; ibin++) {
+      for (int jbin = 1; jbin < timeVsPos->GetYaxis()->GetNbins()+1; jbin++) {
+        timeVsPos->SetBinContent(ibin, jbin, -1000.);//(timeVsPos->GetMaximum() + timeVsPos->GetMinimum())/2.);
+      }
+    }
     for (int ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
       TVector3 pmtpos = pmtInfo->GetPosition(ipmt);
-      timeVsPos->SetBinContent(pmtpos.X(), pmtpos.Y(), 0.);
+      timeVsPos->Fill(pmtpos.X(), pmtpos.Y(), 1000.);
       chargeVsPos->SetBinContent(pmtpos.X(), pmtpos.Y(), 0.);
       chargeVsPosCorr->SetBinContent(pmtpos.X(), pmtpos.Y(), 0.);
       pmtCharge[ipmt] = 0.;
@@ -384,40 +420,59 @@ bool EventDisplay::LoadEvent(int ievt){
 
     //Collect charges and times
     EDGeo->ResetHitPMTs();
+    std::vector<double> ringPMTTimes;
     for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
       int pmtID = ev->GetPMT(ipmt)->GetID();
+      double dist = (pmtInfo->GetPosition(pmtID) - *target_pos).Mag();
+      double tof = dist/cspeed;
       pmtCharge[pmtID] = ev->GetPMT(ipmt)->GetCharge();
-      std::cout<<" pmtCharge "<<pmtID<<" "<<pmtCharge[pmtID]<<std::endl;
-      pmtTime[pmtID] = ev->GetPMT(ipmt)->GetTime();
-      if(pmtID == 24) std::cout<<" pmtTime "<<pmtID<<" "<<pmtTime[pmtID]<<std::endl;
+      pmtTime[pmtID] = ev->GetPMT(ipmt)->GetTime() - pmttime_delay[pmtID] - tof;
+      // std::cout<<" pmtCharge "<<pmtID<<" "<<pmtCharge[pmtID]<<std::endl;
+      std::cout<<" pmtTime "<<pmtID<<" "<<pmtTime[pmtID]<<std::endl;
       // //Apply cut condition
       // if(pmtID==charge_cut_pmts[0] && pmtCharge[pmtID]<charge_cut_values[0]) {
       //   this->SetIsCut(true);
       //   return;
       // }
-      if(pmtTime[pmtID]<0){
+      if(pmtTime[pmtID]<=-9000){
         pmtTime[pmtID] = -400.;
       } else{
         EDGeo->HitPMT(pmtID,1); //If time>0 means that the WF crossed threshold
       }
-      hPmtTime->Fill(pmtTime[pmtID]);
+      if(pmtInfo->GetType(pmtID)==1 && pmtTime[pmtID] != -400){
+        ringPMTTimes.push_back(pmtTime[pmtID]);
+      }
     }
 
     if(debugLevel > 1) std::cout<<"   EventDisplay::LoadEvent (Collected charges and times) "<<std::endl;
 
-    //Fill 2D plot
+    //Find bottom muon tag time
+    double bottommuon_time = -9999.;
+    double bottommuon_timeres = -9999.;
+    RAT::DS::PMT *pmt = ev->GetPMTWithID(7);
+    if(pmt!=NULL) {
+      bottommuon_time = pmt->GetTime();
+      double bottom_dist = (pmtInfo->GetPosition(7) - *target_pos).Mag();
+      double bottom_tof = bottom_dist/cspeed;
+      bottommuon_timeres = bottommuon_time - bottom_tof;
+    }
+
+    event_time = TMath::KOrdStat((int)ringPMTTimes.size(), &ringPMTTimes[0], 1);
+
+    //Fill charge and time plots
     for (int ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
       if(pmtInfo->GetType(ipmt)!=1) continue;
       TVector3 pmtpos = pmtInfo->GetPosition(ipmt);
       // PMT distance
       double XYdist = pow( (pmtpos.X()-centerpos.X()),2 ) + pow( (pmtpos.Y()-centerpos.Y()),2 );
       XYdist = sqrt(XYdist);
-      // double dist = pow(70.,2) + pow(XYdist,2);
-      // dist = sqrt(dist);
+      double dist = (pmtpos - *target_pos).Mag();
+      double tof = dist/cspeed;
+      double timeres = pmtTime[ipmt] - tof;
 
       // Geometry PMT charge correction
-      // chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtCharge[pmtID]*pow(dist,2) );
-      timeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtTime[ipmt]);
+      hTime->Fill( pmtTime[ipmt] - event_time );
+      timeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtTime[ipmt] - event_time);
       chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtCharge[ipmt]);
       chargeVsPosScint->Fill(pmtpos.X(), pmtpos.Y(), pmtGeoCorr[ipmt]);
 
@@ -593,7 +648,7 @@ void EventDisplay::SetGeometry(){
 
 void EventDisplay::DumpEventInfo(int ievt){
 
-  std::cout<<"********EVENT "<<ievt<<"/"<<nevents<<"********"<<std::endl;
+  std::cout<<"******** MC EVENT "<<ievt<<"/"<<nevents<<"********"<<std::endl;
   for (std::map<int,int>::iterator it=npe.begin();it!=npe.end();it++){
     if(it==npe.begin()) std::cout<<"Number of PE"<<std::endl;
     if(it->second!=0) std::cout<<"ID: "<<it->first<<" -> "<<it->second<<std::endl;
@@ -616,11 +671,17 @@ void EventDisplay::DumpEventInfo(int ievt){
     if(it->second!=0) std::cout<<it->first<<" == "<<it->second<<std::endl;
   }
   std::cout<<std::endl;
-  std::cout<<"    WAVEFORMS      "<<std::endl;
-  std::cout<<" Number of Waveforms "<<mc->GetMCPMTCount()<<std::endl;
+  std::cout<<"    HITS      "<<std::endl;
+  std::cout<<" Number of Hits "<<mc->GetMCPMTCount()<<std::endl;
   std::cout<<"***********************************"<<std::endl;
   std::cout<<std::endl;
   std::cout<<" Press any key to go to next event "<<std::endl;
+
+  std::cout<<"****** DAQ EVENT "<<ievt<<"/"<<nevents<<"********"<<std::endl;
+  std::cout<<" Event Time "<<event_time<<std::endl;
+  std::cout<<"***********************************"<<std::endl;
+
+
 
 }
 
@@ -714,24 +775,26 @@ void EventDisplay::DisplayEvent(int ievt){
 
     //  gStyle->SetPalette(55);
     if(debugLevel > 0) std::cout<<"Display canvas 3 and 9"<<std::endl;
-    //Charge and time
+    //Charge
     canvas_event->cd(3);
-    double rightmax = 1.1*timeVsPos->GetMaximum();
-    double scale = gPad->GetUymax()/rightmax;
-    if(scale > 0.) {
-      timeVsPos->Scale(scale);
-    }
     chargeVsPos->SetLineColor(kBlack);
     chargeVsPos->SetFillColor(kBlack);
     // chargeVsPos->SetFillStyle(3002);
     chargeVsPos->Draw("colz");
     chargeVsPos->SetMaximum(TMath::Max( chargeVsPos->GetMaximum(),chargeVsPos->GetMinimum() ) );
     chargeVsPos->SetMinimum(-chargeVsPos->GetMaximum());
-    // timeVsPos->Draw("lego same");
-
     canvas_event->cd(9);
     chargeVsR->SetLineWidth(3);
     chargeVsR->Draw("");
+
+    //Time
+    canvas_event->cd(4);
+    timeVsPos->SetLineColor(kBlack);
+    timeVsPos->SetFillColor(kBlack);
+    timeVsPos->Draw("colz");
+    canvas_event->cd(11);
+    hTime->Draw("");
+
   }
 
   if(debugLevel > 0) std::cout<<"Display canvas 5, 6 & 7"<<std::endl;
@@ -798,11 +861,6 @@ void EventDisplay::DisplayEvent(int ievt){
       //      PMTDigitizedWaveforms[ipmt].ComputeRange(xmin_temp,xmax_temp,ymin_temp,ymax_temp);
     }
   }
-
-  // if(debugLevel > 0) std::cout<<"Display canvas 10 "<<std::endl;
-  // canvas_event->cd(10);
-  // hPmtTime->Draw();
-  ////////////////////
 
   //Wait for user action
   canvas_event->Modified();

@@ -68,6 +68,7 @@ protected:
   std::vector<double> charge_cut_higher;
   std::vector<double> intersection_zplane;
   RAT::DS::PMTInfo *pmtInfo;
+  std::vector<double> pmttime_delay;
 
   TApplication *dummyApp;
 
@@ -100,13 +101,6 @@ protected:
   std::map<int, int> npe; //number of photoelectrons per PMT
   std::map<int, double> pmtCharge; //measured PMT charge
   std::map<int, double> pmtTime; //measured PMT time
-  TH2F *timeVsPos;
-  TH2F *chargeVsPos;
-  TH2F *chargeVsPosScint;
-  TH2F *chargeVsPosCorr;
-  TH1F *chargeVsR;
-  TH1F *chargeVsRScint;
-  TH1F *chargeVsRCorr;
 
   //Geometry
   EventGeometry *EDGeo;
@@ -119,10 +113,17 @@ protected:
   TH1F * hMCPeTime;
 
   //DAQ event
-  TH1F * hPmtTime;
+  double event_time;
   std::vector<double> pmtGeoCorr; // Geometry correction
   std::vector<double> pmtGeoCorrErr; //Error
-  TVector3 centroid;
+  TH1F *hTime;
+  TH2F *timeVsPos;
+  TH2F *chargeVsPos;
+  TH2F *chargeVsPosScint;
+  TH2F *chargeVsPosCorr;
+  TH1F *chargeVsR;
+  TH1F *chargeVsRScint;
+  TH1F *chargeVsRCorr;
 
   //Plot Limits
   UShort_t ymax_d;

@@ -19,7 +19,7 @@
     //Flags
     "event_number": -1,     // Event number to draw: Negative -> Event by event mode
     "initial_track": 0,     // First track to be drawn
-    "final_track": 10000,      // Last track to be drawn: Negative -> Set to max
+    "final_track": -1,      // Last track to be drawn: Negative -> Set to max
     "draw_geo": 1,          // 1 -> Draw Detector geometry
     "draw_pmts": 1,         // 1 -> Draw PMTs stored in PMTINFO
 

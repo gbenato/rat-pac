@@ -68,7 +68,8 @@ namespace RAT {
     }
 
     //Get an angle and momentum following a given distribution
-    double energy = 1000.0;
+    TF1 *cosmic_spectrum = new TF1("cosmic_spectrum","100./(x/4000.*x/4000.+x/4000.+1.)",1,10000);
+    double energy = cosmic_spectrum->GetRandom(100,5000);
     //Get cos2 random distribution
     double phi = G4UniformRand()*CLHEP::twopi;
     TF1 *theta_dist = new TF1("f","cos(x)*cos(x)",TMath::Pi()/2.,TMath::Pi());

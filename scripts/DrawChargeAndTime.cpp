@@ -11,6 +11,7 @@
 #include<TBrowser.h>
 #include<TGraph.h>
 #include<TColor.h>
+#include<TMath.h>
 
 #include<RAT/DS/MC.hh>
 #include<RAT/DS/MCTrack.hh>
@@ -67,6 +68,7 @@ vector<double> qScintCorrErr; // Scintillation correction error
 
 //// Histograms
 //Event level
+TH1F* h_event_time;
 TH1F* h_charge_total; //Total charge in the event
 TH2F* h_pmt_qresvspos; //PMT charge vs PMT position
 TH2F* h_pmt_timevspos; //PMT charge vs PMT position
@@ -84,9 +86,11 @@ std::vector<TH1F*> h_time_res; //Measured time
 std::vector<TH1F*> h_time_bottom; //Measured time
 std::vector<TH1F*> h_time_trigger; //Measured time
 std::vector<TH1F*> h_time_ring; //Measured time
+std::vector<TH1F*> h_time_event;
 std::vector<TH1F*> h_time_diff; //Time diff between EV-MC
 std::vector<TH2F*> h_charge_vs_trigq; //PMT charge vs trigger charge
 TH2F* h_charge_muontrigs; //Muon trigger charges correlation
+TH1F* h_time_muontrigs;
 std::vector<TH1F*> h_mcpmt_npe; //PEs by PMT ID
 std::vector<TH1F*> h_mcpmt_charge; //MC charge
 std::vector<TH1F*> h_mcpmt_time; //MC FE time
@@ -194,9 +198,9 @@ void GetPMTInfo(){
   // pmttime_delay = std::vector<double>(25,0.);
 
   //Plot axis limits
-  double myqxmins[] = {-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000};
+  double myqxmins[] = {-100,-100,-100,-100,-100,-100, -100,-100, -100,-100,-100,-100, -100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100, -100};
   q_xmin.insert(q_xmin.begin(), myqxmins, myqxmins + npmts );
-  double myqxmaxs[] = {3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000};
+  double myqxmaxs[] = {3000,3000,3000,3000,3000,3000, 3000,3000, 3000,3000,3000,3000, 1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000, 3000};
   q_xmax.insert(q_xmax.begin(), myqxmaxs, myqxmaxs + npmts );
 
 }
@@ -225,10 +229,13 @@ void GetHistos(){
     h_time_bottom.push_back(new TH1F(Form("h_time_bottom_%i",ih),"h_time_bottom",150,-1.0,14));
     h_time_trigger.push_back(new TH1F(Form("h_time_trigger%i",ih),"h_time_trigger",200,-10.0,10.0));
     h_time_ring.push_back(new TH1F(Form("h_time_ring%i",ih),"h_time_ring",200,-10.0,10.0));
+    h_time_event.push_back(new TH1F(Form("h_time_event%i",ih),"h_time_event",150,-1.0,14.0));
     h_time_diff.push_back(new TH1F(Form("h_time_diff_%i",ih),"h_time_diff",100,-100,100));
     f_spe.push_back(new TF1(Form("f_spe_%i",ih),fmultigaus,0,50,7));
   }
   h_charge_muontrigs = new TH2F("h_charge_muontrigs","h_charge_muontrigs",200,0,8000,200,0,8000);
+  h_time_muontrigs = new TH1F("h_time_muontrigs","h_time_muontrigs",100,-5,5);
+  h_event_time = new TH1F("h_event_time","h_event_time",200,200,250);
   h_charge_total = new TH1F("h_charge_total","h_charge_total",200,-20,500);
   h_chi2 = new TH1F("h_chi2","h_chi2",50,0,200);
 
@@ -290,9 +297,12 @@ void GetHistos(){
         double charge_trig = 0.;
 
         //First PMT loop:
+        // - Calculate event time
         // - Look for trigger PMT and save charge
         // - Calculate total charge
         // - Get charge at top muon tag
+        double event_time = -9999;
+        std::vector<double> ringPMTTimes;
         for(int ipmt=0; ipmt<ev->GetPMTCount(); ipmt++){
           int pmtid = ev->GetPMT(ipmt)->GetID();
           int pmttype = pmtInfo->GetType(pmtid);
@@ -307,8 +317,18 @@ void GetHistos(){
           // }
           charge = ev->GetPMT(ipmt)->GetCharge();
           qtotal += charge;
-          if(pmttype==1) qtotal_smallpmts += charge;
+          if(pmttype==1) {
+            double dist = (*pos_pmts[pmtid] - *target_pos).Mag();
+            double tof = dist/cspeed;
+            if(ev->GetPMT(ipmt)->GetTime()>-9000) ringPMTTimes.push_back(ev->GetPMT(ipmt)->GetTime() - tof - pmttime_delay[pmtid]);
+
+            qtotal_smallpmts += charge;
+          }
         }
+
+        //Calculate event time
+        event_time = TMath::KOrdStat((int)ringPMTTimes.size(), &ringPMTTimes[0], 1);
+        h_event_time->Fill(event_time);
 
         //Get muon tags, source trigger and muon panels charge and time
         double trigger_time = -9999.;
@@ -316,6 +336,7 @@ void GetHistos(){
         double ring_timeres = -9999.;
         double ring_charge = 0.;
         double topmuon_charge = 0.;
+        double topmuon_time = 0.;
         double bottommuon_charge = 0.;
         double bottommuon_time = -9999.;
         double bottommuon_timeres = -9999.;
@@ -329,7 +350,10 @@ void GetHistos(){
           ring_timeres = ring_time - ring_tof;
         }
         pmt = ev->GetPMTWithID(6);
-        if(pmt!=NULL) topmuon_charge = pmt->GetCharge();
+        if(pmt!=NULL) {
+          topmuon_charge = pmt->GetCharge();
+          topmuon_time = pmt->GetTime();
+        }
         pmt = ev->GetPMTWithID(7);
         if(pmt!=NULL) {
           bottommuon_charge = pmt->GetCharge();
@@ -352,10 +376,11 @@ void GetHistos(){
         pmt = ev->GetPMTWithID(20);
         if(pmt!=NULL) trigger_time = pmt->GetTime();
 
-        //Cuts
-        if(panel_charge[0]>200 || panel_charge[1]>200 || panel_charge[2]>200 || panel_charge[3]>200) continue;
-        // if(bottommuon_charge<30.0 || topmuon_charge<30.0 || panel_charge[0]>10.0 || panel_charge[1]>10.0 || panel_charge[2]>10.0 || panel_charge[3]>10.0) continue;
-        // if(ring_time < -9000) continue;
+        //Cuts for cherenkov imaging
+        //if(bottommuon_charge<400.0 || topmuon_charge<400.0 || bottommuon_time - topmuon_time < 0.4 || bottommuon_time - topmuon_time > 1. ) continue;// || panel_charge[1]>200. || panel_charge[2]>200. || panel_charge[3]>200.) continue;
+        //if(bottommuon_charge<400.0 || topmuon_charge<400.0 || bottommuon_time - topmuon_time < 0.2 || bottommuon_time - topmuon_time > 0.8 ) continue;// || panel_charge[1]>200. || panel_charge[2]>200. || panel_charge[3]>200.) continue;
+        //Cuts for SPE
+        // if(ring_time < -9000 || panel_charge[0]>200 || panel_charge[1]>200 || panel_charge[2]>200 || panel_charge[3]>200) continue;
 
         for(int ipmt=0; ipmt<ev->GetPMTCount(); ipmt++){
           int pmtid = ev->GetPMT(ipmt)->GetID();
@@ -373,9 +398,9 @@ void GetHistos(){
           // std::cout<<" ToF "<<pmtid<<": "<<tof<<" "<<dist<<std::endl;
           h_time_res[pmtid]->Fill(timeres);
           h_time_bottom[pmtidtopos[pmtid]]->Fill(timeres - bottommuon_time - pmttime_delay[pmtid]);
-          //h_time_bottom[pmtid]->Fill(timeres - bottommuon_time - pmttime_delay[pmtid]);
           h_time_trigger[pmtid]->Fill(timeres - trigger_time - pmttime_delay[pmtid]);
           h_time_ring[pmtid]->Fill(timeres - ring_timeres - pmttime_delay[pmtid]);
+          h_time_event[pmtidtopos[pmtid]]->Fill(timeres - event_time - pmttime_delay[pmtid]);
           if(timeres>-900) h_pmt_timevspos->Fill(pos_pmts[pmtid]->X(),pos_pmts[pmtid]->Y(),timeres);
           //Compute chi2 for cher/scint
           if(ev->GetPMT(ipmt)->GetType()==1){
@@ -384,6 +409,7 @@ void GetHistos(){
           }
         }
         h_charge_muontrigs->Fill(bottommuon_charge,topmuon_charge);
+        h_time_muontrigs->Fill(bottommuon_time - topmuon_time);
         h_charge_total->Fill(qtotal_smallpmts);
         // if(qtotal!=0){
         //   h_charge_total->Fill(qtotal);
@@ -458,9 +484,9 @@ void ExtractSPE(){
     f_spe[ipmt]->SetParLimits(3.,0.,9999999.); //SPE norm
     f_spe[ipmt]->SetParLimits(4.,0.,200.); //SPE mean
     f_spe[ipmt]->SetParLimits(5.,0.,100.); //SPE sigma
-    f_spe[ipmt]->SetParLimits(6.,0.,100.); //2PE norm
+    f_spe[ipmt]->SetParLimits(6.,0.,9999999.); //2PE norm
 
-    h_charge[ipmt]->Fit(Form("f_spe_%i",ipmt),"Q","Q",-60,300);
+    h_charge[ipmt]->Fit(Form("f_spe_%i",ipmt),"Q","Q",-60,500);
     f_spe[ipmt]->GetParameters(params);
 
     std::cout<<" SPE "<<ipmt<<":"<<std::endl;
@@ -491,10 +517,16 @@ void DrawHistos(){
   bool firstdrawn2 = false;
   bool firstdrawn3 = false;
   bool firstdrawn4 = false;
-  TCanvas *c_event = new TCanvas("c_event","c_event",900,1000);
-  TCanvas *c_charge_total = new TCanvas("c_charge_total","c_charge_total",900,900);
-  c_charge_total->cd();
+  TCanvas *c_event = new TCanvas("c_event","c_event",900,900);
+  c_event->Divide(2,2);
+  c_event->cd(1);
+  h_pmt_qresvspos->Draw("colz text"); //Average charge per pmt vs position
+  c_event->cd(2);
+  h_event_time->Draw();
+  c_event->cd(3);
   h_charge_total->Draw(); //Total charge in event
+  c_event->cd(4);
+  h_pmt_timevspos->Draw("colz text"); //Average charge per pmt vs position
   std::cout<<" Total Q: "<<h_charge_total->Integral(20,200)<<std::endl;
   TCanvas *c_charge[5];
   c_charge[0] = new TCanvas("c_charge_0","c_charge_0",900,900);
@@ -507,7 +539,6 @@ void DrawHistos(){
   c_charge_ind[0]->Divide(4,3);
   c_charge_ind[1] = new TCanvas("c_charge_ind_1","c_charge_ind_1",1500,900);
   c_charge_ind[1]->Divide(3,2);
-
   TCanvas *c_time[5];
   c_time[0] = new TCanvas("c_time_0","c_time_0",900,900);
   c_time[1] = new TCanvas("c_time_1","c_time_1",900,900);
@@ -515,23 +546,16 @@ void DrawHistos(){
   c_time[3] = new TCanvas("c_time_3","c_time_3",900,900);
   c_time[4] = new TCanvas("c_time_4","c_time_4",900,900);
 
-  c_event->Divide(3,4);
-  c_event->cd(1);
-  h_pmt_qresvspos->Draw("colz text"); //Average charge per pmt vs position
-  c_event->cd(4);
-  h_pmt_timevspos->Draw("colz text"); //Average charge per pmt vs position
-
   for(int pmtid = 0; pmtid<npmts; pmtid++){
     int pmttype = pmtInfo->GetType(pmtid);
     if(pmttype==1){//Ring tubes
       const char *opt = firstdrawn0 ? "sames" : "";
-      //      c_event->cd(2);
       c_charge[0]->cd();
       h_charge[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
       h_charge[pmtid]->Draw(opt);
       c_charge_ind[0]->cd(pmtid-11);
       c_charge_ind[0]->cd(pmtid-11)->SetLogy();
-      h_charge[pmtid]->GetXaxis()->SetRangeUser(-100,400);
+      //      h_charge[pmtid]->GetXaxis()->SetRangeUser(-100,400);
       h_charge[pmtid]->Draw();
       f_spe[pmtid]->Draw("L same");
       c_time[0]->cd();
@@ -540,7 +564,6 @@ void DrawHistos(){
       firstdrawn0 = true;
     } else if(pmttype==2){ //Light tubes
       const char *opt = firstdrawn1 ? "sames" : "";
-      c_event->cd(5);
       c_charge[1]->cd();
       h_charge[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
       h_charge[pmtid]->Draw(opt);
@@ -550,7 +573,6 @@ void DrawHistos(){
       firstdrawn1 = true;
     } else if(pmttype==3){ //Muon tags
       const char *opt = firstdrawn2 ? "sames" : "";
-      c_event->cd(8);
       c_charge[2]->cd();
       h_charge[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
       h_charge[pmtid]->Draw(opt);
@@ -580,12 +602,13 @@ void DrawHistos(){
   }
 
   TCanvas *c_time_bottom = new TCanvas("c_time_bottom","c_time_bottom",900,900);
-  h_time_bottom[0]->SetLineColor(kBlue);
+  h_time_bottom[0]->GetYaxis()->SetRangeUser(0,20);
+  h_time_bottom[0]->SetLineColor(kRed);
   h_time_bottom[0]->Draw();
-  h_time_bottom[1]->SetLineColor(kOrange);
-  h_time_bottom[1]->Draw("same");
-  h_time_bottom[2]->SetLineColor(kRed);
-  h_time_bottom[2]->Draw("same");
+  h_time_bottom[1]->SetLineColor(kBlue);
+  h_time_bottom[1]->Draw("sames");
+  h_time_bottom[2]->SetLineColor(kOrange);
+  h_time_bottom[2]->Draw("sames");
   // for(int pmtid = 0; pmtid<npmts; pmtid++){
   //   h_time_bottom[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
   //   h_time_bottom[pmtid]->Draw("sames");
@@ -607,8 +630,21 @@ void DrawHistos(){
     h_time_ring[pmtid]->Draw("sames");
   }
 
-  TCanvas *c_charge_muontrigs = new TCanvas("c_charge_muontrigs","c_charge_muontrigs",900,900);
+  TCanvas *c_time_event = new TCanvas("c_time_event","c_time_event",900,900);
+  h_time_event[0]->GetYaxis()->SetRangeUser(0,20);
+  h_time_event[0]->SetLineColor(kRed);
+  h_time_event[0]->Draw();
+  h_time_event[1]->SetLineColor(kBlue);
+  h_time_event[1]->Draw("sames");
+  h_time_event[2]->SetLineColor(kOrange);
+  h_time_event[2]->Draw("sames");
+
+  TCanvas *c_muontrigs = new TCanvas("c_muontrigs","c_muontrigs",1200,600);
+  c_muontrigs->Divide(2,1);
+  c_muontrigs->cd(1);
   h_charge_muontrigs->Draw("colz");
+  c_muontrigs->cd(2);
+  h_time_muontrigs->Draw();
 
   TCanvas *c_mc = new TCanvas("c_mc","c_mc",900,1000);
   c_mc->Divide(3,3);
