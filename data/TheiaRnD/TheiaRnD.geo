@@ -57,6 +57,9 @@
   color: [0.1, 0.3, 0.8, 0.1],
 }
 
+/////////////////////
+// COVER
+/////////////////////
 {
   name: "GEO",
   index: "cover",
@@ -67,25 +70,10 @@
   type: "box",
   size: [160.0,160.0,0.5],
   position: [0.0,0.0,32.0],
-//  position: [-400.0, -400.0, -180.0],
   material: "acrylic_berkeley", //mirror
   color: [0.5, 0.2, 0.1, 0.1],
 //  surface: "mirror",
 }
-
-//{
-//  name: "GEO",
-//  index: "mirror",
-//  valid_begin: [0, 0],
-//  valid_end: [0, 0],
-//  invisible: 0, // omitted for visualization
-//  mother: "world", //not used
-//  type: "border",
-//  volume1: "inner",
-//  volume2: "cover",
-//  reverse: 1,
-//  surface: "mirror",
-//}
 
 {
   name: "GEO",
@@ -94,7 +82,6 @@
   valid_end: [0, 0],
   invisible: 0, // omitted for visualization
   mother: "cover",
-  //Cylinder
   type: "tube",
   r_max: 50.0,
   size_z: 0.5,
@@ -110,12 +97,11 @@
   valid_end: [0, 0],
   invisible: 0, // omitted for visualization
   mother: "cover_window",
-  //Cylinder
   type: "tube",
   r_max: 6.0,
   size_z: 0.5,
   position: [0.0,0.0,0.0],
-  material: "acrylic_black",
+  material: "acrylic_black", //acrylic_black
   color: [0.0, 0.0, 0.0, 0.1],
 }
 
@@ -130,7 +116,7 @@
   position: [0.0, 0.0, -0.5],
   r_max: 6.0,
   size_z: 32.0,
-  material: "acrylic_black", // acrylic_black
+  material: "acrylic_black", //acrylic_black
   color: [0.0, 0.0, 0.0, 0.1],
 }
 
@@ -297,8 +283,8 @@
    sensitive_detector: "/mydet/pmt/inner",
    efficiency_correction: 1.0,
    pos_table: "PMTINFO_TRIGGER",
-   orientation: "manual",
-   orient_point: [0.0, 0.0, 400.0],
+   orientation: "point",
+   orient_point: [-400.0, -400.0, -152.5],
 }
 
 {

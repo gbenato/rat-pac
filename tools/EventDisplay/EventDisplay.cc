@@ -57,10 +57,10 @@ EventDisplay::EventDisplay(std::string _inputFileName){
   //MC tracks and geometry
   canvas_event->cd(1)->SetPad(.0, .5, .33, 1.);
   //2D Ring plane
-  canvas_event->cd(2)->SetPad(.33, .5, .66, 1.);
+  canvas_event->cd(3)->SetPad(.33, .5, .66, 1.);
   //Charge vs Pos
-  canvas_event->cd(3)->SetPad(.0, .0, .33, .5);
-  canvas_event->cd(9)->SetPad(.05, .29, .14, .45);
+  canvas_event->cd(2)->SetPad(.0, .0, .33, .5);
+  canvas_event->cd(9)->SetPad(.33, .79, .47, 1.);
   //Time vs Pos
   canvas_event->cd(4)->SetPad(.33, .0, .66, .5);
   canvas_event->cd(11)->SetPad(.33, .29, .47, .5);
@@ -92,7 +92,7 @@ EventDisplay::EventDisplay(std::string _inputFileName){
   hxyplane["Scintillation"] = new TH2F("hxyplane_scint","Track intersections with XY plane: Scintillation",1000,intersection_zplane[0],intersection_zplane[1],1000,intersection_zplane[0],intersection_zplane[1]);
 
   //DAQ event
-  hTime = new TH1F("hTime", "hTime", 60, -10., 20.);
+  hTime = new TH1F("hTime", "hTime", 60, -2., 3.);
   chargeVsR = new TH1F("chargeVsR", "chargeVsR", 3, 0., 100.);
   chargeVsRScint = new TH1F("chargeVsRScint", "chargeVsRScint", 3, 0., 100.);
   chargeVsRCorr = new TH1F("chargeVsRCorr", "chargeVsRCorr", 3, 0., 100.);
@@ -101,10 +101,10 @@ EventDisplay::EventDisplay(std::string _inputFileName){
   chargeVsRCorr->GetYaxis()->SetLabelSize(.06);
 
   //Custom palette
-  Double_t r[]    = {1.0, 1.0, 0.0};
-  Double_t g[]    = {0.0, 1.0, 0.0};
-  Double_t b[]    = {0.0, 1.0, 1.0};
-  Double_t stop[] = {0.0, .55, 1.0};
+  Double_t r[]    = {1.0, 0.0, 0.0};
+  Double_t g[]    = {0.0, 0.0, 0.0};
+  Double_t b[]    = {0.0, 0.0, 1.0};
+  Double_t stop[] = {0.0, .45, 1.0};
   Int_t FI = TColor::CreateGradientColorTable(3, stop, b, g, r, 100);
 
   //Cable delays
@@ -367,14 +367,15 @@ bool EventDisplay::LoadEvent(int ievt){
 
     if(debugLevel > 1) std::cout<<"   EventDisplay::LoadEvent (Got headers) "<<std::endl;
 
-    timeVsPos = new TH2F("timeVsPos", "timeVsPos", 1, 0., 1., 1, 0., 1.);
+    timeVsPos = new TH2F("TIME", "TIME", 1, 0., 1., 1, 0., 1.);
     timeVsPos->SetStats(0);
     // timeVsPos->SetMaximum(TMath::Max( timeVsPos->GetMaximum(),timeVsPos->GetMinimum() ) );
-    // timeVsPos->SetMinimum(-timeVsPos->GetMaximum());
-    timeVsPos->SetMaximum(2.);
-    timeVsPos->SetMinimum(-0.5);
-    chargeVsPos = new TH2F("chargeVsPos", "chargeVsPos", 1, 0., 1., 1, 0., 1.);
+    timeVsPos->SetMaximum(5.);
+    timeVsPos->SetMinimum(-3.);
+    chargeVsPos = new TH2F("CHARGE", "CHARGE", 1, 0., 1., 1, 0., 1.);
     chargeVsPos->SetStats(0);
+    chargeVsPos->SetMaximum(200.);
+    chargeVsPos->SetMinimum(-100.0);
     chargeVsPosScint = new TH2F("chargeVsPosScint", "chargeVsPosScint", 1, 0., 1., 1, 0., 1.);
     chargeVsPosScint->SetStats(0);
     chargeVsPosCorr = new TH2F("chargeVsPosCorr", "chargeVsPosCorr", 1, 0., 1., 1, 0., 1.);
@@ -407,13 +408,16 @@ bool EventDisplay::LoadEvent(int ievt){
     for (int ibin = 1; ibin < timeVsPos->GetXaxis()->GetNbins()+1; ibin++) {
       for (int jbin = 1; jbin < timeVsPos->GetYaxis()->GetNbins()+1; jbin++) {
         timeVsPos->SetBinContent(ibin, jbin, -1000.);//(timeVsPos->GetMaximum() + timeVsPos->GetMinimum())/2.);
+        chargeVsPos->SetBinContent(ibin, jbin, -1000.);//(timeVsPos->GetMaximum() + timeVsPos->GetMinimum())/2.);
+        chargeVsPosCorr->SetBinContent(ibin, jbin, -1000.);//(timeVsPos->GetMaximum() + timeVsPos->GetMinimum())/2.);
       }
     }
     for (int ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
+      if(pmtInfo->GetType(ipmt)!=1) continue;
       TVector3 pmtpos = pmtInfo->GetPosition(ipmt);
       timeVsPos->Fill(pmtpos.X(), pmtpos.Y(), 1000.);
-      chargeVsPos->SetBinContent(pmtpos.X(), pmtpos.Y(), 0.);
-      chargeVsPosCorr->SetBinContent(pmtpos.X(), pmtpos.Y(), 0.);
+      chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), 1000.);
+      chargeVsPosCorr->Fill(pmtpos.X(), pmtpos.Y(), 1000.);
       pmtCharge[ipmt] = 0.;
       pmtTime[ipmt] = 0.;
     }
@@ -427,22 +431,19 @@ bool EventDisplay::LoadEvent(int ievt){
       double tof = dist/cspeed;
       pmtCharge[pmtID] = ev->GetPMT(ipmt)->GetCharge();
       pmtTime[pmtID] = ev->GetPMT(ipmt)->GetTime() - pmttime_delay[pmtID] - tof;
-      // std::cout<<" pmtCharge "<<pmtID<<" "<<pmtCharge[pmtID]<<std::endl;
-      std::cout<<" pmtTime "<<pmtID<<" "<<pmtTime[pmtID]<<std::endl;
-      // //Apply cut condition
-      // if(pmtID==charge_cut_pmts[0] && pmtCharge[pmtID]<charge_cut_values[0]) {
-      //   this->SetIsCut(true);
-      //   return;
-      // }
       if(pmtTime[pmtID]<=-9000){
         pmtTime[pmtID] = -400.;
       } else{
         EDGeo->HitPMT(pmtID,1); //If time>0 means that the WF crossed threshold
       }
       if(pmtInfo->GetType(pmtID)==1 && pmtTime[pmtID] != -400){
+        std::cout<<" pmtCharge "<<pmtID<<" "<<pmtCharge[pmtID]<<std::endl;
+        std::cout<<" pmtTime "<<pmtID<<" "<<pmtTime[pmtID]<<std::endl;
         ringPMTTimes.push_back(pmtTime[pmtID]);
       }
     }
+    //Sort in ascending order
+    std::sort(ringPMTTimes.begin(), ringPMTTimes.end());
 
     if(debugLevel > 1) std::cout<<"   EventDisplay::LoadEvent (Collected charges and times) "<<std::endl;
 
@@ -457,7 +458,9 @@ bool EventDisplay::LoadEvent(int ievt){
       bottommuon_timeres = bottommuon_time - bottom_tof;
     }
 
-    event_time = TMath::KOrdStat((int)ringPMTTimes.size(), &ringPMTTimes[0], 1);
+    //Calculate event time
+    if(ringPMTTimes.size()<3) return false; //More than 3 hits
+    event_time = (ringPMTTimes[0] + ringPMTTimes[1] + ringPMTTimes[2])/3.;
 
     //Fill charge and time plots
     for (int ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
@@ -466,9 +469,6 @@ bool EventDisplay::LoadEvent(int ievt){
       // PMT distance
       double XYdist = pow( (pmtpos.X()-centerpos.X()),2 ) + pow( (pmtpos.Y()-centerpos.Y()),2 );
       XYdist = sqrt(XYdist);
-      double dist = (pmtpos - *target_pos).Mag();
-      double tof = dist/cspeed;
-      double timeres = pmtTime[ipmt] - tof;
 
       // Geometry PMT charge correction
       hTime->Fill( pmtTime[ipmt] - event_time );
@@ -480,7 +480,6 @@ bool EventDisplay::LoadEvent(int ievt){
       chargeVsR->Fill(XYdist, pmtCharge[ipmt]);
       chargeVsRScint->Fill(XYdist, pmtGeoCorr[ipmt]);
       chargeVsRCorr->Fill(XYdist, (pmtCharge[ipmt] - pmtGeoCorr[ipmt])/pmtGeoCorrErr[ipmt] );
-
     }
 
     // chargeVsR->Scale(1./4.); //PMT average
@@ -681,8 +680,6 @@ void EventDisplay::DumpEventInfo(int ievt){
   std::cout<<" Event Time "<<event_time<<std::endl;
   std::cout<<"***********************************"<<std::endl;
 
-
-
 }
 
 
@@ -730,87 +727,24 @@ void EventDisplay::DisplayEvent(int ievt){
 //    EDGeo->DrawPMTMap(pmtCharge);
   }
 
-// #ifdef __WAVEFORMS_IN_DS__
-//   //MC Analogue Waveforms
-//   if(debugLevel > 0) std::cout<<"Display canvas 3 "<<std::endl;
-//
-//   canvas_event->cd(3);
-//   //Analogue waveforms
-//   for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++) {
-//     if(ipmt==0){
-//       MCPMTWaveforms[ipmt].Draw("AP");
-//       MCPMTWaveforms[ipmt].GetXaxis()->SetTitle("t(ns)");
-//       MCPMTWaveforms[ipmt].GetYaxis()->SetTitle("V");
-//     }
-//     MCPMTWaveforms[ipmt].SetLineColor(ipmt+1);
-//     MCPMTWaveforms[ipmt].Draw("LINE same");
-//     //      PMTDigitizedWaveforms[ipmt].SetLineColor(kRed);
-//     //      PMTDigitizedWaveforms[ipmt].Draw("LINE same");
-//   }
-//
-// #endif
-
   //Charge vs position
   if(rds->ExistEV()){
-    if(debugLevel > 0) std::cout<<"Display canvas 3 and 9 "<<std::endl;
-    // canvas_event->cd(3);
-    // chargeVsPosCorr->GetZaxis()->SetRangeUser(-chargeVsPos->GetMaximum(), chargeVsPos->GetMaximum());
-    // chargeVsPosCorr->Draw("colz");
-    // TMarker marker;
-    // marker.SetMarkerSize(3.);
-    // marker.SetMarkerColor(kRed);
-    // marker.SetMarkerStyle(30);
-    // marker.DrawMarker(centroid.X(),centroid.Y());
-    //
-    // canvas_event->cd(6);
-    // chargeVsR->SetLineWidth(3);
-    // chargeVsRScint->SetLineColor(kRed);
-    // chargeVsRScint->SetLineWidth(2);
-    // chargeVsRScint->SetMinimum(0);
-    // //    chargeVsRScint->SetMaximum(chargeVsRScint->GetMaximum()*1.5);
-    // chargeVsRScint->Draw("");
-    // chargeVsR->Draw("same");
-    // // chargeVsRCorr->SetLineWidth(3);
-    // // chargeVsRCorr->Draw("");
-
-    //  gStyle->SetPalette(55);
     if(debugLevel > 0) std::cout<<"Display canvas 3 and 9"<<std::endl;
     //Charge
     canvas_event->cd(3);
-    chargeVsPos->SetLineColor(kBlack);
-    chargeVsPos->SetFillColor(kBlack);
-    // chargeVsPos->SetFillStyle(3002);
-    chargeVsPos->Draw("colz");
-    chargeVsPos->SetMaximum(TMath::Max( chargeVsPos->GetMaximum(),chargeVsPos->GetMinimum() ) );
-    chargeVsPos->SetMinimum(-chargeVsPos->GetMaximum());
+    chargeVsPos->SetMarkerColor(0);
+    chargeVsPos->Draw("colz text");
     canvas_event->cd(9);
     chargeVsR->SetLineWidth(3);
     chargeVsR->Draw("");
 
     //Time
     canvas_event->cd(4);
-    timeVsPos->SetLineColor(kBlack);
-    timeVsPos->SetFillColor(kBlack);
-    timeVsPos->Draw("colz");
+    timeVsPos->SetMarkerColor(0);
+    timeVsPos->Draw("colz text");
     canvas_event->cd(11);
     hTime->Draw("");
 
-  }
-
-  if(debugLevel > 0) std::cout<<"Display canvas 5, 6 & 7"<<std::endl;
-  //Digitized waveforms
-  // for (int ipmt = 0; ipmt < mc->GetMCPMTCount(); ipmt++) {
-  //   if(ipmt==0){
-  //     MCPMTDigitizedWaveforms[ipmt].SetTitle("MC event");
-  //     MCPMTDigitizedWaveforms[ipmt].Draw("AP");
-  //     MCPMTDigitizedWaveforms[ipmt].GetXaxis()->SetTitle("sample");
-  //     MCPMTDigitizedWaveforms[ipmt].GetYaxis()->SetTitle("ADC counts");
-  //   }
-  //   MCPMTDigitizedWaveforms[ipmt].SetLineColor(ipmt+1);
-  //   MCPMTDigitizedWaveforms[ipmt].Draw("LINE same");
-  //   //      MCPMTDigitizedWaveforms[ipmt].ComputeRange(xmin_temp,xmax_temp,ymin_temp,ymax_temp);
-  // }
-  if(rds->ExistEV()){
     bool drawRingPMTs=false, drawLightPMTs=false, drawMuonPMTs=false, drawTriggerPMT=false, drawPanels=false;
     for (int ipmt = 0; ipmt < ev->GetPMTCount(); ipmt++) {
       int pmtID = ev->GetPMT(ipmt)->GetID();

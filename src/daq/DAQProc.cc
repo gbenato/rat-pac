@@ -168,15 +168,19 @@ namespace RAT {
         //Simulate pulse in muon tags PMT
         if(fTriggerType=="external"){
 
-          PMTWaveform pmtwf;
-          pmtwf.SetStepTime(fPulseTimeStep);
-          pmtwf.SetSamplingWindow(fSamplingTime);
+          PMTWaveform pmtwf_top;
+          PMTWaveform pmtwf_bottom;
+          pmtwf_top.SetStepTime(fPulseTimeStep);
+          pmtwf_top.SetSamplingWindow(fSamplingTime);
+          pmtwf_bottom.SetStepTime(fPulseTimeStep);
+          pmtwf_bottom.SetSamplingWindow(fSamplingTime);
 
           PMTPulse *pmtpulse;
           pmtpulse = new RealPMTPulse; //real PMT pulses shape
 
           //Apply external trigger jitter
           double triggerTime = fTriggerDelay + CLHEP::RandGauss::shoot()*fTriggerJitter;
+          double muon_tof = 10./30.; // cm/(cm/ns)
 
           pmtpulse->SetPulseMean(fPulseMean);
           pmtpulse->SetStepTime(fPulseTimeStep);
@@ -185,10 +189,13 @@ namespace RAT {
           pmtpulse->SetPulseWidth(fPulseWidth);
           pmtpulse->SetPulseOffset(fPulseOffset);
           pmtpulse->SetPulseStartTime(triggerTime); //also sets end time according to the pulse width and the pulse mean
-          pmtwf.fPulse.push_back(pmtpulse);
+          pmtwf_top.fPulse.push_back(pmtpulse);
 
-          fDigitizerV1742->AddChannel(6,pmtwf);
-          fDigitizerV1742->AddChannel(7,pmtwf);
+          fDigitizerV1742->AddChannel(6,pmtwf_top);
+
+          pmtpulse->SetPulseStartTime(triggerTime+muon_tof);
+          pmtwf_bottom.fPulse.push_back(pmtpulse);
+          fDigitizerV1742->AddChannel(7,pmtwf_bottom);
 
         }
 
