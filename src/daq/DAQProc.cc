@@ -185,12 +185,11 @@ namespace RAT {
           pmtpulse->SetPulseMean(fPulseMean);
           pmtpulse->SetStepTime(fPulseTimeStep);
           pmtpulse->SetPulseMin(fPulseMin);
-          pmtpulse->SetPulseCharge(40.); //FIXME: handwaivy
+          pmtpulse->SetPulseCharge(4000.);
           pmtpulse->SetPulseWidth(fPulseWidth);
           pmtpulse->SetPulseOffset(fPulseOffset);
           pmtpulse->SetPulseStartTime(triggerTime); //also sets end time according to the pulse width and the pulse mean
           pmtwf_top.fPulse.push_back(pmtpulse);
-
           fDigitizerV1742->AddChannel(6,pmtwf_top);
 
           pmtpulse->SetPulseStartTime(triggerTime+muon_tof);

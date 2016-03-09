@@ -34,8 +34,10 @@
 #include <RAT/GLG4VertexGen.hh>
 
 #include <RAT/PDFPMTTime.hh>
+#include <RAT/GausPMTTime.hh>
 #include <RAT/MiniCleanPMTCharge.hh>
 #include <RAT/PDFPMTCharge.hh>
+#include <RAT/GausPMTCharge.hh>
 #include <RAT/TimeUtil.hh>
 #include <RAT/Config.hh>
 
@@ -189,25 +191,32 @@ void Gsim::BeginOfRunAction(const G4Run* /*aRun*/) {
     delete fPMTCharge[i];
   }
 
-  const size_t numModels = fPMTInfo->GetModelCount();
-  fPMTTime.resize(numModels);
-  fPMTCharge.resize(numModels);
-  for (size_t i = 0; i < numModels; i++) {
-    const std::string modelName = fPMTInfo->GetModelName(i);
+  const size_t numPMTs = fPMTInfo->GetPMTCount();
+  fPMTTime.resize(numPMTs);
+  fPMTCharge.resize(numPMTs);
+  for (size_t ipmt = 0; ipmt < numPMTs; ipmt++) {
+    const std::string modelName = fPMTInfo->GetModelName(fPMTInfo->GetModel(ipmt));
     try {
-      fPMTTime[i] = new RAT::PDFPMTTime(modelName);
+      fPMTTime[ipmt] = new RAT::GausPMTTime(ipmt);
     } catch (DBNotFoundError& e) {
-      //fallback to default table if model is not available
-      fPMTTime[i] = new RAT::PDFPMTTime();
+      try {
+        fPMTTime[ipmt] = new RAT::PDFPMTTime(modelName);
+      } catch (DBNotFoundError& e) {
+        //fallback to default table if model is not available
+        fPMTTime[ipmt] = new RAT::PDFPMTTime();
+      }
     }
     try {
-      fPMTCharge[i] = new RAT::PDFPMTCharge(modelName);
+      fPMTCharge[ipmt] = new RAT::GausPMTCharge(ipmt);
     } catch (DBNotFoundError& e) {
-      //fallback to MiniCleanPMTCharge if nothing else avaliable
-      fPMTCharge[i] = new RAT::MiniCleanPMTCharge();
+      try {
+        fPMTCharge[ipmt] = new RAT::PDFPMTCharge(modelName);
+      } catch (DBNotFoundError& e) {
+        //fallback to MiniCleanPMTCharge if nothing else avaliable
+        fPMTCharge[ipmt] = new RAT::MiniCleanPMTCharge();
+      }
     }
   }
-
   // Tell the generator when the run starts
   GLG4PrimaryGeneratorAction* theGLG4PGA=
       GLG4PrimaryGeneratorAction::GetTheGLG4PrimaryGeneratorAction();
@@ -659,11 +668,12 @@ void Gsim::AddMCPhoton(DS::MCPMT* rat_mcpmt, const GLG4HitPhoton* photon,
     rat_mcphoton->SetTrackID(-1);
 
   }
-  rat_mcphoton->SetHitTime(photon->GetTime());
-  rat_mcphoton->SetFrontEndTime(fPMTTime[fPMTInfo->GetModel(rat_mcpmt->GetID())]->PickTime(photon->GetTime()));
-  rat_mcphoton->SetCharge(fPMTCharge[fPMTInfo->GetModel(rat_mcpmt->GetID())]->PickCharge());
 
-  //  std::cout<<" Photon Time "<<rat_mcphoton->GetHitTime()<<" "<<rat_mcphoton->GetFrontEndTime()<<std::endl;
+  rat_mcphoton->SetHitTime(photon->GetTime());
+  rat_mcphoton->SetFrontEndTime(fPMTTime[rat_mcpmt->GetID()]->PickTime(photon->GetTime()));
+  rat_mcphoton->SetCharge(fPMTCharge[rat_mcpmt->GetID()]->PickCharge());
+
+  //std::cout<<" Photon Time "<<rat_mcphoton->GetHitTime()<<" "<<rat_mcphoton->GetFrontEndTime()<<std::endl;
 
 }
 

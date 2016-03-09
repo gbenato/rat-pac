@@ -18,10 +18,10 @@ PMTPulse::~PMTPulse()
 {
 }
 
-double RealPMTPulse::GetPulseHeight(double time)
+double RealPMTPulse::GetPulseHeight(double utime)
 {
     double height;
-    double delta_t = (time-fStartTime);
+    double delta_t = (utime-fStartTime);
 
     if (delta_t > 0.0) {
       height = fPulseOffset - (fPulseCharge*TMath::LogNormal(delta_t, fPulseWidth, 0., fPulseMean) );

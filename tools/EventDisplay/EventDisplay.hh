@@ -101,6 +101,7 @@ protected:
   std::map<int, int> npe; //number of photoelectrons per PMT
   std::map<int, double> pmtCharge; //measured PMT charge
   std::map<int, double> pmtTime; //measured PMT time
+  std::vector<double> spe;
 
   //Geometry
   EventGeometry *EDGeo;
@@ -124,6 +125,7 @@ protected:
   TH1F *chargeVsR;
   TH1F *chargeVsRScint;
   TH1F *chargeVsRCorr;
+  TH2F *npeVsPos;
 
   //Plot Limits
   UShort_t ymax_d;

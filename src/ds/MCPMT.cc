@@ -13,16 +13,18 @@ namespace RAT {
     }
     
     Float_t MCPMT::GetTime() const {
-      Float_t time = -9999.;
-      if(photon.size()>0)
-	time = photon[0].GetHitTime();
+      Float_t time = 9999.;
+      for(int iph = 0; iph<photon.size(); iph++){
+	if(photon[iph].GetHitTime() < time) time = photon[iph].GetHitTime();
+      }
       return time;
     }
     
     Float_t MCPMT::GetFrontEndTime() const {
-      Float_t time = -9999.;
-      if(photon.size()>0)
-	time = photon[0].GetFrontEndTime();
+      Float_t time = 9999.;
+      for(int iph = 0; iph<photon.size(); iph++){
+	if(photon[iph].GetFrontEndTime() < time) time = photon[iph].GetFrontEndTime();
+      }
       return time;
     }
     

@@ -78,9 +78,8 @@ namespace RAT {
     double tadcs = 0.;
     for(int isample = 0; isample<nsamples; isample++){
 
-      //      charge = pmtwf.GetCharge(currenttime-timeres, currenttime);
       charge = pmtwf.GetHeight(currenttime)*timeres;
-      volt = charge*fResistance/timeres; //convert to voltage
+      volt = charge/timeres*fResistance; //convert to voltage
       volt = volt + fNoiseAmpl*CLHEP::RandGauss::shoot(); //add electronic noise
       adcs = round((volt - fVlow + fOffset)*adcpervolt); //digitize: V->ADC
       tcharge += charge; //not used, just for sanity check

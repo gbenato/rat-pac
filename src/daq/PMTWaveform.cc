@@ -27,26 +27,6 @@ inline bool Cmp_PMTPulse_TimeAscending(const PMTPulse *a,
   return atime < btime;
 }
 
-
-// void PMTWaveform::GenerateElectronicNoise(double fNoiseAmpl)
-// {
-
-//   //Sort pulses in time order
-//   std::sort(fPulse.begin(),fPulse.end(),Cmp_PMTPulse_TimeAscending);
-//   int nsteps = (int)(fPulse.back()->GetPulseEndTime() - fPulse.front()->GetPulseStartTime())/fStepTime + 1;
-//   double PulseDuty=0.0;
-//   for(std::vector<PMTPulse*>::iterator ipulse = fPulse.begin();ipulse<fPulse.end();ipulse++)
-//     PulseDuty += (*ipulse)->GetPulseEndTime() - (*ipulse)->GetPulseStartTime();
-//   float NoiseAmpl = fNoiseAmpl/sqrt(PulseDuty/fStepTime);
-//   //  int nsteps = (int)fEventTime/fStepTime;
-//   fNoise.resize(nsteps);
-//   for(int istep=0; istep<nsteps ;istep++){
-//     fNoise[istep] = NoiseAmpl*CLHEP::RandGauss::shoot();
-//   }
-
-// }
-
-
 double PMTWaveform::GetHeight(double currenttime)
 {
     float height = 0.;
@@ -55,10 +35,6 @@ double PMTWaveform::GetHeight(double currenttime)
 			height+=fPulse[i]->GetPulseHeight(currenttime);
 			i++;
     }
-    //    if(time>=fEventTime) time = fEventTime - 0.001;
-    // int istep = round(time/fStepTime);
-    //    height+=fNoise[istep]; //add electronic noise
-    //std::cout<<height<<" "<<fNoise[istep]<<" "<<istep<<std::endl;
     return height;
 
 }

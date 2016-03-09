@@ -163,8 +163,6 @@ bool EventDisplay::LoadEvent(int ievt){
 
   if(debugLevel > 0) std::cout<<"EventDisplay::LoadEvent -- Loading event "<<ievt<<"......."<<std::endl;
 
-  //Initialize
-  //  SetParameters();
   //Objects
   rds = dsreader->GetEvent(ievt);
   mc = rds->GetMC();
@@ -380,11 +378,16 @@ bool EventDisplay::LoadEvent(int ievt){
     chargeVsPosScint->SetStats(0);
     chargeVsPosCorr = new TH2F("chargeVsPosCorr", "chargeVsPosCorr", 1, 0., 1., 1, 0., 1.);
     chargeVsPosCorr->SetStats(0);
+    npeVsPos = new TH2F("NPE", "NPE", 1, 0., 1., 1, 0., 1.);
+    npeVsPos->SetStats(0);
+    npeVsPos->SetMaximum(15.);
+    npeVsPos->SetMinimum(0.0);
     chargeVsPos->Reset();
     chargeVsR->Reset();
     chargeVsRScint->Reset();
     chargeVsRCorr->Reset();
     timeVsPos->Reset();
+    npeVsPos->Reset();
     hTime->Reset();
 
     //Get center of the small PMT array and locate
@@ -401,6 +404,7 @@ bool EventDisplay::LoadEvent(int ievt){
     centerpos = centerpos*(1./pmtTypeCount);
     timeVsPos->SetBins(7, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 7, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
     chargeVsPos->SetBins(7, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 7, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
+    npeVsPos->SetBins(7, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 7, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
     chargeVsPosScint->SetBins(7, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 7, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
     chargeVsPosCorr->SetBins(7, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 7, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
 
@@ -408,6 +412,7 @@ bool EventDisplay::LoadEvent(int ievt){
     for (int ibin = 1; ibin < timeVsPos->GetXaxis()->GetNbins()+1; ibin++) {
       for (int jbin = 1; jbin < timeVsPos->GetYaxis()->GetNbins()+1; jbin++) {
         timeVsPos->SetBinContent(ibin, jbin, -1000.);//(timeVsPos->GetMaximum() + timeVsPos->GetMinimum())/2.);
+        npeVsPos->SetBinContent(ibin, jbin, -1000.);//(timeVsPos->GetMaximum() + timeVsPos->GetMinimum())/2.);
         chargeVsPos->SetBinContent(ibin, jbin, -1000.);//(timeVsPos->GetMaximum() + timeVsPos->GetMinimum())/2.);
         chargeVsPosCorr->SetBinContent(ibin, jbin, -1000.);//(timeVsPos->GetMaximum() + timeVsPos->GetMinimum())/2.);
       }
@@ -416,10 +421,11 @@ bool EventDisplay::LoadEvent(int ievt){
       if(pmtInfo->GetType(ipmt)!=1) continue;
       TVector3 pmtpos = pmtInfo->GetPosition(ipmt);
       timeVsPos->Fill(pmtpos.X(), pmtpos.Y(), 1000.);
+      npeVsPos->Fill(pmtpos.X(), pmtpos.Y(), 1000.);
       chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), 1000.);
       chargeVsPosCorr->Fill(pmtpos.X(), pmtpos.Y(), 1000.);
       pmtCharge[ipmt] = 0.;
-      pmtTime[ipmt] = 0.;
+      pmtTime[ipmt] = -9999.;
     }
 
     //Collect charges and times
@@ -473,22 +479,14 @@ bool EventDisplay::LoadEvent(int ievt){
       // Geometry PMT charge correction
       hTime->Fill( pmtTime[ipmt] - event_time );
       timeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtTime[ipmt] - event_time);
+      npeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtCharge[ipmt]/spe[ipmt]);
       chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtCharge[ipmt]);
       chargeVsPosScint->Fill(pmtpos.X(), pmtpos.Y(), pmtGeoCorr[ipmt]);
-
       chargeVsPosCorr->Fill(pmtpos.X(), pmtpos.Y(), (pmtCharge[ipmt] - pmtGeoCorr[ipmt])/pmtGeoCorrErr[ipmt] );
       chargeVsR->Fill(XYdist, pmtCharge[ipmt]);
       chargeVsRScint->Fill(XYdist, pmtGeoCorr[ipmt]);
       chargeVsRCorr->Fill(XYdist, (pmtCharge[ipmt] - pmtGeoCorr[ipmt])/pmtGeoCorrErr[ipmt] );
     }
-
-    // chargeVsR->Scale(1./4.); //PMT average
-    // chargeVsRScint->Scale(1./4.); //PMT average
-    // chargeVsRCorr->Scale(1./4.); //PMT average
-
-    // chargeVsR->Scale(1./chargeVsR->Integral()); //Area norm
-    // chargeVsRScint->Scale(1./chargeVsRScint->Integral()); //Area norm
-    // chargeVsRCorr->Scale(1./chargeVsRCorr->Integral()); //Area norm
 
     //Perform KS test against scintillation light only
     double ks = chargeVsPos->KolmogorovTest(chargeVsPosScint);
@@ -630,6 +628,11 @@ void EventDisplay::SetParameters(){
   pmtGeoCorr = dbCorr->GetDArray("corr");
   pmtGeoCorrErr = dbCorr->GetDArray("corr_err");
 
+
+  db->Load("../../data/PMTGAUSCHARGE.ratdb");
+  dbED = db->GetLink("PMTGAUSCHARGE");
+  spe = dbED->GetDArray("gaus_mean");
+
 }
 
 
@@ -732,8 +735,10 @@ void EventDisplay::DisplayEvent(int ievt){
     if(debugLevel > 0) std::cout<<"Display canvas 3 and 9"<<std::endl;
     //Charge
     canvas_event->cd(3);
-    chargeVsPos->SetMarkerColor(0);
-    chargeVsPos->Draw("colz text");
+    npeVsPos->SetMarkerColor(0);
+    npeVsPos->Draw("colz text");
+    // chargeVsPos->SetMarkerColor(0);
+    // chargeVsPos->Draw("colz text");
     canvas_event->cd(9);
     chargeVsR->SetLineWidth(3);
     chargeVsR->Draw("");

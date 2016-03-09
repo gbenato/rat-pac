@@ -92,26 +92,13 @@ namespace RAT {
     Log::Die("invalid inhdf5 \"set\" command");
   }
 
-  bool InHDF5Producer::ReadEvents(G4String _mapfilename)
+  bool InHDF5Producer::ReadEvents(G4String inputfilename)
   {
 
-    //Get map filename and dir
-    std::string dirname = _mapfilename.substr(0,_mapfilename.find_last_of("/"));
-    std::string mapfilename = _mapfilename.substr(_mapfilename.find_last_of("/"),_mapfilename.end());
-    std::string basefilename = mapfilename.replace(".map.csv","");
-    std::string fastfile = basefilename + ".0.h5";
-    std::string masterfile =  basefilename + ".0.h5";
-
-    if (!H5::H5File::isHdf5(fastfile.c_str()))
+    if (!H5::H5File::isHdf5(inputfilename.c_str()))
     {
       // Invalid HDF5 file
-      std::cout<<" Invalid HDF5 file "<<fastfile<<std::endl;
-      return 0;
-    }
-    if (!H5::H5File::isHdf5(masterfile.c_str()))
-    {
-      // Invalid HDF5 file
-      std::cout<<" Invalid HDF5 file "<<masterfile<<std::endl;
+      std::cout<<" Invalid HDF5 file "<<inputfilename<<std::endl;
       return 0;
     }
 
