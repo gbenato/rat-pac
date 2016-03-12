@@ -24,20 +24,25 @@
     "draw_pmts": 1,         // 1 -> Draw PMTs stored in PMTINFO
 
     //Cuts
-    "charge_cut_pmts": [-1],   //PMT IDs to be applied the cuts
+    "charge_cut_pmts": [-10],   //PMT IDs to be applied the cuts
     "charge_cut_lower": [-99999.0],  //Charge cut [30.0, 30.0]
     "charge_cut_higher": [99999.0],  //Charge cut [30.0, 30.0]
+
     // "charge_cut_pmts": [8,9,10,11],   //PMT IDs to be applied the cuts
     // "charge_cut_lower": [100.0,100.0,100.0,100.0],  //Charge cut [30.0, 30.0]
     // "charge_cut_higher": [99999.0, 99999.0, 99999.0, 99999.0],  //Charge cut [30.0, 30.0]
-//    "charge_cut_pmts": [6,7, 9,10,11],   //PMT IDs to be applied the cuts
-//    "charge_cut_lower": [30.0,30.0, -999.0,-999.0,-999.0],  //Charge cut [30.0, 30.0]
-//    "charge_cut_higher": [99999.0,99999.0, 10.0,10.0,10.0],  //Charge cut [30.0, 30.0]
+
+    // "charge_cut_pmts": [6,7, 9,10,11],   //PMT IDs to be applied the cuts
+    // "charge_cut_lower": [30.0,30.0, -999.0,-999.0,-999.0],  //Charge cut [30.0, 30.0]
+    // "charge_cut_higher": [99999.0,99999.0, 10.0,10.0,10.0],  //Charge cut [30.0, 30.0]
+
+    // "charge_cut_pmts": [8,9,10,11],   //PMT IDs to be applied the cuts
     // "charge_cut_lower": [-999.0,-999.0, -999.0,-999.0,-999.0],  //Charge cut [30.0, 30.0]
     // "charge_cut_higher": [99999.0,99999.0, 99999.0,99999.0,99999.0],  //Charge cut [30.0, 30.0]
+
     "event_option": "",       // Drawing options: "pe" -> only events with at least one PE,
-                                       //                    "cherenkov" -> only events with a cherenkov process
-                                       //                    "triggered" -> only events triggered by the DAQ
-    "debug_level": 0,
+                                       //                  "cherenkov" -> only events with a cherenkov process
+                                       //                  "triggered" -> only events triggered by the DAQ
+    "debug_level": 1,
 
 }

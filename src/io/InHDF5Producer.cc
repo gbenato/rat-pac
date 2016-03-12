@@ -443,9 +443,9 @@ namespace RAT {
       event_map->GetEntry(iev);
       if(fast_file != opened_file) continue;
       if(master_file != fast_file) {
-	//	info<<" V1730and V1742 events are in different files. Skipping event "<<event_id<<"! \n";
-	skippedEvents++;
-	//continue;
+        info<<" V1730and V1742 events are in different files. Skipping event "<<event_id<<"! \n";
+        skippedEvents++;
+        continue;
       }
       if(DEBUG) info<<" Ordering events: "<<iev<<" "<<event_id<<" "<<master_file<<" "<<master_index<<" "<<fast_file<<" "<<fast_index<<" \n";
 

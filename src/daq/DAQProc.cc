@@ -365,8 +365,8 @@ namespace RAT {
             if (DigitizedTriggerWaveform[isample]<=fDigitizerV1742->GetDigitizedThreshold()){ //hit above threshold! (remember the pulses are negative)
 
               double threstime = fDigitizerV1742->GetTimeAtSample(isample);
-              //  std::cout<<" Above threshold "<<isample<<"/"<<DigitizedTriggerWaveform.size()<<" "<<DigitizedTriggerWaveform[isample]<<" "<<fDigitizer->GetDigitizedThreshold()<<std::endl;
-              std::cout<<" Above threshold "<<threstime<<" "<<fDigitizerV1742->GetSampleAtTime(threstime)<<std::endl;
+              // std::cout<<" Above threshold "<<isample<<"/"<<DigitizedTriggerWaveform.size()<<" "<<DigitizedTriggerWaveform[isample]<<" "<<fDigitizer->GetDigitizedThreshold()<<std::endl;
+              // std::cout<<" Above threshold "<<threstime<<" "<<fDigitizerV1742->GetSampleAtTime(threstime)<<std::endl;
 
               //Create a new event
               DS::EV *ev = ds->AddNewEV();

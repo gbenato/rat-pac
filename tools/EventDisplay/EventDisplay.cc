@@ -331,7 +331,6 @@ bool EventDisplay::LoadEvent(int ievt){
   if(debugLevel > 1) std::cout<<"   EventDisplay::LoadEvent (Passed MC truth) "<<std::endl;
 
 
-
   if(rds->ExistEV()){
 
     ev = rds->GetEV(0); //FIXME: so far get only first event
@@ -437,14 +436,16 @@ bool EventDisplay::LoadEvent(int ievt){
       double tof = dist/cspeed;
       pmtCharge[pmtID] = ev->GetPMT(ipmt)->GetCharge();
       pmtTime[pmtID] = ev->GetPMT(ipmt)->GetTime() - pmttime_delay[pmtID] - tof;
+      if(pmtInfo->GetType(pmtID)==4){
+        std::cout<<" pmtCharge "<<pmtID<<" "<<pmtCharge[pmtID]<<std::endl;
+        // std::cout<<" pmtTime "<<pmtID<<" "<<pmtTime[pmtID]<<std::endl;
+      }
       if(pmtTime[pmtID]<=-9000){
         pmtTime[pmtID] = -400.;
       } else{
         EDGeo->HitPMT(pmtID,1); //If time>0 means that the WF crossed threshold
       }
       if(pmtInfo->GetType(pmtID)==1 && pmtTime[pmtID] != -400){
-        std::cout<<" pmtCharge "<<pmtID<<" "<<pmtCharge[pmtID]<<std::endl;
-        std::cout<<" pmtTime "<<pmtID<<" "<<pmtTime[pmtID]<<std::endl;
         ringPMTTimes.push_back(pmtTime[pmtID]);
       }
     }
@@ -465,8 +466,11 @@ bool EventDisplay::LoadEvent(int ievt){
     }
 
     //Calculate event time
-    if(ringPMTTimes.size()<3) return false; //More than 3 hits
-    event_time = (ringPMTTimes[0] + ringPMTTimes[1] + ringPMTTimes[2])/3.;
+    if(ringPMTTimes.size() > 3){
+      event_time = (ringPMTTimes[0] + ringPMTTimes[1] + ringPMTTimes[2])/3.;
+    } else{
+      event_time = -9999.;
+    }
 
     //Fill charge and time plots
     for (int ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
@@ -570,7 +574,7 @@ bool EventDisplay::LoadEvent(int ievt){
     #endif
 
   }
-  else if(debugLevel > 0) std::cout<<"EventDisplay::LoadEvent -- EV does not exist! "<<std::endl;
+  else if(debugLevel > 0) std::cout<<" EventDisplay::LoadEvent -- EV does not exist! "<<std::endl;
 
   if(debugLevel > 0) std::cout<<" EventDisplay::LoadEvent - DONE "<<std::endl;
 
@@ -693,7 +697,7 @@ void EventDisplay::DisplayEvent(int ievt){
   if(event_option == "cherenkov" && !this->IsCerenkov()) return;
   if(event_option == "pe" && !this->IsPE()) return;
   if(event_option == "triggered" && !this->IsTriggered()) return;
-  if(this->IsCut()) return;
+  //  if(this->IsCut()) return;
   this->DumpEventInfo(ievt);
   if(event_number>=0) this->DumpDisplayInfo();
 

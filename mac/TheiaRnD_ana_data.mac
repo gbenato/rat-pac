@@ -9,12 +9,13 @@
 ##### BEGIN EVENT LOOP ##################
 /rat/proc analysis
 /rat/proc count
-/rat/procset update 100
+/rat/procset update 1000
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "../../results/spe-feb-10.0.root"
+/rat/procset file "../../results/spe-feb-1_01Mar2016-182954_merge_re.root"
 #########################################
 
-/rat/inhdf5/read ../../data/spe-feb-10.0.h5
+#/rat/inhdf5/read ../../data/spe-feb-10.0.h5
+/rat/inroot/read ../../results/spe-feb-1_01Mar2016-182954_merge.root
 exit

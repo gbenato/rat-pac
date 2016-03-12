@@ -45,7 +45,7 @@
 /////////////////////
 {
   name: "GEO",
-  index: "outer_vessel",
+  index: "block",
   valid_begin: [0, 0],
   valid_end: [0, 0],
   invisible: 0, // omitted for visualization
@@ -57,34 +57,23 @@
   color: [0.1, 0.3, 0.8, 0.1],
 }
 
+/////////////////////
+// COVER
+/////////////////////
 {
   name: "GEO",
   index: "cover",
   valid_begin: [0, 0],
   valid_end: [0, 0],
   invisible: 0, // omitted for visualization
-  mother: "outer_vessel",
+  mother: "block",
   type: "box",
   size: [160.0,160.0,0.5],
   position: [0.0,0.0,32.0],
-  material: "mirror",
+  material: "acrylic_berkeley", //mirror
   color: [0.5, 0.2, 0.1, 0.1],
-  surface: "mirror",
-}
-
-//{
-//  name: "GEO",
-//  index: "mirror",
-//  valid_begin: [0, 0],
-//  valid_end: [0, 0],
-//  invisible: 0, // omitted for visualization
-//  mother: "world", //not used
-//  type: "border",
-//  volume1: "inner",
-//  volume2: "cover",
-//  reverse: 1,
 //  surface: "mirror",
-//}
+}
 
 {
   name: "GEO",
@@ -93,7 +82,6 @@
   valid_end: [0, 0],
   invisible: 0, // omitted for visualization
   mother: "cover",
-  //Cylinder
   type: "tube",
   r_max: 50.0,
   size_z: 0.5,
@@ -109,7 +97,6 @@
   valid_end: [0, 0],
   invisible: 0, // omitted for visualization
   mother: "cover_window",
-  //Cylinder
   type: "tube",
   r_max: 6.0,
   size_z: 0.5,
@@ -124,12 +111,28 @@
   valid_begin: [0, 0],
   valid_end: [0, 0],
   invisible: 0, // omitted for visualization
-  mother: "outer_vessel",
+  mother: "block",
   type: "tube",
   position: [0.0, 0.0, -0.5],
   r_max: 6.0,
   size_z: 32.0,
   material: "acrylic_black", // acrylic_black
+  color: [0.0, 0.0, 0.0, 0.1],
+}
+
+{
+  name: "GEO",
+  index: "chip",
+  valid_begin: [0, 0],
+  valid_end: [0, 0],
+  invisible: 0, // omitted for visualization
+  mother: "block",
+  type: "tube",
+  position: [0.0, 0.0, -31.5],
+  r_max: 10.0,
+  r_min: 6.0,
+  size_z: 1.0,
+  material: "air",
   color: [0.0, 0.0, 0.0, 0.1],
 }
 
