@@ -22,6 +22,7 @@
 #include <RAT/DB.hh>
 #include <RAT/DS/RunStore.hh>
 
+#define REFTUBE 20
 #define MCPHOTONLOOP false
 #define NLOGENTRIES 10
 
@@ -47,7 +48,7 @@ void GetHistos();
 void DrawHistos();
 void PrintHistos(char*);
 void NormalizeHistos();
-void ExtractSPE();
+void GetPMTCalibration(); //Extract SPE and time delays
 
 //Fit function
 Double_t fmultigaus(Double_t *x, Double_t *par) {
@@ -64,7 +65,7 @@ int npmts; // # PMTs
 std::map<int,int> npmts_type; // # PMTs per type
 std::vector<Color_t> pmtidtocolor;
 std::vector<int> pmtidtopos;
-std::vector<double> pmttime_delay;
+std::vector<double> time_delay;
 vector<double> qScintCorr; //Scintillation correction
 vector<double> qScintCorrErr; // Scintillation correction error
 vector<double> spe; //SPE
@@ -87,6 +88,9 @@ std::vector<double> q_xmax;
 std::vector<TF1*> f_spe;
 std::vector<double> f_spe_mean;
 std::vector<double> f_spe_sigma;
+std::vector<double> f_timecal_mean;
+std::vector<double> f_timecal_sigma;
+std::vector<double> f_timecal_sigma_mc;
 std::vector<TH1F*> h_charge; //Measured charge
 std::vector<TH1F*> h_charge_res; //Measured charge geometry corrected
 std::vector<TH1F*> h_time; //Measured time
@@ -124,7 +128,7 @@ int main(int argc, char **argv){
   GetDBTables();
   GetHistos();
   NormalizeHistos();
-  ExtractSPE();
+  GetPMTCalibration();
 
   DrawHistos();
   if(gOutFile){
@@ -158,6 +162,11 @@ void GetDBTables(){
   db->Load("../data/PMTGAUSCHARGE.ratdb");
   RAT::DBLinkPtr dbSPE = db->GetLink("PMTGAUSCHARGE");
   spe = dbSPE->GetDArray("gaus_mean");
+
+  db->Load("../data/PMTGAUSTIME.ratdb");
+  RAT::DBLinkPtr dbTime = db->GetLink("PMTGAUSTIME");
+  time_delay = dbTime->GetDArray("cable_delay");
+  f_timecal_sigma_mc = dbTime->GetDArray("jitter");
 
 }
 
@@ -204,22 +213,6 @@ void GetPMTInfo(){
 
   pmtidtocolor.insert(pmtidtocolor.begin(), mycolors, mycolors + npmts );
   pmtidtopos.insert(pmtidtopos.begin(), mypmtpos, mypmtpos + npmts );
-  double mydelays[] = {.0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0,
-                    -20.57914449553667,
-                    -20.659866192027934,
-                    -20.827556184469994,
-                    -20.83027277200025,
-                    -20.41955157599053,
-                    -20.42802016610127,
-                    -20.565785808047142,
-                    -20.607075743765186,
-                    -20.628455171240507,
-                    -20.65168715965919,
-                    -20.70112435087266,
-                    -20.450410008571303,
-                    .0};
-
-  pmttime_delay.insert(pmttime_delay.begin(), mydelays, mydelays + npmts );
 
   //Plot axis limits
   double myqxmins[] = {-100,-100,-100,-100,-100,-100, -100,-100, -100,-100,-100,-100, -100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100, -100};
@@ -324,13 +317,13 @@ void GetHistos(){
       double bottommuon_time = -9999.;
       double bottommuon_timeres = -9999.;
       double panel_charge[] = {0., 0., 0., 0.};
-      RAT::DS::PMT *pmt = ev->GetPMTWithID(20); //ref ring tube
+      RAT::DS::PMT *pmt = ev->GetPMTWithID(REFTUBE); //ref ring tube
       if(pmt!=NULL) {
         ring_charge = pmt->GetCharge();
         ring_time = pmt->GetTime();
-        double ring_dist = (*pos_pmts[20] - *target_pos).Mag();
+        double ring_dist = (*pos_pmts[REFTUBE] - *target_pos).Mag();
         double ring_tof = ring_dist/cspeed;
-        ring_timeres = ring_time - ring_tof;
+        ring_timeres = ring_time - ring_tof - time_delay[REFTUBE];
       }
       pmt = ev->GetPMTWithID(24); //trigger
       if(pmt!=NULL) {
@@ -370,7 +363,7 @@ void GetHistos(){
         if(pmttype==1) {
           double dist = (*pos_pmts[pmtid] - *target_pos).Mag();
           double tof = dist/cspeed;
-          if(ev->GetPMT(ipmt)->GetTime()>-9000) ringPMTTimes.push_back(ev->GetPMT(ipmt)->GetTime() - tof - pmttime_delay[pmtid]);
+          if(ev->GetPMT(ipmt)->GetTime()>-9000) ringPMTTimes.push_back(ev->GetPMT(ipmt)->GetTime() - tof - time_delay[pmtid]);
         }
       }
       //Sort in ascending order
@@ -384,13 +377,13 @@ void GetHistos(){
       // if(panel_charge[1]>400. || panel_charge[2]>400. || panel_charge[3]>400.) continue; //Veto cut
 
       //Cuts for SPE
-      // if(panel_charge[0]>200 || panel_charge[1]>200 || panel_charge[2]>200 || panel_charge[3]>200) continue;
-      // if(ring_time < 180) continue;
+      if(panel_charge[0]>200 || panel_charge[1]>200 || panel_charge[2]>200 || panel_charge[3]>200) continue;
+      if(ring_time < 180) continue;
 
       //Calculate event time
-      event_time = TMath::KOrdStat((int)ringPMTTimes.size(), &ringPMTTimes[0], 1);
+      // event_time = TMath::KOrdStat((int)ringPMTTimes.size(), &ringPMTTimes[0], 1);
       // event_time = (ringPMTTimes[0] + ringPMTTimes[1] + ringPMTTimes[2])/3.;
-      // event_time = ring_time;
+      event_time = ring_time;
       h_event_time->Fill(event_time);
 
 
@@ -401,23 +394,23 @@ void GetHistos(){
         double tof = dist/cspeed;
         double pmttime = ev->GetPMT(ipmt)->GetTime();
         charge = ev->GetPMT(ipmt)->GetCharge();
-        //if(pmttime < 170) continue;
+        if(pmttime < 170) continue;
         //if(charge > 200) continue;
-        double timeres = pmttime - tof;
+        double timeres = pmttime - tof - time_delay[pmtid];
         h_time[pmtid]->Fill(timeres - ring_timeres);
         // std::cout<<" ToF "<<pmtid<<": "<<tof<<" "<<dist<<std::endl;
-        //h_time_bottom[pmtid]->Fill(timeres - bottommuon_time - pmttime_delay[pmtid]);
-        //h_time_event[pmtid]->Fill(timeres - event_time - pmttime_delay[pmtid]);
-        if(pmtid != 13 && pmtid != 22 && pmtid != 19 && pmtid != 16) continue;
-        h_time_bottom[pmtidtopos[pmtid]]->Fill(timeres - bottommuon_time - pmttime_delay[pmtid]);
-        h_time_event[pmtidtopos[pmtid]]->Fill(timeres - event_time - pmttime_delay[pmtid]);
-        h_time_trigger[pmtid]->Fill(timeres - trigger_time - pmttime_delay[pmtid]);
+        //h_time_bottom[pmtid]->Fill(timeres - bottommuon_time - time_delay[pmtid]);
+        //h_time_event[pmtid]->Fill(timeres - event_time - time_delay[pmtid]);
+        //if(pmtid != 13 && pmtid != 22 && pmtid != 19 && pmtid != 16) continue;
+        h_time_bottom[pmtidtopos[pmtid]]->Fill(timeres - bottommuon_time - time_delay[pmtid]);
+        h_time_event[pmtidtopos[pmtid]]->Fill(timeres - event_time - time_delay[pmtid]);
+        h_time_trigger[pmtid]->Fill(timeres - trigger_time - time_delay[pmtid]);
         //Event level averaged
         if(timeres>-900) {
           if (pmtInfo->GetType(pmtid)==1){
             h_pmt_chargevspos->Fill(pos_pmts[pmtid]->X(),pos_pmts[pmtid]->Y(),charge);
             h_pmt_npevspos->Fill(pos_pmts[pmtid]->X(),pos_pmts[pmtid]->Y(),charge/spe[pmtid]);
-            h_pmt_timevspos->Fill(pos_pmts[pmtid]->X(),pos_pmts[pmtid]->Y(),timeres - event_time - pmttime_delay[pmtid]);
+            h_pmt_timevspos->Fill(pos_pmts[pmtid]->X(),pos_pmts[pmtid]->Y(),timeres - event_time - time_delay[pmtid]);
             h_pmt_countvspos->Fill(pos_pmts[pmtid]->X(),pos_pmts[pmtid]->Y());
           }
         }
@@ -444,9 +437,12 @@ void GetHistos(){
 
 }
 
-void ExtractSPE(){
+void GetPMTCalibration(){
 
-  double params[6];
+  double *pspe;
+  double *ptime;
+  double *pspe_err;
+  double *ptime_err;
   for(int ipmt=0; ipmt<npmts; ipmt++){
 
 //    if(pmtInfo->GetType(ipmt)!=1 && pmtInfo->GetType(ipmt)!=2) continue;
@@ -461,32 +457,59 @@ void ExtractSPE(){
     f_spe[ipmt]->SetParLimits(6.,0.,9999999.); //2PE norm
 
     h_charge[ipmt]->Fit(Form("f_spe_%i",ipmt),"Q","Q",-60,500);
-    f_spe[ipmt]->GetParameters(params);
-    f_spe_mean.push_back(params[4]);
-    f_spe_sigma.push_back(params[5]);
+    pspe = f_spe[ipmt]->GetParameters();
+    f_spe_mean.push_back(pspe[4]);
+    f_spe_sigma.push_back(pspe[5]);
 
-    std::cout<<" SPE "<<ipmt<<":"<<std::endl;
-    std::cout<<"  |-> Noise norm: "<<params[0]<<std::endl;
-    std::cout<<"  |-> Noise mean: "<<params[1]<<std::endl;
-    std::cout<<"  |-> Noise sigma: "<<params[2]<<std::endl;
-    std::cout<<"  |-> SPE norm: "<<params[3]<<std::endl;
-    std::cout<<"  |-> SPE mean: "<<params[4]<<std::endl;
-    std::cout<<"  |-> SPE sigma: "<<params[5]<<std::endl;
-    std::cout<<"  |-> 2PE norm: "<<params[6]<<std::endl;
+    h_time[ipmt]->Fit("gaus","Q","Q",-0.7,0.7);
+    if(h_time[ipmt]->GetFunction("gaus") == NULL){
+      ptime = new double[3];
+      ptime[0] = 0.; ptime[1] = 0.; ptime[2] = 0.;
+      ptime_err = new double[3];
+      ptime_err[0] = 0.; ptime_err[1] = 0.; ptime_err[2] = 0.;
+      f_timecal_mean.push_back(0.);
+      f_timecal_sigma.push_back(0.);
+    } else{
+      ptime = h_time[ipmt]->GetFunction("gaus")->GetParameters();
+      ptime_err = h_time[ipmt]->GetFunction("gaus")->GetParErrors();
+      f_timecal_mean.push_back(ptime[1]);
+      double jittercorr = 1./sqrt(2.)*sqrt(ptime[2]*ptime[2] - f_timecal_sigma_mc[ipmt]*f_timecal_sigma_mc[ipmt]);
+      f_timecal_sigma.push_back(jittercorr);
+    }
+
+    std::cout<<" PMT SPE "<<ipmt<<":"<<std::endl;
+    std::cout<<"  |-> Noise norm: "<<pspe[0]<<" mean: "<<pspe[1]<<" sigma: "<<pspe[2]<<std::endl;
+    std::cout<<"  |-> SPE norm: "<<pspe[3]<<" mean: "<<pspe[4]<<" sigma: "<<pspe[5]<<std::endl;
+    std::cout<<"  |-> 2PE norm: "<<pspe[6]<<std::endl;
+    std::cout<<"  |-> Delay: "<<ptime[1]<<" +- "<<ptime_err[1]<<" jitter: "<<ptime[2]<<std::endl;
 
   }
 
-  std::cout<<" RATDB TABLE "<<":"<<std::endl;
-  std::cout<<"{"<<std::endl;
-  std::cout<<"  name: \"PMTGAUSCHARGE\", \n  valid_begin: [0,0], \n  valid_end: [0,0],"<<std::endl;
-  std::cout<<"  gaus_mean: ["<<f_spe_mean.at(0);
-  for(int ipmt=1; ipmt<f_spe_mean.size(); ipmt++) std::cout<<", "<<f_spe_mean.at(ipmt);
-  std::cout<<"],"<<std::endl;
-  std::cout<<"  gaus_sigma: ["<<f_spe_sigma.at(0);
-  for(int ipmt=1; ipmt<f_spe_sigma.size(); ipmt++) std::cout<<", "<<f_spe_sigma.at(ipmt);
-  std::cout<<"],"<<std::endl;
-  std::cout<<"}"<<std::endl;
+  ofstream ratdb_charge("PMTGAUSCHARGE.ratdb"), ratdb_time("PMTGAUSTIME.ratdb");
 
+  //Charge ratdb
+  ratdb_charge<<"{\n";
+  ratdb_charge<<"  name: \"PMTGAUSCHARGE\", \n  valid_begin: [0,0], \n  valid_end: [0,0],\n";
+  ratdb_charge<<"  gaus_mean: ["<<f_spe_mean.at(0);
+  for(int ipmt=1; ipmt<f_spe_mean.size(); ipmt++) ratdb_charge<<", "<<f_spe_mean.at(ipmt);
+  ratdb_charge<<"],\n";
+  ratdb_charge<<"  gaus_sigma: ["<<f_spe_sigma.at(0);
+  for(int ipmt=1; ipmt<f_spe_sigma.size(); ipmt++) ratdb_charge<<", "<<f_spe_sigma.at(ipmt);
+  ratdb_charge<<"],\n";
+  ratdb_charge<<"}\n";
+
+  //Time ratdb
+  ratdb_time<<"{\n";
+  ratdb_time<<"  name: \"PMTGAUSTIME\", \n  valid_begin: [0,0], \n  valid_end: [0,0],\n";
+  ratdb_time<<"  cable_delay: ["<<f_timecal_mean.at(0);
+  for(int ipmt=1; ipmt<f_timecal_mean.size(); ipmt++) ratdb_time<<", "<<f_timecal_mean.at(ipmt);
+  ratdb_time<<"],\n";
+  ratdb_time<<"  transit_time: [63.0,63.0,63.0,63.0,63.0,63.0,9.0,9.0,20.0,20.0,20.0,20.0,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8],\n";
+  ratdb_time<<"  tts: [1.23,1.23,1.23,1.23,1.23,1.23,0.212,0.212,1.0,1.0,1.0,1.0,0.127,0.127,0.127,0.127,0.127,0.127,0.127,0.127,0.127,0.127,0.127,0.127,0.127],\n";
+  ratdb_time<<"  jitter: ["<<f_timecal_sigma.at(0);
+  for(int ipmt=1; ipmt<f_timecal_sigma.size(); ipmt++) ratdb_time<<", "<<f_timecal_sigma.at(ipmt);
+  ratdb_time<<"],\n";
+  ratdb_time<<"}\n";
 
 }
 

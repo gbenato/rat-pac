@@ -40,7 +40,7 @@
     // "charge_cut_lower": [-999.0,-999.0, -999.0,-999.0,-999.0],  //Charge cut [30.0, 30.0]
     // "charge_cut_higher": [99999.0,99999.0, 99999.0,99999.0,99999.0],  //Charge cut [30.0, 30.0]
 
-    "event_option": "",       // Drawing options: "pe" -> only events with at least one PE,
+    "event_option": "triggered",       // Drawing options: "pe" -> only events with at least one PE,
                                        //                  "cherenkov" -> only events with a cherenkov process
                                        //                  "triggered" -> only events triggered by the DAQ
     "debug_level": 1,

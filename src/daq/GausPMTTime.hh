@@ -33,6 +33,7 @@ protected:
   double fCableDelay;
   double fTransitTime;
   double fTTS;
+  double fJitter;
 };
 
 } // namespace RAT

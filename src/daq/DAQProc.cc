@@ -155,12 +155,12 @@ namespace RAT {
           mcpmt->SetWFCharge(pmtwf.GetCharge(0.,200.)); //for debugging
           if(pmtType == 1 || pmtType == 3 || pmtType == 0){
             fDigitizerV1742->AddChannel(pmtID,pmtwf);
-            mcpmt->SetWaveform(fDigitizerV1742->GetAnalogueWaveform(pmtID));
-            mcpmt->SetDigitizedWaveform(fDigitizerV1742->GetDigitizedWaveform(pmtID));
+            //mcpmt->SetWaveform(fDigitizerV1742->GetAnalogueWaveform(pmtID));
+            //mcpmt->SetDigitizedWaveform(fDigitizerV1742->GetDigitizedWaveform(pmtID));
           } else if(pmtType == 2){
             fDigitizerV1730->AddChannel(pmtID,pmtwf);
-            mcpmt->SetWaveform(fDigitizerV1730->GetAnalogueWaveform(pmtID));
-            mcpmt->SetDigitizedWaveform(fDigitizerV1730->GetDigitizedWaveform(pmtID));
+            //mcpmt->SetWaveform(fDigitizerV1730->GetAnalogueWaveform(pmtID));
+            //mcpmt->SetDigitizedWaveform(fDigitizerV1730->GetDigitizedWaveform(pmtID));
           }
 
         } //end pmt loop
