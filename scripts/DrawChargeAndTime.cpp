@@ -4,6 +4,7 @@
 #include<TF1.h>
 #include<TH1F.h>
 #include<TH2F.h>
+#include<THStack.h>
 #include<TFile.h>
 #include<TTree.h>
 #include<TCanvas.h>
@@ -55,7 +56,7 @@ Double_t fmultigaus(Double_t *x, Double_t *par) {
   Double_t gaus_noise = 1./(par[2]*sqrt(2.*3.14159)) * exp( -0.5 * pow( ( x[0] - par[1] )/par[2] , 2.) );
   Double_t gaus_spe = 1./(par[5]*sqrt(2.*3.14159)) * exp( -0.5 * pow( ( x[0] - par[4] )/par[5] , 2.) );
   Double_t gaus_2pe = 1./(par[5]*sqrt(2.)*sqrt(2.*3.14159)) * exp( -0.5 * pow( ( x[0] - par[4]*2. )/(par[5]*sqrt(2.)), 2.) );
-  gaus_noise = 0.;
+//  gaus_noise = 0.;
   return par[0]*gaus_noise + par[3]*gaus_spe + par[6]*gaus_2pe;
 }
 
@@ -93,10 +94,15 @@ std::vector<double> f_timecal_sigma;
 std::vector<double> f_timecal_sigma_mc;
 std::vector<TH1F*> h_charge; //Measured charge
 std::vector<TH1F*> h_charge_res; //Measured charge geometry corrected
+std::vector<TH1F*> hs_charge;
 std::vector<TH1F*> h_time; //Measured time
 std::vector<TH1F*> h_time_bottom; //Measured time
 std::vector<TH1F*> h_time_trigger; //Measured time
 std::vector<TH1F*> h_time_event;
+TH1F* h_time_event_forfit;
+TH1F* h_time_bottom_forfit;
+std::vector<TH1F*> hs_time_event;
+std::vector<THStack*> hs_time_bottom;
 std::vector<TH1F*> h_time_diff; //Time diff between EV-MC
 std::vector<TH2F*> h_charge_vs_trigq; //PMT charge vs trigger charge
 TH2F* h_charge_muontrigs; //Muon trigger charges correlation
@@ -128,7 +134,7 @@ int main(int argc, char **argv){
   GetDBTables();
   GetHistos();
   NormalizeHistos();
-  GetPMTCalibration();
+  //GetPMTCalibration();
 
   DrawHistos();
   if(gOutFile){
@@ -208,16 +214,16 @@ void GetPMTInfo(){
   //  Color_t mycolors[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, kBlue, kBlue, kBlue, kBlue, kOrange, kOrange, kOrange, kOrange, kRed, kRed, kRed, kRed, 1}; //By Digitizer group
   //  Color_t mycolors[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, kBlue, kOrange, kRed, kCyan, kBlack, kGray, kGreen, kTeal, kAzure, kViolet, kPink, kYellow, 1}; //Individual
 
-  //int mypmtpos[] = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 1, 2, 2, 1, 0, 0, 1, 2, 2, 1, 0, 3}; //In space
-  int mypmtpos[] = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3}; //In digit group
+  int mypmtpos[] = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 1, 2, 2, 1, 0, 0, 1, 2, 2, 1, 0, 3}; //In space
+  //int mypmtpos[] = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3}; //In digit group
 
   pmtidtocolor.insert(pmtidtocolor.begin(), mycolors, mycolors + npmts );
   pmtidtopos.insert(pmtidtopos.begin(), mypmtpos, mypmtpos + npmts );
 
   //Plot axis limits
-  double myqxmins[] = {-100,-100,-100,-100,-100,-100, -100,-100, -100,-100,-100,-100, -100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100, -100};
+  double myqxmins[] = {-100,-100,-100,-100,-100,-100, -100,-100, -100,-100,-100,-100, -10,-10,-10,-10,-10,-10,-10,-10,-10,-10,-10,-10, -10};
   q_xmin.insert(q_xmin.begin(), myqxmins, myqxmins + npmts );
-  double myqxmaxs[] = {3000,3000,3000,3000,3000,3000, 100000,100000, 100000,100000,100000,100000, 1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000, 3000};
+  double myqxmaxs[] = {3000,3000,3000,3000,3000,3000, 100000,100000, 100000,100000,100000,100000, 40,40,40,40,40,40,40,40,40,40,40,40, 40};
   q_xmax.insert(q_xmax.begin(), myqxmaxs, myqxmaxs + npmts );
 
 }
@@ -242,16 +248,24 @@ void GetHistos(){
     h_mcpmt_time.push_back(new TH1F(Form("h_mcpmt_time_%i",ih),"h_mcpmt_time",200,5,10));
     h_mcpmt_fetime.push_back(new TH1F(Form("h_mcpmt_fetime_%i",ih),"h_mcpmt_fetime",200,5,10));
     //DAQ
-    h_charge.push_back(new TH1F(Form("h_charge_%i",ih),"h_charge",500,q_xmin[ih],q_xmax[ih]));
+    h_charge.push_back(new TH1F(Form("h_charge_%i",ih),"h_charge",50,q_xmin[ih],q_xmax[ih]));
     h_charge_res.push_back(new TH1F(Form("h_charge_res_%i",ih),"h_charge_res",50,0,50));
+    //hs_charge.push_back(new THStack("hs_charge","Ring Tube Charges"));
+    hs_charge.push_back(new TH1F(Form("hs_charge_%i",ih),"Ring Tube Charges",50,q_xmin[13],q_xmax[13]));
     h_charge_vs_trigq.push_back(new TH2F(Form("h_charge_vs_trigq_%i",ih),"h_charge_vs_trigq",200,0,100,200,0,100));
-    h_time.push_back(new TH1F(Form("h_time_%i",ih),"h_time",200,-4,4));
-    h_time_bottom.push_back(new TH1F(Form("h_time_bottom_%i",ih),"h_time_bottom",50,0.0,5));
+    h_time.push_back(new TH1F(Form("h_time_%i",ih),"h_time",200,-10,10));
+    h_time_bottom.push_back(new TH1F(Form("h_time_bottom_%i",ih),"h_time_bottom",100,-2.0,4.0));
     h_time_trigger.push_back(new TH1F(Form("h_time_trigger%i",ih),"h_time_trigger",200,-10.0,10.0));
-    h_time_event.push_back(new TH1F(Form("h_time_event%i",ih),"h_time_event",50,-2.0,2.0));
+    h_time_event.push_back(new TH1F(Form("h_time_event%i",ih),"h_time_event",100,-2.0,4.0));
+    //hs_time_event.push_back(new THStack("hs_time_event","Ring Tube Event Time"));
+    hs_time_event.push_back(new TH1F(Form("hs_time_event%i",ih),"Ring Tube Event Time",100,-2.0,4.0));
+    hs_time_bottom.push_back(new THStack("hs_time_bottom","Ring Tube Bottom Time"));
     h_time_diff.push_back(new TH1F(Form("h_time_diff_%i",ih),"h_time_diff",100,-100,100));
     f_spe.push_back(new TF1(Form("f_spe_%i",ih),fmultigaus,0,50,7));
   }
+  h_time_event_forfit = new TH1F("h_time_event_forfit","h_time_event_forfit",100,-2.0,4.0);
+  h_time_bottom_forfit = new TH1F("h_time_bottom_forfit","h_time_bottom_forfit",100,-2.0,4.0);
+
   h_charge_muontrigs = new TH2F("h_charge_muontrigs","h_charge_muontrigs",100,0,10000,100,0,10000);
   h_time_muontrigs = new TH1F("h_time_muontrigs","h_time_muontrigs",100,-5,5);
   h_event_time = new TH1F("h_event_time","h_event_time",300,150,250);
@@ -304,6 +318,7 @@ void GetHistos(){
       double qtotal = 0.;
       double qtotal_smallpmts = 0.;
       double charge = 0.;
+      double qshort = 0.;
       double charge_trig = 0.;
 
       // Get muon tags, source trigger and muon panels charge and time
@@ -370,20 +385,20 @@ void GetHistos(){
       std::sort(ringPMTTimes.begin(), ringPMTTimes.end());
 
       //Cuts for cherenkov imaging
-      // if(ringPMTTimes.size()<3) continue; //More than 3 hits
-      // if(bottommuon_charge<2000.0 || topmuon_charge<2000.0) continue; //Charge cut
-      // if(bottommuon_time - topmuon_time < 0.4 || bottommuon_time - topmuon_time > 0.8 ) continue; //Time cut
+      if(ringPMTTimes.size()<3) continue; //More than 3 hits
+      if(bottommuon_charge<2000.0 || topmuon_charge<2000.0) continue; //Charge cut
+      if(bottommuon_time - topmuon_time < 0.3 || bottommuon_time - topmuon_time > 0.7 ) continue; //Time cut
       // if(panel_charge[0]<2000.) continue; //Veto cut
-      // if(panel_charge[1]>400. || panel_charge[2]>400. || panel_charge[3]>400.) continue; //Veto cut
+      if(panel_charge[1]>400. || panel_charge[2]>400. || panel_charge[3]>400.) continue; //Veto cut
 
       //Cuts for SPE
-      if(panel_charge[0]>200 || panel_charge[1]>200 || panel_charge[2]>200 || panel_charge[3]>200) continue;
-      if(ring_time < 180) continue;
+      //if(panel_charge[0]>50 || panel_charge[1]>50 || panel_charge[2]>50 || panel_charge[3]>50) continue;
+      //if(ring_time < 180) continue;
 
       //Calculate event time
       // event_time = TMath::KOrdStat((int)ringPMTTimes.size(), &ringPMTTimes[0], 1);
-      // event_time = (ringPMTTimes[0] + ringPMTTimes[1] + ringPMTTimes[2])/3.;
-      event_time = ring_time;
+      event_time = (ringPMTTimes[0] + ringPMTTimes[1] + ringPMTTimes[2])/3.;
+      //event_time = ring_time;
       h_event_time->Fill(event_time);
 
 
@@ -394,7 +409,8 @@ void GetHistos(){
         double tof = dist/cspeed;
         double pmttime = ev->GetPMT(ipmt)->GetTime();
         charge = ev->GetPMT(ipmt)->GetCharge();
-        if(pmttime < 170) continue;
+        qshort = ev->GetPMT(ipmt)->GetQShort();
+        //if(pmttime < 170) continue;
         //if(charge > 200) continue;
         double timeres = pmttime - tof - time_delay[pmtid];
         h_time[pmtid]->Fill(timeres - ring_timeres);
@@ -402,22 +418,23 @@ void GetHistos(){
         //h_time_bottom[pmtid]->Fill(timeres - bottommuon_time - time_delay[pmtid]);
         //h_time_event[pmtid]->Fill(timeres - event_time - time_delay[pmtid]);
         //if(pmtid != 13 && pmtid != 22 && pmtid != 19 && pmtid != 16) continue;
-        h_time_bottom[pmtidtopos[pmtid]]->Fill(timeres - bottommuon_time - time_delay[pmtid]);
-        h_time_event[pmtidtopos[pmtid]]->Fill(timeres - event_time - time_delay[pmtid]);
-        h_time_trigger[pmtid]->Fill(timeres - trigger_time - time_delay[pmtid]);
+        h_time_bottom[pmtid]->Fill(timeres - bottommuon_time + 20);
+        h_time_event[pmtid]->Fill(timeres - event_time);
+        h_time_trigger[pmtid]->Fill(timeres - trigger_time);
         //Event level averaged
         if(timeres>-900) {
           if (pmtInfo->GetType(pmtid)==1){
             h_pmt_chargevspos->Fill(pos_pmts[pmtid]->X(),pos_pmts[pmtid]->Y(),charge);
             h_pmt_npevspos->Fill(pos_pmts[pmtid]->X(),pos_pmts[pmtid]->Y(),charge/spe[pmtid]);
-            h_pmt_timevspos->Fill(pos_pmts[pmtid]->X(),pos_pmts[pmtid]->Y(),timeres - event_time - time_delay[pmtid]);
+            h_pmt_timevspos->Fill(pos_pmts[pmtid]->X(),pos_pmts[pmtid]->Y(),timeres - event_time);
             h_pmt_countvspos->Fill(pos_pmts[pmtid]->X(),pos_pmts[pmtid]->Y());
           }
         }
         if(pmtInfo->GetType(pmtid)==1){
           qtotal_smallpmts += charge;
         }
-        h_charge[pmtid]->Fill(charge);
+//        h_charge[pmtid]->Fill(charge);
+        h_charge[pmtid]->Fill(qshort);
         double charge_res = charge/qScintCorr[pmtid]/20; //20cm (?)
         h_charge_res[pmtid]->Fill(charge_res);
         h_charge_vs_trigq[pmtid]->Fill(charge,charge_trig);
@@ -435,6 +452,22 @@ void GetHistos(){
 
   } //end ds entry loop
 
+  //Create Stacks for Ring Tubes
+  for(int ipmt=0; ipmt<pmtInfo->GetPMTCount();ipmt++){
+    hs_charge[pmtidtopos[ipmt]]->Add(h_charge[ipmt]);
+    hs_time_event[pmtidtopos[ipmt]]->Add(h_time_event[ipmt]);
+    hs_time_bottom[pmtidtopos[ipmt]]->Add(h_time_bottom[ipmt]);
+    if(pmtidtopos[ipmt]==0){
+      h_time_event_forfit->Add(h_time_event[ipmt]);
+      h_time_bottom_forfit->Add(h_time_bottom[ipmt]);
+    }
+    h_time_event[ipmt]->SetLineColor(pmtidtocolor[ipmt]);
+    //    h_time_event[ipmt]->SetFillColor(pmtidtocolor[ipmt]);
+    //    h_time_event[ipmt]->SetFillStyle(3003+pmtidtopos[ipmt]);
+    h_time_bottom[ipmt]->SetLineColor(pmtidtocolor[ipmt]);
+    //    h_time_bottom[ipmt]->SetFillColor(pmtidtocolor[ipmt]);
+    //    h_time_bottom[ipmt]->SetFillStyle(3003+pmtidtopos[ipmt]);
+  }
 }
 
 void GetPMTCalibration(){
@@ -562,12 +595,17 @@ void DrawHistos(){
   for(int pmtid = 0; pmtid<npmts; pmtid++){
     int pmttype = pmtInfo->GetType(pmtid);
     if(pmttype==1){//Ring tubes
+      //c_charge[0]->cd(++cc0);
       c_charge[0]->cd(++cc0)->SetLogy();
       h_charge[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
+      h_charge[pmtid]->SetFillColor(pmtidtocolor[pmtid]);
+      h_charge[pmtid]->SetFillStyle(3003+pmtidtopos[pmtid]);
       h_charge[pmtid]->Draw();
       f_spe[pmtid]->Draw("L same");
       c_time[0]->cd(cc0);
       h_time[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
+      h_time[pmtid]->SetFillColor(pmtidtocolor[pmtid]);
+      h_time[pmtid]->SetFillStyle(3003+pmtidtopos[pmtid]);
       h_time[pmtid]->Draw();
     } else if(pmttype==2){ //Light tubes
       c_charge[1]->cd(++cc1)->SetLogy();
@@ -607,35 +645,32 @@ void DrawHistos(){
   h_time_muontrigs->Draw();
 
 
-  TCanvas *c_time_bottom = new TCanvas("c_time_bottom","c_time_bottom",900,900);
-  h_time_bottom[0]->GetYaxis()->SetRangeUser(0,100);
-  h_time_bottom[0]->SetLineColor(pmtidtocolor[12]);
-  h_time_bottom[0]->Draw();
-  h_time_bottom[1]->SetLineColor(pmtidtocolor[13]);
-  h_time_bottom[1]->Draw("sames");
-  h_time_bottom[2]->SetLineColor(pmtidtocolor[14]);
-  h_time_bottom[2]->Draw("sames");
-  // for(int pmtid = 0; pmtid<npmts; pmtid++){
-  //   h_time_bottom[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
-  //   h_time_bottom[pmtid]->Draw("sames");
-  // }
+  TCanvas *c_time_event = new TCanvas("c_time_event","Ring Time respect to Event Time",900,900);
+  //  h_time_event_forfit->Draw();
+  hs_time_event[0]->SetLineColor(pmtidtocolor[12]);
+  hs_time_event[1]->SetLineColor(pmtidtocolor[13]);
+  hs_time_event[2]->SetLineColor(pmtidtocolor[14]);
+  hs_time_event[0]->Draw();
+  hs_time_event[1]->Draw("same");
+  hs_time_event[2]->Draw("same");
+//  h_time_event_forfit->Draw("same");
 
-  TCanvas *c_time_event = new TCanvas("c_time_event","c_time_event",900,900);
-  h_time_event[0]->GetYaxis()->SetRangeUser(0,100);
-  h_time_event[0]->SetLineColor(pmtidtocolor[12]);
-  h_time_event[0]->Draw();
-  h_time_event[1]->SetLineColor(pmtidtocolor[13]);
-  h_time_event[1]->Draw("sames");
-  h_time_event[2]->SetLineColor(pmtidtocolor[14]);
-  h_time_event[2]->Draw("sames");
-  // h_time_event[0]->Draw("");
-  // for(int pmtid = 0; pmtid<npmts; pmtid++){
-  //   //if(pmtid !=13 && pmtid != 16 && pmtid !=19 && pmtid !=22) continue;
-  //   h_time_event[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
-  //   h_time_event[pmtid]->Draw("sames");
-  // }
+  TCanvas *c_charge_ring = new TCanvas("c_charge_ring","Ring Tube Charges",900,900);
+  hs_charge[0]->SetLineColor(pmtidtocolor[12]);
+  hs_charge[1]->SetLineColor(pmtidtocolor[13]);
+  hs_charge[2]->SetLineColor(pmtidtocolor[14]);
+  hs_charge[0]->Draw();
+  hs_charge[1]->Draw("same");
+  hs_charge[2]->Draw("same");
 
-  TCanvas *c_time_trigger = new TCanvas("c_time_trigger","c_time_trigger",900,900);
+  TCanvas *c_time_bottom = new TCanvas("c_time_bottom","Ring Time respect to Bottom",900,900);
+  h_time_bottom_forfit->Draw();
+  for(int ipos = 0; ipos<3; ipos++){
+    hs_time_bottom[ipos]->Draw("same");
+  }
+  h_time_bottom_forfit->Draw("same");
+
+  TCanvas *c_time_trigger = new TCanvas("c_time_trigger","Ring Time respect to Trigger",900,900);
   for(int pmtid = 0; pmtid<npmts; pmtid++){
     int pmttype = pmtInfo->GetType(pmtid);
     if(pmttype!=1) continue;

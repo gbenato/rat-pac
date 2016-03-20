@@ -2,7 +2,7 @@
 /glg4debug/glg4param omit_hadronic_processes  1.0
 
 /rat/db/set DETECTOR experiment "TheiaRnD"
-/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD.geo"
+/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_labppo.geo"
 
 /run/initialize
 #/process/inactivate Cerenkov
@@ -70,7 +70,7 @@
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "../../results/TheiaRnD_mcprod_water_cosmics_cabledelay_ce100pct.root"
+/rat/procset file "../../results/TheiaRnD_mcprod_labppo_cosmics_qhs.root"
 #########################################
 
 ##### GENERATORS #################
@@ -109,4 +109,4 @@
 #######################################
 
 ##### RUN ###########
-/run/beamOn 100
+/run/beamOn 300

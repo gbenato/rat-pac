@@ -101,7 +101,7 @@
   r_max: 5.0,
   size_z: 0.5,
   position: [0.0,0.0,0.0],
-  material: "acrylic_black",
+  material: "acrylic_black", //acrylic_black
   color: [0.0, 0.0, 0.0, 0.1],
 }
 
@@ -116,7 +116,7 @@
   position: [0.0, 0.0, -0.5],
   r_max: 5.0,
   size_z: 32.0,
-  material: "acrylic_black", // acrylic_black
+  material: "acrylic_black", //acrylic_black
   color: [0.0, 0.0, 0.0, 0.1],
 }
 
@@ -145,7 +145,7 @@
   valid_begin: [0, 0],
   valid_end: [0, 0],
   invisible: 0, // omitted for visualization
-  mother: "inner", //inner_vessel
+  mother: "inner",
   type: "tube",
   r_max: 50.0,
   size_z: 15.0,
@@ -165,45 +165,44 @@
   r_max: 45.0, //LAB->35.0, WBLS->30.0
   size_z: 14.0,
   position: [0.0, 0.0, 1.0],
-  material: "water", //water, wbls_1pct_mod, wbls_1pct, wbls_5pct, wbls_10pct, labppo_scintillator
+  material: "labppo_scintillator", //water, wbls_1pct_mod, wbls_1pct, wbls_5pct, wbls_10pct, labppo_scintillator
   color: [0.5, 0.1, 0.5, 0.5],
 }
 
+///////////////////////
+// COSMIC TAGS
+///////////////////////
 
-/////////////////////////////
-// RADIACTIVE SOURCES
-/////////////////////////////
 {
   name: "GEO",
-  index: "envelope",
+  index: "tag1",
   valid_begin: [0, 0],
   valid_end: [0, 0],
   invisible: 0, // omitted for visualization
   mother: "inner",
   type: "tube",
-  position: [-400.0, -400.0, -135.913],
-// rotation:  [0.0, 90.0, 0.0],
-  r_max: 12.808,
-  size_z: 1.587, //half height
-  material: "acrylic_black",
-  color: [0.1, 1.0, 0.3, 0.8],
+  position: [-400.0, -400.0, -112.5],
+  r_max: 5.0,
+  size_z: 25.0,
+  material: "air",
+  color: [0.0, 0.0, 0.0, 0.1],
 }
 
 {
   name: "GEO",
-  index: "source",
+  index: "tag2",
   valid_begin: [0, 0],
   valid_end: [0, 0],
   invisible: 0, // omitted for visualization
-  mother: "envelope",
+  mother: "inner",
   type: "tube",
-  position: [0.0, 0.0, 0.254],
-  r_max: 3.175,
-  size_z: 1.333, //half height
-  material: "strontium", //strontium
-  color: [0.1, 1.0, 1.0, 0.8],
+  position: [-400.0, -400.0, -257.5],
+  r_max: 5.0,
+  size_z: 25.0,
+  material: "air",
+  color: [0.0, 0.0, 0.0, 0.1],
 }
-
+/////////////////////////////////
 
 
 //////////////////
@@ -232,7 +231,7 @@
   valid_end: [0, 0],
   mother: "inner",
   type: "pmtarray",
-  pmt_model: "h11934", //h11934
+  pmt_model: "h11934", //h11934, r7600u-20
   pmt_detector_type: "idpmt",
   sensitive_detector: "/mydet/pmt/inner",
   efficiency_correction: 1.0,
@@ -242,7 +241,7 @@
 
 {
   name: "GEO",
-  index: "big_pmts",
+  index: "light_pmts",
   valid_begin: [0, 0],
   valid_end: [0, 0],
   mother: "inner",
@@ -257,35 +256,35 @@
 }
 
 {
-   name: "GEO",
-   index: "trigger_pmt",
-   valid_begin: [0, 0],
-   valid_end: [0, 0],
-   mother: "inner",
-   type: "pmtarray",
-   pmt_model: "h11934", //r7081_hqe, r11780_hqe, fast_test
-   pmt_detector_type: "idpmt",
-   sensitive_detector: "/mydet/pmt/inner",
-   efficiency_correction: 1.0,
-   pos_table: "PMTINFO_TRIGGER",
-   orientation: "manual",
-   orient_point: [0.0, 0.0, 400.0],
-}
-
-{
   name: "GEO",
   index: "muon_pmts",
   valid_begin: [0, 0],
   valid_end: [0, 0],
   mother: "world",
   type: "pmtarray",
-  pmt_model: "h11934", //r7081_hqe, r11780_hqe
+  pmt_model: "h11934", //h11934, r7081_hqe, r11780_hqe
   pmt_detector_type: "idpmt",
   sensitive_detector: "/mydet/pmt/inner",
   efficiency_correction: 1.0,
   pos_table: "PMTINFO_MUON_TAGS",
   orientation: "manual",
   orient_point: [-400.0, -400.0, -200.0],
+}
+
+{
+   name: "GEO",
+   index: "trigger_pmt",
+   valid_begin: [0, 0],
+   valid_end: [0, 0],
+   mother: "inner",
+   type: "pmtarray",
+   pmt_model: "h11934", //h11934, r7081_hqe, r11780_hqe, fast_test
+   pmt_detector_type: "idpmt",
+   sensitive_detector: "/mydet/pmt/inner",
+   efficiency_correction: 1.0,
+   pos_table: "PMTINFO_TRIGGER",
+   orientation: "point",
+   orient_point: [-400.0, -400.0, -152.5],
 }
 
 {

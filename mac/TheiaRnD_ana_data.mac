@@ -2,20 +2,20 @@
 /glg4debug/glg4param omit_hadronic_processes  1.0
 
 /rat/db/set DETECTOR experiment "TheiaRnD"
-/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD.geo"
+/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_water.geo"
 
 /run/initialize
 
 ##### BEGIN EVENT LOOP ##################
 /rat/proc analysis
 /rat/proc count
-/rat/procset update 1000
+/rat/procset update 10
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "../../results/spe-feb-1_01Mar2016-182954_merge_re.root"
+/rat/procset file "../../results/TheiaRnD_mcprod_labppo_cosmics_qhs_re.root"
 #########################################
 
 #/rat/inhdf5/read ../../data/spe-feb-10.0.h5
-/rat/inroot/read ../../results/spe-feb-1_01Mar2016-182954_merge.root
+/rat/inroot/read ../../results/TheiaRnD_mcprod_labppo_cosmics_qhs.root
 exit

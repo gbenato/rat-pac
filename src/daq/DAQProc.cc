@@ -31,7 +31,6 @@ namespace RAT {
       fPulseWidth = fLdaq->GetD("pulse_width");
       fPulseOffset = fLdaq->GetD("pulse_offset");
       fPulseMin = fLdaq->GetD("pulse_min");
-      fPulseType = fLdaq->GetI("pulse_type");
       fPulseMean = fLdaq->GetD("pulse_mean");
       fPulseTimeStep = fLdaq->GetD("pulse_time_step");
 
@@ -41,7 +40,6 @@ namespace RAT {
 
 
       detail << "DAQProc: DAQ constants loaded" << newline;
-      detail << "  PMT Pulse type: " << (fPulseType==0 ? "square" : "realistic") << newline;
       detail << dformat("  PMT Pulse Mean: ........................ %5.1f\n", fPulseMean);
       detail << dformat("  PMT Pulse Width: ....................... %5.1f ns\n", fPulseWidth);
       detail << dformat("  PMT Pulse Offset: ...................... %5.1f ADC Counts\n", fPulseOffset);
@@ -180,7 +178,7 @@ namespace RAT {
 
           //Apply external trigger jitter
           double triggerTime = fTriggerDelay + CLHEP::RandGauss::shoot()*fTriggerJitter;
-          double muon_tof = 10./30.; // cm/(cm/ns)
+          double muon_tof = 10./30. + 0.3; // cm/(cm/ns) + cable delay
 
           pmtpulse->SetPulseMean(fPulseMean);
           pmtpulse->SetStepTime(fPulseTimeStep);

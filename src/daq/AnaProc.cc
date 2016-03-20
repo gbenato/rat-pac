@@ -1,4 +1,6 @@
 #include <vector>
+#include <TAxis.h>
+
 #include <RAT/AnaProc.hh>
 #include <RAT/Digitizer.hh>
 #include <RAT/DS/PMT.hh>
@@ -16,6 +18,9 @@ namespace RAT {
     anaV1730.max_spread = fLAnalysis->GetD("max_spread");
     anaV1730.int_start = fLAnalysis->GetI("int_start");
     anaV1730.int_end = fLAnalysis->GetI("int_end");
+    anaV1730.qshort_ped = fLAnalysis->GetI("qshort_ped");
+    anaV1730.qshort_int = fLAnalysis->GetI("qshort_int");
+
     anaV1730.peak_window = fLAnalysis->GetD("peak_window");
     anaV1730.peak_qthres = fLAnalysis->GetD("peak_qthres");
     anaV1730.ped_max_fluc = fLAnalysis->GetD("ped_max_fluc");
@@ -29,6 +34,9 @@ namespace RAT {
     anaV1742.max_spread = fLAnalysis->GetD("max_spread");
     anaV1742.int_start = fLAnalysis->GetI("int_start");
     anaV1742.int_end = fLAnalysis->GetI("int_end");
+    anaV1742.qshort_ped = fLAnalysis->GetI("qshort_ped");
+    anaV1742.qshort_int = fLAnalysis->GetI("qshort_int");
+
     anaV1742.peak_window = fLAnalysis->GetD("peak_window");
     anaV1742.peak_qthres = fLAnalysis->GetD("peak_qthres");
     anaV1742.ped_max_fluc = fLAnalysis->GetD("ped_max_fluc");
@@ -77,6 +85,7 @@ namespace RAT {
           //          pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1742, anaV1742) );
           pmt->SetTime( GetTimeAtFraction(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
           pmt->SetCharge(IntegrateCharge(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
+          pmt->SetQShort(IntegrateQShort(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
 
           if(anaV1742.prune_wf){
             std::vector<uint16_t> wf_dummy(1,0);
@@ -90,6 +99,7 @@ namespace RAT {
           //        pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1730, anaV1730) );
           pmt->SetTime( GetTimeAtFraction(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730) );
           pmt->SetCharge(IntegrateCharge(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730) );
+          pmt->SetQShort(IntegrateQShort(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730) );
 
           if(anaV1730.prune_wf){
             std::vector<uint16_t> wf_dummy(1,0);
@@ -375,6 +385,58 @@ namespace RAT {
     //Integrate charge and sustract pedestal
     int s_int_start = anaParams.int_start;
     int s_int_end = anaParams.int_end;
+    double charge = 0.;
+    for (size_t isample = s_int_start; isample < s_int_end; isample++) {
+      charge += ((double)dWaveform[isample]*voltsperadc + fVLow - fVOffSet)*fTimeStep/fResistance - ped_mean; //ADC to charge
+      //    std::cout<<" charge "<<isample<<"/"<<dWaveform.size()<<" "<<charge<<std::endl;
+    }
+
+    charge *= -1; //pulses are negative so covert to positive charge
+    //    std::cout<<" Integrated charge "<<charge<<" pedestal "<<ped_mean<<" "<<s_int_start<<" "<<s_int_end<<std::endl;
+
+    return charge;
+  }
+
+  double AnaProc::IntegrateQShort(std::vector<UShort_t> dWaveform, std::vector<double> dWaveformTime, RAT::DS::DAQHeader *daqHeader, AnaParams anaParams){
+
+    double time_th = GetTimeAtFraction(dWaveform, dWaveformTime, daqHeader, anaParams);
+    TAxis *aWFTime = new TAxis(dWaveformTime.size()-1, &dWaveformTime[0]);
+    int sample_th = aWFTime->FindBin(time_th);
+    int sample_th_down = sample_th - anaParams.qshort_int;
+
+    double fTimeStep = daqHeader->GetDoubleAttribute("TIME_RES");
+    double fTimeDelay = daqHeader->GetDoubleAttribute("TIME_DELAY");
+    fTimeDelay = 0.;
+    double fVHigh = daqHeader->GetDoubleAttribute("V_HIGH");
+    double fVLow = daqHeader->GetDoubleAttribute("V_LOW");
+    double fVOffSet = daqHeader->GetDoubleAttribute("V_OFFSET");
+    double fResistance = 1.;//daqHeader->GetDoubleAttribute("RESISTANCE");
+    int fNBits = daqHeader->GetIntAttribute("NBITS");
+
+    int nADCs = 1 << fNBits; //Calculate the number of adc counts
+    double voltsperadc = (fVHigh - fVLow)/(double)nADCs;
+
+    //Compute pedestal charge
+    int s_ped_end = sample_th_down - anaParams.qshort_int;
+    int s_ped_start = s_ped_end - anaParams.qshort_ped;
+
+    double ped_min,ped_max,ped_mean;
+    ped_min = ped_max = ped_mean = (dWaveform[s_ped_start]*voltsperadc + fVLow - fVOffSet)*fTimeStep/fResistance;
+    for (size_t isample = s_ped_start+1; isample < s_ped_end; isample++) {
+      double voltage = (dWaveform[isample]*voltsperadc + fVLow - fVOffSet)*fTimeStep/fResistance;
+      if (ped_min < voltage) ped_min = voltage;
+      if (ped_max > voltage) ped_max = voltage;
+      ped_mean += voltage;
+    }
+    ped_mean /= (double)(s_ped_end-s_ped_start);
+    if (ped_max - ped_min > anaParams.ped_max_fluc) {
+      std::cout<<" Charge: Pedestal above fluctuations "<<ped_max<<" "<<ped_min<<" "<<ped_max-ped_min<<" "<<anaParams.ped_max_fluc<<std::endl;
+      return -9999.;
+    }
+
+    //Integrate charge and sustract pedestal
+    int s_int_start = sample_th_down;
+    int s_int_end = sample_th;
     double charge = 0.;
     for (size_t isample = s_int_start; isample < s_int_end; isample++) {
       charge += ((double)dWaveform[isample]*voltsperadc + fVLow - fVOffSet)*fTimeStep/fResistance - ped_mean; //ADC to charge

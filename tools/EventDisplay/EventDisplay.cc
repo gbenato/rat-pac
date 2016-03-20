@@ -92,7 +92,7 @@ EventDisplay::EventDisplay(std::string _inputFileName){
   hxyplane["Scintillation"] = new TH2F("hxyplane_scint","Track intersections with XY plane: Scintillation",1000,intersection_zplane[0],intersection_zplane[1],1000,intersection_zplane[0],intersection_zplane[1]);
 
   //DAQ event
-  hTime = new TH1F("hTime", "hTime", 60, -2., 3.);
+  hTime = new TH1F("hTime", "hTime", 60, -1., 1.);
   chargeVsR = new TH1F("chargeVsR", "chargeVsR", 3, 0., 100.);
   chargeVsRScint = new TH1F("chargeVsRScint", "chargeVsRScint", 3, 0., 100.);
   chargeVsRCorr = new TH1F("chargeVsRCorr", "chargeVsRCorr", 3, 0., 100.);
@@ -106,24 +106,6 @@ EventDisplay::EventDisplay(std::string _inputFileName){
   Double_t b[]    = {0.0, 0.0, 1.0};
   Double_t stop[] = {0.0, .45, 1.0};
   Int_t FI = TColor::CreateGradientColorTable(3, stop, b, g, r, 100);
-
-  //Cable delays
-  double mydelays[] = {.0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0,
-                    -20.57914449553667,
-                    -20.659866192027934,
-                    -20.827556184469994,
-                    -20.83027277200025,
-                    -20.41955157599053,
-                    -20.42802016610127,
-                    -20.565785808047142,
-                    -20.607075743765186,
-                    -20.628455171240507,
-                    -20.65168715965919,
-                    -20.70112435087266,
-                    -20.450410008571303,
-                    .0};
-
-  pmttime_delay.insert(pmttime_delay.begin(), mydelays, mydelays + 25 );
 
   SetGeometry();
 
@@ -367,21 +349,24 @@ bool EventDisplay::LoadEvent(int ievt){
     timeVsPos = new TH2F("TIME", "TIME", 1, 0., 1., 1, 0., 1.);
     timeVsPos->SetStats(0);
     // timeVsPos->SetMaximum(TMath::Max( timeVsPos->GetMaximum(),timeVsPos->GetMinimum() ) );
-    timeVsPos->SetMaximum(5.);
-    timeVsPos->SetMinimum(-3.);
+    timeVsPos->SetMaximum(1.);
+    timeVsPos->SetMinimum(-1.);
     chargeVsPos = new TH2F("CHARGE", "CHARGE", 1, 0., 1., 1, 0., 1.);
     chargeVsPos->SetStats(0);
-    chargeVsPos->SetMaximum(200.);
-    chargeVsPos->SetMinimum(-100.0);
+    chargeVsPos->SetMaximum(20.);
+    chargeVsPos->SetMinimum(-10.0);
     chargeVsPosScint = new TH2F("chargeVsPosScint", "chargeVsPosScint", 1, 0., 1., 1, 0., 1.);
     chargeVsPosScint->SetStats(0);
     chargeVsPosCorr = new TH2F("chargeVsPosCorr", "chargeVsPosCorr", 1, 0., 1., 1, 0., 1.);
     chargeVsPosCorr->SetStats(0);
+    chargeVsPosCorr->SetMaximum(3000.);
+    chargeVsPosCorr->SetMinimum(-3000.);
     npeVsPos = new TH2F("NPE", "NPE", 1, 0., 1., 1, 0., 1.);
     npeVsPos->SetStats(0);
     npeVsPos->SetMaximum(15.);
     npeVsPos->SetMinimum(0.0);
     chargeVsPos->Reset();
+    chargeVsPosCorr->Reset();
     chargeVsR->Reset();
     chargeVsRScint->Reset();
     chargeVsRCorr->Reset();
@@ -413,7 +398,7 @@ bool EventDisplay::LoadEvent(int ievt){
         timeVsPos->SetBinContent(ibin, jbin, -1000.);//(timeVsPos->GetMaximum() + timeVsPos->GetMinimum())/2.);
         npeVsPos->SetBinContent(ibin, jbin, -1000.);//(timeVsPos->GetMaximum() + timeVsPos->GetMinimum())/2.);
         chargeVsPos->SetBinContent(ibin, jbin, -1000.);//(timeVsPos->GetMaximum() + timeVsPos->GetMinimum())/2.);
-        chargeVsPosCorr->SetBinContent(ibin, jbin, -1000.);//(timeVsPos->GetMaximum() + timeVsPos->GetMinimum())/2.);
+        chargeVsPosCorr->SetBinContent(ibin, jbin, -9999.);//(timeVsPos->GetMaximum() + timeVsPos->GetMinimum())/2.);
       }
     }
     for (int ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
@@ -422,9 +407,11 @@ bool EventDisplay::LoadEvent(int ievt){
       timeVsPos->Fill(pmtpos.X(), pmtpos.Y(), 1000.);
       npeVsPos->Fill(pmtpos.X(), pmtpos.Y(), 1000.);
       chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), 1000.);
-      chargeVsPosCorr->Fill(pmtpos.X(), pmtpos.Y(), 1000.);
+      chargeVsPosCorr->Fill(pmtpos.X(), pmtpos.Y(), 9999.);
       pmtCharge[ipmt] = 0.;
+      pmtQShort[ipmt] = 0.;
       pmtTime[ipmt] = -9999.;
+      pmtTimeCorr[ipmt] = -9999.;
     }
 
     //Collect charges and times
@@ -435,18 +422,21 @@ bool EventDisplay::LoadEvent(int ievt){
       double dist = (pmtInfo->GetPosition(pmtID) - *target_pos).Mag();
       double tof = dist/cspeed;
       pmtCharge[pmtID] = ev->GetPMT(ipmt)->GetCharge();
-      pmtTime[pmtID] = ev->GetPMT(ipmt)->GetTime() - pmttime_delay[pmtID] - tof;
-      if(pmtInfo->GetType(pmtID)==4){
+      pmtQShort[pmtID] = ev->GetPMT(ipmt)->GetQShort();
+      pmtTime[pmtID] = ev->GetPMT(ipmt)->GetTime();
+      pmtTimeCorr[pmtID] = ev->GetPMT(ipmt)->GetTime() - time_delay[pmtID] - tof;
+      if(pmtInfo->GetType(pmtID)==4 || pmtInfo->GetType(pmtID)==3){
         std::cout<<" pmtCharge "<<pmtID<<" "<<pmtCharge[pmtID]<<std::endl;
+        std::cout<<" pmtQShort "<<pmtID<<" "<<pmtQShort[pmtID]<<std::endl;
         // std::cout<<" pmtTime "<<pmtID<<" "<<pmtTime[pmtID]<<std::endl;
       }
-      if(pmtTime[pmtID]<=-9000){
-        pmtTime[pmtID] = -400.;
+      if(pmtTimeCorr[pmtID]<=-9000){
+        pmtTimeCorr[pmtID] = -400.;
       } else{
         EDGeo->HitPMT(pmtID,1); //If time>0 means that the WF crossed threshold
       }
-      if(pmtInfo->GetType(pmtID)==1 && pmtTime[pmtID] != -400){
-        ringPMTTimes.push_back(pmtTime[pmtID]);
+      if(pmtInfo->GetType(pmtID)==1 && pmtTimeCorr[pmtID] != -400){
+        ringPMTTimes.push_back(pmtTimeCorr[pmtID]);
       }
     }
     //Sort in ascending order
@@ -481,15 +471,17 @@ bool EventDisplay::LoadEvent(int ievt){
       XYdist = sqrt(XYdist);
 
       // Geometry PMT charge correction
-      hTime->Fill( pmtTime[ipmt] - event_time );
-      timeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtTime[ipmt] - event_time);
+      hTime->Fill( pmtTimeCorr[ipmt] - event_time );
+      timeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtTimeCorr[ipmt] - event_time);
       npeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtCharge[ipmt]/spe[ipmt]);
-      chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtCharge[ipmt]);
+      chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtQShort[ipmt]);
       chargeVsPosScint->Fill(pmtpos.X(), pmtpos.Y(), pmtGeoCorr[ipmt]);
-      chargeVsPosCorr->Fill(pmtpos.X(), pmtpos.Y(), (pmtCharge[ipmt] - pmtGeoCorr[ipmt])/pmtGeoCorrErr[ipmt] );
-      chargeVsR->Fill(XYdist, pmtCharge[ipmt]);
+      // chargeVsPosCorr->Fill(pmtpos.X(), pmtpos.Y(), (pmtCharge[ipmt] - pmtGeoCorr[ipmt])/pmtGeoCorrErr[ipmt] );
+      chargeVsPosCorr->Fill(pmtpos.X(), pmtpos.Y(), pmtCharge[ipmt] - pmtGeoCorr[ipmt]);
+      chargeVsR->Fill(XYdist, pmtQShort[ipmt]);
       chargeVsRScint->Fill(XYdist, pmtGeoCorr[ipmt]);
-      chargeVsRCorr->Fill(XYdist, (pmtCharge[ipmt] - pmtGeoCorr[ipmt])/pmtGeoCorrErr[ipmt] );
+      // chargeVsRCorr->Fill(XYdist, (pmtCharge[ipmt] - pmtGeoCorr[ipmt])/pmtGeoCorrErr[ipmt] );
+      chargeVsRCorr->Fill(XYdist, pmtCharge[ipmt] - pmtGeoCorr[ipmt]);
     }
 
     //Perform KS test against scintillation light only
@@ -632,10 +624,15 @@ void EventDisplay::SetParameters(){
   pmtGeoCorr = dbCorr->GetDArray("corr");
   pmtGeoCorrErr = dbCorr->GetDArray("corr_err");
 
-
+  //Charge calibration
   db->Load("../../data/PMTGAUSCHARGE.ratdb");
   dbED = db->GetLink("PMTGAUSCHARGE");
   spe = dbED->GetDArray("gaus_mean");
+
+  //Time calibration
+  db->Load("../data/PMTGAUSTIME.ratdb");
+  RAT::DBLinkPtr dbTime = db->GetLink("PMTGAUSTIME");
+  time_delay = dbTime->GetDArray("cable_delay");
 
 }
 
@@ -739,13 +736,17 @@ void EventDisplay::DisplayEvent(int ievt){
     if(debugLevel > 0) std::cout<<"Display canvas 3 and 9"<<std::endl;
     //Charge
     canvas_event->cd(3);
-    npeVsPos->SetMarkerColor(0);
-    npeVsPos->Draw("colz text");
-    // chargeVsPos->SetMarkerColor(0);
-    // chargeVsPos->Draw("colz text");
+    // npeVsPos->SetMarkerColor(0);
+    // npeVsPos->Draw("colz text");
+    chargeVsPos->SetMarkerColor(0);
+    chargeVsPosCorr->SetMarkerColor(0);
+    chargeVsPos->Draw("colz text");
+    //chargeVsPosCorr->Draw("colz text");
     canvas_event->cd(9);
     chargeVsR->SetLineWidth(3);
+    chargeVsRCorr->SetLineWidth(3);
     chargeVsR->Draw("");
+    //chargeVsRCorr->Draw("");
 
     //Time
     canvas_event->cd(4);

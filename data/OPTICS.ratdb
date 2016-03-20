@@ -1063,7 +1063,7 @@ index: "labppo_scintillator",
 valid_begin : [0, 0],
 valid_end : [0, 0],
 NUM_COMP: 2,
-LIGHT_YIELD: 5080d, //modified by Javi for testing (10800d)
+LIGHT_YIELD: 10800d,
 SCINTWAVEFORM_value1: [-4.6d, -18d, -156d,],
 SCINTWAVEFORM_value2: [0.71d, 0.22d, 0.07d,],
 SCINTWAVEFORMalpha_value1: [-3.2d, -18d, -190d,],

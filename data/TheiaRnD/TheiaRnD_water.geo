@@ -98,7 +98,7 @@
   invisible: 0, // omitted for visualization
   mother: "cover_window",
   type: "tube",
-  r_max: 6.0,
+  r_max: 5.0,
   size_z: 0.5,
   position: [0.0,0.0,0.0],
   material: "acrylic_black", //acrylic_black
@@ -114,7 +114,7 @@
   mother: "block",
   type: "tube",
   position: [0.0, 0.0, -0.5],
-  r_max: 6.0,
+  r_max: 5.0,
   size_z: 32.0,
   material: "acrylic_black", //acrylic_black
   color: [0.0, 0.0, 0.0, 0.1],
@@ -130,7 +130,7 @@
   type: "tube",
   position: [0.0, 0.0, -31.5],
   r_max: 10.0,
-  r_min: 6.0,
+  r_min: 5.0,
   size_z: 1.0,
   material: "air",
   color: [0.0, 0.0, 0.0, 0.1],

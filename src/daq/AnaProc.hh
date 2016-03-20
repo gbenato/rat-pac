@@ -17,6 +17,9 @@ struct AnaParams {
   double max_spread;
   int int_start;
   int int_end;
+  int qshort_ped;
+  int qshort_int;
+
   double peak_window;
   double peak_qthres;
   double ped_max_fluc;
@@ -34,6 +37,7 @@ public:
   virtual double GetTimeAtThreshold(std::vector<UShort_t>, std::vector<double>, RAT::DS::DAQHeader*, AnaParams);
   virtual double GetTimeAtFraction(std::vector<UShort_t>, std::vector<double>, RAT::DS::DAQHeader*, AnaParams);
   virtual double IntegrateCharge(std::vector<UShort_t>, std::vector<double>, RAT::DS::DAQHeader*, AnaParams);
+  virtual double IntegrateQShort(std::vector<UShort_t>, std::vector<double>, RAT::DS::DAQHeader*, AnaParams);
 
 protected:
 

@@ -9,9 +9,9 @@
     "input_file": "../../results/TheiaRnD_cosmics_cher_WBLS1MOD.root", // Analysis ROOT file
 
     //Geometry files: used only if 'draw_geo==1'
-    "geo_file": "/Users/snoplus/Work/TheiaRnD/rat-pac/data/TheiaRnD/TheiaRnD.geo",
+    "geo_file": "/Users/snoplus/Work/TheiaRnD/rat-pac/data/TheiaRnD/TheiaRnD_water.geo",
     "corr_file": "/Users/snoplus/Work/TheiaRnD/rat-pac/data/TheiaRnD/SCINTCORR.ratdb",
-    "material": "WBLS10pct", //LAB, WBLS1pct, WBLS10pct
+    "material": "LABPPO", //LAB, LABPPO, WBLS1pct, WBLS10pct
 
     //XY plane for ring imaging
     "intersection_zplane": [-600.0,0.0,-232.5], // Photon-plane intersection dimensions and Z position [SIDE_MIN, SIDE_MAX, ZPOS]
@@ -19,14 +19,18 @@
     //Flags
     "event_number": -1,     // Event number to draw: Negative -> Event by event mode
     "initial_track": 0,     // First track to be drawn
-    "final_track": -1,      // Last track to be drawn: Negative -> Set to max
+    "final_track": 5000,      // Last track to be drawn: Negative -> Set to max
     "draw_geo": 1,          // 1 -> Draw Detector geometry
     "draw_pmts": 1,         // 1 -> Draw PMTs stored in PMTINFO
 
     //Cuts
-    "charge_cut_pmts": [-10],   //PMT IDs to be applied the cuts
-    "charge_cut_lower": [-99999.0],  //Charge cut [30.0, 30.0]
+    "charge_cut_pmts": [-1],   //PMT IDs to be applied the cuts
+    "charge_cut_lower": [2000.0],  //Charge cut [30.0, 30.0]
     "charge_cut_higher": [99999.0],  //Charge cut [30.0, 30.0]
+
+    // "charge_cut_pmts": [6,7],   //PMT IDs to be applied the cuts
+    // "charge_cut_lower": [2000.0,2000.0],  //Charge cut [30.0, 30.0]
+    // "charge_cut_higher": [999999.0,999999.0],  //Charge cut [30.0, 30.0]
 
     // "charge_cut_pmts": [8,9,10,11],   //PMT IDs to be applied the cuts
     // "charge_cut_lower": [100.0,100.0,100.0,100.0],  //Charge cut [30.0, 30.0]
@@ -40,9 +44,9 @@
     // "charge_cut_lower": [-999.0,-999.0, -999.0,-999.0,-999.0],  //Charge cut [30.0, 30.0]
     // "charge_cut_higher": [99999.0,99999.0, 99999.0,99999.0,99999.0],  //Charge cut [30.0, 30.0]
 
-    "event_option": "triggered",       // Drawing options: "pe" -> only events with at least one PE,
+    "event_option": "",       // Drawing options: "pe" -> only events with at least one PE,
                                        //                  "cherenkov" -> only events with a cherenkov process
                                        //                  "triggered" -> only events triggered by the DAQ
-    "debug_level": 1,
+    "debug_level": 0,
 
 }

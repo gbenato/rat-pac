@@ -68,7 +68,7 @@ protected:
   std::vector<double> charge_cut_higher;
   std::vector<double> intersection_zplane;
   RAT::DS::PMTInfo *pmtInfo;
-  std::vector<double> pmttime_delay;
+  std::vector<double> time_delay;
 
   TApplication *dummyApp;
 
@@ -100,7 +100,9 @@ protected:
   double elength;
   std::map<int, int> npe; //number of photoelectrons per PMT
   std::map<int, double> pmtCharge; //measured PMT charge
+  std::map<int, double> pmtQShort;
   std::map<int, double> pmtTime; //measured PMT time
+  std::map<int, double> pmtTimeCorr; //measured PMT time
   std::vector<double> spe;
 
   //Geometry

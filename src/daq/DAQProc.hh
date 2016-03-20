@@ -37,7 +37,6 @@ protected:
   float fNoiseAmpl;
   double fGDelay;
   double fTriggerThreshold;
-  int fPulseType;
   float fPulseMean;
   double fTriggerDelay;
   double fTriggerJitter;

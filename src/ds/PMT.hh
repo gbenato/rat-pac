@@ -30,6 +30,10 @@ public:
   virtual void SetCharge(Float_t _charge) { this->charge = _charge; }
   virtual Float_t GetCharge() { return charge; }
 
+  /** Short window charge (pC) */
+  virtual void SetQShort(Float_t _qshort) { this->qshort = _qshort; }
+  virtual Float_t GetQShort() { return qshort; }
+
   /** Hit time in ns */
   virtual void SetTime(Float_t _time) { this->time = _time; }
   virtual Float_t GetTime() { return time; }
@@ -46,7 +50,7 @@ public:
   virtual void SetWaveformTime(std::vector<double> _waveform_time) {waveform_time = _waveform_time; }
   virtual std::vector<double> GetWaveformTime() { return waveform_time; }
 
-  
+
 
  ClassDef(PMT, 1);
 
@@ -54,6 +58,7 @@ protected:
   Int_t id;
   Int_t type;
   Float_t charge;
+  Float_t qshort;
   Float_t time;
   bool AboveThreshold;
   std::vector<UShort_t> waveform;
