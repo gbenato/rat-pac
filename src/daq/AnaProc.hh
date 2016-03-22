@@ -2,12 +2,18 @@
 #define __RAT_AnaProc__
 
 #include <string>
+
+#include <TMath.h>
+
 #include <RAT/Processor.hh>
 #include <RAT/DS/DAQHeader.hh>
 #include <RAT/DS/RunStore.hh>
 #include <RAT/DB.hh>
 
+
 namespace RAT {
+
+Double_t mylognormal(Double_t *x, Double_t *par);
 
 struct AnaParams {
 
@@ -38,6 +44,7 @@ public:
   virtual double GetTimeAtFraction(std::vector<UShort_t>, std::vector<double>, RAT::DS::DAQHeader*, AnaParams);
   virtual double IntegrateCharge(std::vector<UShort_t>, std::vector<double>, RAT::DS::DAQHeader*, AnaParams);
   virtual double IntegrateQShort(std::vector<UShort_t>, std::vector<double>, RAT::DS::DAQHeader*, AnaParams);
+  virtual void GetChargeAndTimeByFitting(std::vector<UShort_t>, std::vector<double>, RAT::DS::DAQHeader*, AnaParams);
 
 protected:
 
@@ -46,6 +53,10 @@ protected:
   DS::DAQHeader *daqHeaderV1742;
   RAT::DS::PMTInfo *pmtInfo;
   bool gotDAQHeader;
+
+  double fcn_fit;
+  double charge_by_fit;
+  double time_by_fit;
 
   DBLinkPtr fLAnalysis;
 

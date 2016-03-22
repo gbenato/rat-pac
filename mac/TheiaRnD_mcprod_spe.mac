@@ -70,7 +70,7 @@
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "../../results/TheiaRnD_mcprod_water_spe_1cm.root"
+/rat/procset file "../../results/TheiaRnD_mcprod_water_spe.root"
 #########################################
 
 ##### GENERATORS #################
@@ -80,9 +80,9 @@
 #/generator/pos/set -400.0 -400.0 -135.0
 
 ###PHOTON BOMB
-#/generator/add combo pbomb:point:uniform    # Photonbomb generator from fixed point, uniform in time
-#/generator/pos/set -400.0 -400.0 -152.5
-#/generator/vtx/set 100 400
+/generator/add combo pbomb:point:uniform    # Photonbomb generator from fixed point, uniform in time
+/generator/pos/set -400.0 -400.0 -152.5
+/generator/vtx/set 100 400
   
 #/generator/add combo gun:point
 ##isotropic events (mom direction = 0,0,0) with 3.103 eV with 1000 photons
@@ -92,10 +92,10 @@
 # /generator/pos/set photons
 
 ###RADIACTIVE SOURCE DECAYCHAIN
-/generator/add decaychain 90Y:fill:uniform
-/generator/pos/set -400.0 -400.0 -135.913
-/generator/pos/set source
+#/generator/add decaychain 90Y:fill:uniform
+#/generator/pos/set -400.0 -400.0 -135.913
+#/generator/pos/set source
 #######################################
 
 ##### RUN ###########
-/run/beamOn 1000000
+/run/beamOn 10000

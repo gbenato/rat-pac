@@ -50,6 +50,10 @@ public:
   virtual void SetWaveformTime(std::vector<double> _waveform_time) {waveform_time = _waveform_time; }
   virtual std::vector<double> GetWaveformTime() { return waveform_time; }
 
+  /** Goodness of pulse fit */
+  virtual void SetFCN(Float_t _fcn_pulse) { this->fcn_pulse = _fcn_pulse; }
+  virtual double GetFCN() { return fcn_pulse; }
+
 
 
  ClassDef(PMT, 1);
@@ -63,6 +67,7 @@ protected:
   bool AboveThreshold;
   std::vector<UShort_t> waveform;
   std::vector<double> waveform_time;
+  double fcn_pulse;
 };
 
   } // namespace DS

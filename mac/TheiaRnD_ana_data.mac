@@ -9,13 +9,13 @@
 ##### BEGIN EVENT LOOP ##################
 /rat/proc analysis
 /rat/proc count
-/rat/procset update 10
+/rat/procset update 100
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "../../results/TheiaRnD_mcprod_labppo_cosmics_qhs_re.root"
+/rat/procset file "../../results/spe-light-tubes-march-2.0.root"
 #########################################
 
-#/rat/inhdf5/read ../../data/spe-feb-10.0.h5
-/rat/inroot/read ../../results/TheiaRnD_mcprod_labppo_cosmics_qhs.root
+/rat/inhdf5/read ../../results/spe-light-tubes-march-2.0.h5
+#/rat/inroot/read ../../results/TheiaRnD_mcprod_labppo_cosmics_qhs.root
 exit

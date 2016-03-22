@@ -109,6 +109,10 @@ EventDisplay::EventDisplay(std::string _inputFileName){
 
   SetGeometry();
 
+  Color_t mycolors[] = {1, 1, 1, 1, 1, 1,  kBlue, kRed,  kRed, 1, 1, 1,  kOrange, kBlue, kRed, kRed, kBlue, kOrange, kOrange, kBlue, kRed, kRed, kBlue, kOrange, 1}; //By Position (WATER)
+  pmtidtocolor.insert(pmtidtocolor.begin(), mycolors, mycolors + 25 );
+
+
   if(debugLevel > 0) std::cout<<" EventDisplay::EventDisplay - DONE "<<std::endl;
 
 };
@@ -456,8 +460,9 @@ bool EventDisplay::LoadEvent(int ievt){
     }
 
     //Calculate event time
-    if(ringPMTTimes.size() > 3){
-      event_time = (ringPMTTimes[0] + ringPMTTimes[1] + ringPMTTimes[2])/3.;
+    if(ringPMTTimes.size() > 2){
+      //event_time = (ringPMTTimes[0] + ringPMTTimes[1] + ringPMTTimes[2])/3.;
+      event_time = (ringPMTTimes[1] + ringPMTTimes[2])/2.;
     } else{
       event_time = -9999.;
     }
@@ -474,11 +479,13 @@ bool EventDisplay::LoadEvent(int ievt){
       hTime->Fill( pmtTimeCorr[ipmt] - event_time );
       timeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtTimeCorr[ipmt] - event_time);
       npeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtCharge[ipmt]/spe[ipmt]);
-      chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtQShort[ipmt]);
+      chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtCharge[ipmt]);
+      //chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtQShort[ipmt]);
       chargeVsPosScint->Fill(pmtpos.X(), pmtpos.Y(), pmtGeoCorr[ipmt]);
       // chargeVsPosCorr->Fill(pmtpos.X(), pmtpos.Y(), (pmtCharge[ipmt] - pmtGeoCorr[ipmt])/pmtGeoCorrErr[ipmt] );
       chargeVsPosCorr->Fill(pmtpos.X(), pmtpos.Y(), pmtCharge[ipmt] - pmtGeoCorr[ipmt]);
-      chargeVsR->Fill(XYdist, pmtQShort[ipmt]);
+      chargeVsR->Fill(XYdist, pmtCharge[ipmt]);
+      //chargeVsR->Fill(XYdist, pmtQShort[ipmt]);
       chargeVsRScint->Fill(XYdist, pmtGeoCorr[ipmt]);
       // chargeVsRCorr->Fill(XYdist, (pmtCharge[ipmt] - pmtGeoCorr[ipmt])/pmtGeoCorrErr[ipmt] );
       chargeVsRCorr->Fill(XYdist, pmtCharge[ipmt] - pmtGeoCorr[ipmt]);
@@ -766,6 +773,7 @@ void EventDisplay::DisplayEvent(int ievt){
       if(pmtType == 0) canvas_event->cd(8);
       if(pmtType == 4) canvas_event->cd(10);
       if( (pmtType == 1 && drawRingPMTs==false) || (pmtType == 2 && drawLightPMTs==false) || (pmtType == 3 && drawMuonPMTs==false) || (pmtType == 0 && drawTriggerPMT==false) || (pmtType == 4 && drawPanels==false) ){
+        if(pmtTimeCorr[pmtID] - event_time < 0.5) continue;
         PMTDigitizedWaveforms[ipmt].Draw("A LINE");
         PMTDigitizedWaveforms[ipmt].GetXaxis()->SetTitle("t(ns)");
         PMTDigitizedWaveforms[ipmt].GetYaxis()->SetTitle("ADC counts");
@@ -790,13 +798,12 @@ void EventDisplay::DisplayEvent(int ievt){
           drawPanels=true;
         }
       }
-      PMTDigitizedWaveforms[ipmt].SetLineColor(ipmt+20);
-      if(pmtID==6) PMTDigitizedWaveforms[ipmt].SetLineColor(kRed);
-      if(pmtID==7) PMTDigitizedWaveforms[ipmt].SetLineColor(kBlue);
+      PMTDigitizedWaveforms[ipmt].SetLineColor(pmtidtocolor[pmtID]);
+      if(pmtTimeCorr[pmtID] - event_time < 0.5) continue;
       PMTDigitizedWaveforms[ipmt].Draw("LINE same");
       TMarker timeMarker;
       timeMarker.SetMarkerSize(1.);
-      timeMarker.SetMarkerColor(ipmt+20);
+      timeMarker.SetMarkerColor(pmtidtocolor[pmtID]);
       timeMarker.SetMarkerStyle(22);
       timeMarker.DrawMarker(pmtTime[pmtID], 0);
       gPad->Update();

@@ -98,6 +98,7 @@ protected:
   std::map<std::string,TH2F*> hxyplane;
   TCanvas *canvas_event;
   double elength;
+  std::vector<Color_t> pmtidtocolor;
   std::map<int, int> npe; //number of photoelectrons per PMT
   std::map<int, double> pmtCharge; //measured PMT charge
   std::map<int, double> pmtQShort;

@@ -1,5 +1,7 @@
 #include <vector>
 #include <TAxis.h>
+#include <TF1.h>
+#include <TFitResult.h>
 
 #include <RAT/AnaProc.hh>
 #include <RAT/Digitizer.hh>
@@ -8,6 +10,18 @@
 using namespace std;
 
 namespace RAT {
+
+  //Log-normal function
+  Double_t mylognormal(Double_t *x, Double_t *par) {
+
+    if(x[0]>par[4]){
+      return par[3] - par[0]*TMath::LogNormal(x[0] - par[4], par[2], 0., par[1]);
+    }
+    else{
+      return par[3];
+    }
+
+  }
 
   AnaProc::AnaProc() : Processor("analysis") {
 
@@ -87,6 +101,11 @@ namespace RAT {
           pmt->SetCharge(IntegrateCharge(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
           pmt->SetQShort(IntegrateQShort(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
 
+          // GetChargeAndTimeByFitting(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742);
+          // pmt->SetFCN(fcn_fit);
+          // pmt->SetCharge(charge_by_fit);
+          // pmt->SetTime(time_by_fit);
+
           if(anaV1742.prune_wf){
             std::vector<uint16_t> wf_dummy(1,0);
             std::vector<double> wft_dummy(1,0);
@@ -100,6 +119,11 @@ namespace RAT {
           pmt->SetTime( GetTimeAtFraction(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730) );
           pmt->SetCharge(IntegrateCharge(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730) );
           pmt->SetQShort(IntegrateQShort(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730) );
+
+          // GetChargeAndTimeByFitting(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730);
+          // pmt->SetFCN(fcn_fit);
+          // pmt->SetCharge(charge_by_fit);
+          // pmt->SetTime(time_by_fit);
 
           if(anaV1730.prune_wf){
             std::vector<uint16_t> wf_dummy(1,0);
@@ -117,6 +141,36 @@ namespace RAT {
     return Processor::OK;
 
   } //AnaProc::DSEvent
+
+  //Calculates time and charge by fitting log-normal to pulse and fill charge_by_fit and time_by_fit
+  void AnaProc::GetChargeAndTimeByFitting(std::vector<UShort_t> dWaveform, std::vector<double> dWaveformTime, RAT::DS::DAQHeader *daqHeader, AnaParams anaParams){
+
+    //Prepare fitting function
+    TF1 *flognormal = new TF1("flognormal",mylognormal,0,400,5);
+    flognormal->SetParameters(200.,5.5,0.2,2500.,205.);
+    flognormal->SetParLimits(0.,0.,999999.);
+    flognormal->SetParLimits(1.,0.,15.);
+    flognormal->SetParLimits(2.,0.,1.);
+    flognormal->SetParLimits(3.,1000.,3000.);
+    flognormal->SetParLimits(4.,170.,250.);
+
+    int npoints = dWaveformTime.size();
+    TGraph *waveform = new TGraph(npoints);
+    for(int isample=0; isample<npoints;isample++){
+      waveform->SetPoint(isample,dWaveformTime[isample],dWaveform[isample]);
+    }
+
+    //Get fit results
+    TFitResultPtr fitresultptr = waveform->Fit(flognormal,"Q M S","",170.,250.);
+    TFitResult *fitresult = fitresultptr.Get();
+    fcn_fit = fitresult->MinFcnValue();
+    charge_by_fit = fitresult->Parameter(0);
+    time_by_fit = fitresult->Parameter(4);
+
+    // std::cout<<" AnaProc::GetChargeAndTimeByFitting DONE "<<fcn_fit<<" "<<charge_by_fit<<" "<<time_by_fit<<std::endl;
+
+  }
+
 
   //Calculates the time at which the waveform crosses threshold
   double AnaProc::GetTimeAtFraction(std::vector<UShort_t> dWaveform, std::vector<double> dWaveformTime, RAT::DS::DAQHeader *daqHeader, AnaParams anaParams){

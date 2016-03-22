@@ -5,11 +5,11 @@ valid_begin: [0, 0],
 valid_end: [0, 0],
 
 //Pulse analysis
-ped_start: 5,     //start time of pedestal window in samples
-ped_end: 100,      //end time of pedestal window in samples
+ped_start: 100,     //start time of pedestal window in samples
+ped_end: 220,      //end time of pedestal window in samples
 max_spread: 3.0,   //
-int_start: 200,    //start time of integration window in samples
-int_end: 450,      //end time of integration window in samples
+int_start: 220,    //start time of integration window in samples
+int_end: 400,      //end time of integration window in samples
 qshort_ped: 100,
 qshort_int: 10,
 
@@ -30,11 +30,11 @@ valid_begin: [0, 0],
 valid_end: [0, 0],
 
 //Pulse analysis
-ped_start: 250,      //start time of pedestal window in samples
-ped_end: 450,        //end time of pedestal window in samples
+ped_start: 400,      //start time of pedestal window in samples
+ped_end: 500,        //end time of pedestal window in samples
 max_spread: 3.0,     //
-int_start: 450,      //start time of integration window in samples (450)
-int_end: 700,        //end time of integration window in samples (700)
+int_start: 500,      //start time of integration window in samples (450)
+int_end: 625,        //end time of integration window in samples (700)
 qshort_ped: 100,
 qshort_int: 10,
 

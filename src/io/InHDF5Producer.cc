@@ -414,14 +414,14 @@ namespace RAT {
 
     delete h5mastergr;
 
-    // int nevents = waveforms.begin()->second.size(); //FIXME: deal with different number of events...
-
     //Get event mapping file and opened file index
     std::stringstream sopened_file, sevent_map;
 
-    std::size_t pos1 = inputfilename.find_first_of(".")+1;
-    std::size_t pos2 = inputfilename.find_last_of(".");
+    std::size_t pos0 = inputfilename.find_last_of("/");
+    std::size_t pos1 = inputfilename.find(".",pos0)+1;
+    std::size_t pos2 = inputfilename.find(".",pos1+1);
     std::string filename = inputfilename.substr(0,pos1-1);
+
     std::string runnumber = inputfilename.substr(pos1,pos2-pos1);
     int opened_file = std::atoi(runnumber.c_str());
     std::string filename_map = filename + ".map.csv";
