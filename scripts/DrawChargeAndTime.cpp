@@ -13,6 +13,8 @@
 #include<TGraph.h>
 #include<TColor.h>
 #include<TMath.h>
+#include<TROOT.h>
+#include "Math/Minimizer.h"
 
 #include<RAT/DS/MC.hh>
 #include<RAT/DS/MCTrack.hh>
@@ -56,6 +58,7 @@ Double_t fmultigaus(Double_t *x, Double_t *par) {
   Double_t gaus_noise = 1./(par[2]*sqrt(2.*3.14159)) * exp( -0.5 * pow( ( x[0] - par[1] )/par[2] , 2.) );
   Double_t gaus_spe = 1./(par[5]*sqrt(2.*3.14159)) * exp( -0.5 * pow( ( x[0] - par[4] )/par[5] , 2.) );
   Double_t gaus_2pe = 1./(par[5]*sqrt(2.)*sqrt(2.*3.14159)) * exp( -0.5 * pow( ( x[0] - par[4]*2. )/(par[5]*sqrt(2.)), 2.) );
+  // Double_t gaus_3pe = 1./(par[5]*sqrt(3.)*sqrt(2.*3.14159)) * exp( -0.5 * pow( ( x[0] - par[4]*3. )/(par[5]*sqrt(3.)), 2.) );
   //  gaus_noise = 0.;
   return par[0]*gaus_noise + par[3]*gaus_spe + par[6]*gaus_2pe;
   //  return par[0]*gaus_noise + par[3]*gaus_spe;
@@ -209,7 +212,7 @@ void GetPMTInfo(char* inputfile){
   //Plot axis limits
   double myqxmins[] = {-100,-100,-100,-100,-100,-100, -100,-100, -100,-100,-100,-100, -100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100, -10};
   q_xmin.insert(q_xmin.begin(), myqxmins, myqxmins + pmtInfo->GetPMTCount() );
-  double myqxmaxs[] = {3000,3000,3000,3000,3000,3000, 20000,20000, 100000,100000,100000,100000, 400,400,400,400,400,400,400,400,400,400,400,400, 40};
+  double myqxmaxs[] = {1000,1000,1000,1000,1000,1000, 20000,20000, 100000,100000,100000,100000, 400,400,400,400,400,400,400,400,400,400,400,400, 40};
   q_xmax.insert(q_xmax.begin(), myqxmaxs, myqxmaxs + pmtInfo->GetPMTCount() );
 
 }
@@ -399,7 +402,7 @@ void GetHistos(){
         charge = ev->GetPMT(ipmt)->GetCharge();
         qshort = ev->GetPMT(ipmt)->GetQShort();
         if(pmtfcn > 1000) continue;
-        // if(pmttime < 170) continue;
+        //if(pmttime < 170) continue;
         //if(charge < 50) continue;
         double timeres = pmttime - tof - time_delay[pmtid];
         h_time[pmtid]->Fill(timeres - event_time);
@@ -462,20 +465,22 @@ void GetPMTCalibration(){
 //    if(pmtInfo->GetType(ipmt)!=1 && pmtInfo->GetType(ipmt)!=2) continue;
 
     f_spe[ipmt]->SetParameters(1.,0.,10.,1.,50.,50.,1.);
-    f_spe[ipmt]->SetParLimits(0.,0.,9999999.); //Noise norm
+    f_spe[ipmt]->SetParLimits(0.,0.,99999999.); //Noise norm
     f_spe[ipmt]->SetParLimits(1.,-60.,60.); //Noise mean
     f_spe[ipmt]->SetParLimits(2.,0.,100.); //Noise sigma
-    f_spe[ipmt]->SetParLimits(3.,0.,9999999.); //SPE norm
-    f_spe[ipmt]->SetParLimits(4.,0.,200.); //SPE mean
-    f_spe[ipmt]->SetParLimits(5.,0.,100.); //SPE sigma
-    f_spe[ipmt]->SetParLimits(6.,0.,9999999.); //2PE norm
+    f_spe[ipmt]->SetParLimits(3.,0.,99999999.); //SPE norm
+    f_spe[ipmt]->SetParLimits(4.,0.,400.); //SPE mean
+    f_spe[ipmt]->SetParLimits(5.,0.,200.); //SPE sigma
+    f_spe[ipmt]->SetParLimits(6.,0.,99999999.); //2PE norm
 
-    h_charge[ipmt]->Fit(Form("f_spe_%i",ipmt),"Q","Q",-60,500);
+    // ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Simplex");
+    // h_charge[ipmt]->Fit(Form("f_spe_%i",ipmt),"Q","",-60,500);
+    h_charge[ipmt]->Fit(Form("f_spe_%i",ipmt),"Q M","",-60,500);
     pspe = f_spe[ipmt]->GetParameters();
     f_spe_mean.push_back(pspe[4]);
     f_spe_sigma.push_back(pspe[5]);
 
-    h_time[ipmt]->Fit("gaus","Q","Q",-0.7,0.7);
+    h_time[ipmt]->Fit("gaus","Q M","",-0.7,0.7);
     if(h_time[ipmt]->GetFunction("gaus") == NULL){
       ptime = new double[3];
       ptime[0] = 0.; ptime[1] = 0.; ptime[2] = 0.;

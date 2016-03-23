@@ -164,12 +164,32 @@ namespace RAT {
       waveform->SetPoint(isample,dWaveformTime[isample],dWaveform[isample]);
     }
 
-    //Get fit results
-    waveform->Fit(flognormal,"Q","",180.,250.); //SIMPLEX
-    TFitResultPtr fitresultptr = waveform->Fit(flognormal,"Q M S","",180.,250.); //MIGRAD IMPROVED
-    TFitResult *fitresult = fitresultptr.Get();
-    fcn_fit = fitresult->MinFcnValue();
-    charge_by_fit = fitresult->Parameter(0);
+    //Fit: SIMPLEX and then MIGRAD until the chi2 is good or 10 tries
+    TFitResult *fitresult;
+    double status = 0, chi2 = 0;
+    int nfits = 0;
+    ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Simplex");
+    flognormal->SetParameters(50.,5.5,0.2,2500.,200.);
+    status = 0;
+    nfits = 0;
+    chi2 = 0;
+    do{
+      TFitResultPtr fitresultptr = waveform->Fit("flognormal","S","",180,300);
+      fitresult = fitresultptr.Get();
+      status = fitresult->Status();
+      chi2 = fitresult->MinFcnValue();
+      nfits++;
+    } while(status == 4);
+    do{
+      TFitResultPtr fitresultptr = waveform->Fit("flognormal","MS","",180,300);
+      fitresult = fitresultptr.Get();
+      status = fitresult->Status();
+      chi2 = fitresult->MinFcnValue();
+      nfits++;
+    } while(status == 4 || (chi2 > 1000 && nfits < 10));
+
+    fcn_fit = chi2;
+    charge_by_fit = fitresult->Parameter(3)*(250-180) - flognormal->Integral(180,250);
     time_by_fit = fitresult->Parameter(4);
 
     // std::cout<<" AnaProc::GetChargeAndTimeByFitting DONE "<<fcn_fit<<" "<<charge_by_fit<<" "<<time_by_fit<<std::endl;
