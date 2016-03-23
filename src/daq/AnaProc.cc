@@ -2,6 +2,8 @@
 #include <TAxis.h>
 #include <TF1.h>
 #include <TFitResult.h>
+#include<TROOT.h>
+#include "Math/Minimizer.h"
 
 #include <RAT/AnaProc.hh>
 #include <RAT/Digitizer.hh>
@@ -97,14 +99,14 @@ namespace RAT {
         if(pmtType==1 || pmtType==3 || pmtType==0){
           //          pmt->SetTime(GetTimeAtPeak(dWaveform), daqHeaderV1742 );
           //          pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1742, anaV1742) );
-          pmt->SetTime( GetTimeAtFraction(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
-          pmt->SetCharge(IntegrateCharge(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
-          pmt->SetQShort(IntegrateQShort(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
+          // pmt->SetTime( GetTimeAtFraction(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
+          // pmt->SetCharge(IntegrateCharge(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
+          //pmt->SetQShort(IntegrateQShort(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
 
-          // GetChargeAndTimeByFitting(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742);
-          // pmt->SetFCN(fcn_fit);
-          // pmt->SetCharge(charge_by_fit);
-          // pmt->SetTime(time_by_fit);
+          GetChargeAndTimeByFitting(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742);
+          pmt->SetFCN(fcn_fit);
+          pmt->SetCharge(charge_by_fit);
+          pmt->SetTime(time_by_fit);
 
           if(anaV1742.prune_wf){
             std::vector<uint16_t> wf_dummy(1,0);
@@ -116,14 +118,14 @@ namespace RAT {
         } else if(pmtType==2 || pmtType==4){
           //        pmt->SetTime(GetTimeAtPeak(dWaveform), daqHeaderV1730 );
           //        pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1730, anaV1730) );
-          pmt->SetTime( GetTimeAtFraction(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730) );
-          pmt->SetCharge(IntegrateCharge(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730) );
-          pmt->SetQShort(IntegrateQShort(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730) );
+          // pmt->SetTime( GetTimeAtFraction(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730) );
+          // pmt->SetCharge(IntegrateCharge(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730) );
+          //pmt->SetQShort(IntegrateQShort(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730) );
 
-          // GetChargeAndTimeByFitting(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730);
-          // pmt->SetFCN(fcn_fit);
-          // pmt->SetCharge(charge_by_fit);
-          // pmt->SetTime(time_by_fit);
+          GetChargeAndTimeByFitting(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730);
+          pmt->SetFCN(fcn_fit);
+          pmt->SetCharge(charge_by_fit);
+          pmt->SetTime(time_by_fit);
 
           if(anaV1730.prune_wf){
             std::vector<uint16_t> wf_dummy(1,0);
@@ -145,14 +147,16 @@ namespace RAT {
   //Calculates time and charge by fitting log-normal to pulse and fill charge_by_fit and time_by_fit
   void AnaProc::GetChargeAndTimeByFitting(std::vector<UShort_t> dWaveform, std::vector<double> dWaveformTime, RAT::DS::DAQHeader *daqHeader, AnaParams anaParams){
 
+    ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Simplex");
+
     //Prepare fitting function
     TF1 *flognormal = new TF1("flognormal",mylognormal,0,400,5);
-    flognormal->SetParameters(200.,5.5,0.2,2500.,205.);
-    flognormal->SetParLimits(0.,0.,999999.);
+    flognormal->SetParameters(50.,5.5,0.2,2500.,200.);
+    flognormal->SetParLimits(0.,0.,500.);
     flognormal->SetParLimits(1.,0.,15.);
     flognormal->SetParLimits(2.,0.,1.);
     flognormal->SetParLimits(3.,1000.,3000.);
-    flognormal->SetParLimits(4.,170.,250.);
+    flognormal->SetParLimits(4.,180.,250.);
 
     int npoints = dWaveformTime.size();
     TGraph *waveform = new TGraph(npoints);
@@ -161,7 +165,8 @@ namespace RAT {
     }
 
     //Get fit results
-    TFitResultPtr fitresultptr = waveform->Fit(flognormal,"Q M S","",170.,250.);
+    waveform->Fit(flognormal,"Q","",180.,250.); //SIMPLEX
+    TFitResultPtr fitresultptr = waveform->Fit(flognormal,"Q M S","",180.,250.); //MIGRAD IMPROVED
     TFitResult *fitresult = fitresultptr.Get();
     fcn_fit = fitresult->MinFcnValue();
     charge_by_fit = fitresult->Parameter(0);

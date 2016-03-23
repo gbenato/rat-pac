@@ -56,8 +56,9 @@ Double_t fmultigaus(Double_t *x, Double_t *par) {
   Double_t gaus_noise = 1./(par[2]*sqrt(2.*3.14159)) * exp( -0.5 * pow( ( x[0] - par[1] )/par[2] , 2.) );
   Double_t gaus_spe = 1./(par[5]*sqrt(2.*3.14159)) * exp( -0.5 * pow( ( x[0] - par[4] )/par[5] , 2.) );
   Double_t gaus_2pe = 1./(par[5]*sqrt(2.)*sqrt(2.*3.14159)) * exp( -0.5 * pow( ( x[0] - par[4]*2. )/(par[5]*sqrt(2.)), 2.) );
-//  gaus_noise = 0.;
+  //  gaus_noise = 0.;
   return par[0]*gaus_noise + par[3]*gaus_spe + par[6]*gaus_2pe;
+  //  return par[0]*gaus_noise + par[3]*gaus_spe;
 }
 
 //Global variables
@@ -397,7 +398,7 @@ void GetHistos(){
         double pmtfcn = ev->GetPMT(ipmt)->GetFCN();
         charge = ev->GetPMT(ipmt)->GetCharge();
         qshort = ev->GetPMT(ipmt)->GetQShort();
-        //if(pmtfcn > 1500) continue;
+        if(pmtfcn > 1000) continue;
         // if(pmttime < 170) continue;
         //if(charge < 50) continue;
         double timeres = pmttime - tof - time_delay[pmtid];
