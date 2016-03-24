@@ -319,7 +319,12 @@ bool EventDisplay::LoadEvent(int ievt){
 
   if(rds->ExistEV()){
 
+    /////////////////////////////////////
+    // DAQ EVENT
+    /////////////////////////////////////
+
     ev = rds->GetEV(0); //FIXME: so far get only first event
+    event_id = ev->GetID(); //FIXME: so far get only first event
     //Apply cuts before loading the whole event for speed
     for (int ipmt = 0; ipmt < charge_cut_pmts.size(); ipmt++) {
       int pmtID = charge_cut_pmts[ipmt];
@@ -330,10 +335,6 @@ bool EventDisplay::LoadEvent(int ievt){
         if(charge>charge_cut_higher[ipmt]) return false; //dont load event
       }
     }
-
-    /////////////////////////////////////
-    // DAQ EVENT
-    /////////////////////////////////////
 
     TTree *runT = dsreader->GetRunT();
     RAT::DS::Run *run = 0;
@@ -357,7 +358,7 @@ bool EventDisplay::LoadEvent(int ievt){
     timeVsPos->SetMinimum(-1.);
     chargeVsPos = new TH2F("CHARGE", "CHARGE", 1, 0., 1., 1, 0., 1.);
     chargeVsPos->SetStats(0);
-    chargeVsPos->SetMaximum(20.);
+    chargeVsPos->SetMaximum(600.);
     chargeVsPos->SetMinimum(-10.0);
     chargeVsPosScint = new TH2F("chargeVsPosScint", "chargeVsPosScint", 1, 0., 1., 1, 0., 1.);
     chargeVsPosScint->SetStats(0);
@@ -688,6 +689,7 @@ void EventDisplay::DumpEventInfo(int ievt){
   std::cout<<" Press any key to go to next event "<<std::endl;
 
   std::cout<<"****** DAQ EVENT "<<ievt<<"/"<<nevents<<"********"<<std::endl;
+  std::cout<<" Event ID "<<event_id<<std::endl;
   std::cout<<" Event Time "<<event_time<<std::endl;
   std::cout<<"***********************************"<<std::endl;
 
@@ -773,7 +775,7 @@ void EventDisplay::DisplayEvent(int ievt){
       if(pmtType == 0) canvas_event->cd(8);
       if(pmtType == 4) canvas_event->cd(10);
       if( (pmtType == 1 && drawRingPMTs==false) || (pmtType == 2 && drawLightPMTs==false) || (pmtType == 3 && drawMuonPMTs==false) || (pmtType == 0 && drawTriggerPMT==false) || (pmtType == 4 && drawPanels==false) ){
-        if(pmtTimeCorr[pmtID] - event_time < 0.5) continue;
+        //if(pmtTimeCorr[pmtID] - event_time < 0.5) continue;
         PMTDigitizedWaveforms[ipmt].Draw("A LINE");
         PMTDigitizedWaveforms[ipmt].GetXaxis()->SetTitle("t(ns)");
         PMTDigitizedWaveforms[ipmt].GetYaxis()->SetTitle("ADC counts");
@@ -799,7 +801,7 @@ void EventDisplay::DisplayEvent(int ievt){
         }
       }
       PMTDigitizedWaveforms[ipmt].SetLineColor(pmtidtocolor[pmtID]);
-      if(pmtTimeCorr[pmtID] - event_time < 0.5) continue;
+      //if(pmtTimeCorr[pmtID] - event_time < 0.5) continue;
       PMTDigitizedWaveforms[ipmt].Draw("LINE same");
       TMarker timeMarker;
       timeMarker.SetMarkerSize(1.);

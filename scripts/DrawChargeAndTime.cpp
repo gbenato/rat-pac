@@ -84,8 +84,8 @@ TH1F* h_chi2; //Chi2 cher vs scint
 TH2F* h_mcpmt_npevspos; //MC NPE vs PMT position
 
 //Hit level (PMT)
-double t_min = -10.0;
-double t_max = 10.0;
+double t_min = -2.0;
+double t_max = 5.0;
 std::vector<double> q_xmin;
 std::vector<double> q_xmax;
 std::vector<TF1*> f_spe;
@@ -127,7 +127,7 @@ int main(int argc, char **argv){
   GetDBTables();
   GetHistos();
   NormalizeHistos();
-  GetPMTCalibration();
+  //GetPMTCalibration();
 
   DrawHistos();
   if(gOutFile){
@@ -382,13 +382,13 @@ void GetHistos(){
       //if(ring_time < 170) continue;
 
       //Calculate event time
-      event_time = ring_timeres;
+      //event_time = ring_timeres;
       // if(ringPMTTimes.size() > 1){
       //   event_time = TMath::KOrdStat((int)ringPMTTimes.size(), &ringPMTTimes[0], 1);
       // }
-      // if(ringPMTTimes.size() > 2){
-      //   event_time = (ringPMTTimes[0] + ringPMTTimes[1] + ringPMTTimes[2])/3.;
-      // }
+      if(ringPMTTimes.size() > 2){
+        event_time = (ringPMTTimes[0] + ringPMTTimes[1] + ringPMTTimes[2])/3.;
+      }
       h_event_time->Fill(event_time);
 
 
@@ -401,7 +401,7 @@ void GetHistos(){
         double pmtfcn = ev->GetPMT(ipmt)->GetFCN();
         charge = ev->GetPMT(ipmt)->GetCharge();
         qshort = ev->GetPMT(ipmt)->GetQShort();
-        if(pmtfcn > 1000) continue;
+        //if(pmtfcn > 1000) continue;
         //if(pmttime < 170) continue;
         //if(charge < 50) continue;
         double timeres = pmttime - tof - time_delay[pmtid];
@@ -557,7 +557,7 @@ void DrawHistos(){
   TCanvas *c_charge[5];
   c_charge[0] = new TCanvas("c_charge_0","Charge Ring Tubes",1200,900);
   c_charge[1] = new TCanvas("c_charge_1","Charge Light Tubes",900,600);
-  c_charge[2] = new TCanvas("c_charge_2","Charge Muon Tags",600,600);
+  c_charge[2] = new TCanvas("c_charge_2","Muon Tags",600,600);
   c_charge[3] = new TCanvas("c_charge_3","Charge Trigger",300,300);
   c_charge[4] = new TCanvas("c_charge_4","Charge Vetos",600,600);
   c_charge[0]->Divide(4,3);
@@ -569,12 +569,10 @@ void DrawHistos(){
   TCanvas *c_time[5];
   c_time[0] = new TCanvas("c_time_0","Time Ring Tubes",1200,900);
   c_time[1] = new TCanvas("c_time_1","Time Light Tubes",900,600);
-  c_time[2] = new TCanvas("c_time_2","Time Muon Tags",600,300);
   c_time[3] = new TCanvas("c_time_3","Time Trigger",300,300);
   c_time[4] = new TCanvas("c_time_4","Time Vetos",600,600);
   c_time[0]->Divide(4,3);
   c_time[1]->Divide(3,2);
-  c_time[2]->Divide(2,2);
   c_time[3]->Divide(1,1);
   c_time[4]->Divide(2,2);
 
@@ -605,9 +603,6 @@ void DrawHistos(){
       c_charge[2]->cd(++cc2)->SetLogy();
       h_charge[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
       h_charge[pmtid]->Draw();
-      c_time[2]->cd(cc2);
-      h_time[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
-      h_time[pmtid]->Draw();
     } else if(pmttype==0){ //Trigger tube
       c_charge[3]->cd(++cc3)->SetLogy();
       h_charge[pmtid]->SetLineColor(pmtidtocolor[pmtid]);

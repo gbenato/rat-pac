@@ -96,17 +96,22 @@ namespace RAT {
         std::vector<UShort_t> dWaveform = pmt->GetWaveform();
         std::vector<double> dWaveformTime = pmt->GetWaveformTime();
 
-        if(pmtType==1 || pmtType==3 || pmtType==0){
-          //          pmt->SetTime(GetTimeAtPeak(dWaveform), daqHeaderV1742 );
-          //          pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1742, anaV1742) );
-          // pmt->SetTime( GetTimeAtFraction(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
-          // pmt->SetCharge(IntegrateCharge(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
-          //pmt->SetQShort(IntegrateQShort(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
+        if(pmtType==1 || pmtType==3){
 
-          GetChargeAndTimeByFitting(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742);
-          pmt->SetFCN(fcn_fit);
-          pmt->SetCharge(charge_by_fit);
-          pmt->SetTime(time_by_fit);
+          if(pmtType==1){
+            pmt->SetTime( GetTimeAtFraction(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
+            pmt->SetCharge( IntegrateCharge(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
+
+            // GetChargeAndTimeByFitting(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742);
+            // pmt->SetFCN(fcn_fit);
+            // pmt->SetCharge(charge_by_fit);
+            // pmt->SetTime(time_by_fit);
+          }
+          else if(pmtType==3){
+            pmt->SetTime( GetTimeAtFraction(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
+            pmt->SetCharge( IntegrateCharge(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
+          }
+          //pmt->SetQShort(IntegrateQShort(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
 
           if(anaV1742.prune_wf){
             std::vector<uint16_t> wf_dummy(1,0);
@@ -115,17 +120,16 @@ namespace RAT {
             pmt->SetWaveformTime(wft_dummy);
           }
 
-        } else if(pmtType==2 || pmtType==4){
-          //        pmt->SetTime(GetTimeAtPeak(dWaveform), daqHeaderV1730 );
-          //        pmt->SetTime( GetTimeAtThreshold(dWaveform, daqHeaderV1730, anaV1730) );
-          // pmt->SetTime( GetTimeAtFraction(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730) );
-          // pmt->SetCharge(IntegrateCharge(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730) );
+        } else if(pmtType==2 || pmtType==4 || pmtType==0){
+          //This digitizer is too slow to fit pulses so fall back to usual method
+          pmt->SetTime( GetTimeAtFraction(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730) );
+          pmt->SetCharge( IntegrateCharge(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730) );
           //pmt->SetQShort(IntegrateQShort(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730) );
 
-          GetChargeAndTimeByFitting(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730);
-          pmt->SetFCN(fcn_fit);
-          pmt->SetCharge(charge_by_fit);
-          pmt->SetTime(time_by_fit);
+          // GetChargeAndTimeByFitting(dWaveform, dWaveformTime, daqHeaderV1730, anaV1730);
+          // pmt->SetFCN(fcn_fit);
+          // pmt->SetCharge(charge_by_fit);
+          // pmt->SetTime(time_by_fit);
 
           if(anaV1730.prune_wf){
             std::vector<uint16_t> wf_dummy(1,0);
@@ -174,19 +178,19 @@ namespace RAT {
     nfits = 0;
     chi2 = 0;
     do{
-      TFitResultPtr fitresultptr = waveform->Fit("flognormal","S","",180,300);
+      TFitResultPtr fitresultptr = waveform->Fit("flognormal","QS","",180,300);
       fitresult = fitresultptr.Get();
       status = fitresult->Status();
       chi2 = fitresult->MinFcnValue();
       nfits++;
     } while(status == 4);
     do{
-      TFitResultPtr fitresultptr = waveform->Fit("flognormal","MS","",180,300);
+      TFitResultPtr fitresultptr = waveform->Fit("flognormal","QMS","",180,300);
       fitresult = fitresultptr.Get();
       status = fitresult->Status();
       chi2 = fitresult->MinFcnValue();
       nfits++;
-    } while(status == 4 || (chi2 > 1000 && nfits < 10));
+    } while( (status == 4 || chi2 > 1000) && nfits < 10);
 
     fcn_fit = chi2;
     charge_by_fit = fitresult->Parameter(3)*(250-180) - flognormal->Integral(180,250);

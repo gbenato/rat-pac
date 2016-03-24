@@ -13,9 +13,10 @@
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "../../results/spe-feb-10.0.root"
+/rat/procset file "../../results/spe-feb-10_22Mar2016-204725_0_timestamp.root"
 #########################################
 
 /rat/inhdf5/read ../../results/spe-feb-10.0.h5
+#/rat/inroot/read ../../results/spe-feb-10_22Mar2016-204725_0.root
 #/rat/inroot/read ../../results/TheiaRnD_mcprod_labppo_cosmics_qhs.root
 exit

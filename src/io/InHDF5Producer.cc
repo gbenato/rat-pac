@@ -19,6 +19,7 @@
 #include <assert.h>
 #include <regex>
 #include <fstream>
+#include <cstdint> //64bits integer
 
 typedef std::map< int, std::vector< std::vector<UShort_t> > > mw_t; //channel:[event,waveform]
 typedef std::map< int, std::vector< std::vector<double> > > mwt_t; //channel:[event,waveformtime]
@@ -186,6 +187,7 @@ namespace RAT {
     }
     //Loop over groups (each group should be a different channel)
     //and fill the waveforms in event order and the DAQHeader.
+    uint64_t *data_times;
     mw_t waveforms;
     mwt_t waveformTimes;
     std::map< int, uint16_t* > start_cell; //For time calibrations (PMTID:[EV:CELL])
@@ -373,23 +375,32 @@ namespace RAT {
 
       //Now retrieve the samples
       H5::DataSet *dataset;
+      H5::DataSet *dataset_times;
       try{
         dataset = new H5::DataSet(channel->openDataSet("samples"));
+        dataset_times = new H5::DataSet(channel->openDataSet("times"));
       }
       catch(...){
         Log::Die("Data set \"samples\" not found in channel " + chname);
       }
 
-      //Get dimensions of the dataset
+      //Get traces
       H5::DataSpace dataspace = dataset->getSpace();
       int rank = dataspace.getSimpleExtentNdims();
       hsize_t *dims = new hsize_t[rank];
       dataspace.getSimpleExtentDims(dims);
-
-      //Get traces
       const int nevents = dims[0], nsamples = dims[1];
       UShort_t *data = new UShort_t[nevents*nsamples];
       dataset->read(data,H5::PredType::NATIVE_UINT16,dataspace);
+
+      H5::DataSpace dataspace_times = dataset_times->getSpace();
+      int rank_times = dataspace_times.getSimpleExtentNdims();
+      hsize_t *dims_times = new hsize_t[rank_times];
+      dataspace_times.getSimpleExtentDims(dims_times);
+      const int nevents_times = dims_times[0];
+      data_times = new uint64_t[nevents_times];
+      dataset_times->read(data_times,H5::PredType::NATIVE_UINT64,dataspace_times);
+
       for(int iev=0; iev<nevents; iev++){
         std::vector<UShort_t> waveform;
         for(int isample=0; isample<nsamples; isample++){
@@ -453,10 +464,18 @@ namespace RAT {
       ds->SetRunID(1);
       RAT::DS::EV *ev = ds->AddNewEV();
       ev->SetID((int)event_id);
+      if(master_index==0){
+        ev->SetDeltaT(-9999.);
+      }
+      else{
+        ev->SetDeltaT( (float) (data_times[(int)master_index] - data_times[(int)master_index-1]) );
+      }
+
+      std::cout<<" DeltaT "<<master_index<<" "<<data_times[(int)master_index]<<" "<<data_times[(int)master_index-1]<<" "<<ev->GetDeltaT()<<std::endl;
+
       for(mw_t::iterator iwaveform = waveforms.begin(); iwaveform != waveforms.end(); iwaveform++){
         if(iwaveform->first == 999) continue;
         // if(DEBUG) std::cout<<" Events for CH"<<iwaveform->first<<" "<<iwaveform->second.size()<<std::endl;
-        // if(iwaveform->second.size()-1 < iev) continue; //FIXME: deal with different number of events...
         if(DEBUG) info<<" WF "<<iwaveform->first<<"\n";
 
         if(IDToDAQ[iwaveform->first] == 0) {

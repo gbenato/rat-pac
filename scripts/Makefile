@@ -7,7 +7,9 @@ INCLUDES= `root-config --cflags --glibs` -lGeom\
 -I$(RATROOT)/include \
 -I$(RATROOT)/include/RAT \
 -I$(RATROOT)/include/RAT/DS \
--lRATEvent
+-lRATEvent\
+-lhdf5_cpp\
+-lhdf5
 
 .PHONY: all
 

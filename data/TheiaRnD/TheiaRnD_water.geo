@@ -250,7 +250,7 @@
   pmt_detector_type: "idpmt",
   sensitive_detector: "/mydet/pmt/inner",
   efficiency_correction: 1.0,
-  pos_table: "PMTINFO_FAR",
+  pos_table: "PMTINFO_CLOSE",
   orientation: "point",
   orient_point: [-400.0, -400.0, -200.0],
 }
