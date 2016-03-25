@@ -122,7 +122,7 @@ z_edge: [ 96.7, 40.0, 0.0, -40.0, -90.0, -142.0 ],
 rho_edge: [ 0.0, 111.0, 130.0, 111.0, 42.25, 42.25 ],
 z_origin: [ -40.0, 0.0, 0.0, 40.0, -142.0 ],
 
-efficiency_correction: 0.8,
+//efficiency_correction: 0.8,
 
 }
 
@@ -245,7 +245,7 @@ glass_thickness: 1.0, // mm
 pmt_width: 15.0, //mm
 photocathode_width: 11.5, //mm
 
-efficiency_correction: 1.0,
+//efficiency_correction: 1.0,
 
 }
 

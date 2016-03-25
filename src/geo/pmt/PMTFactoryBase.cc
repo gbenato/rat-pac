@@ -321,6 +321,13 @@ G4VPhysicalVolume *PMTFactoryBase::ConstructPMTs(DBLinkPtr table,
       break;
     }
   }
+  //Set individual collection efficiency from PMTINFO
+  for (size_t i = 0; i < fastsim_log_pmt->GetFastSimulationManager()->GetFastSimulationModelList().size(); i++) {
+    if (fastsim_log_pmt->GetFastSimulationManager()->GetFastSimulationModelList()[i]->GetName() == modname) {
+      ((GLG4PMTOpticalModel*)fastsim_log_pmt->GetFastSimulationManager()->GetFastSimulationModelList()[i])->SetEfficiencyCorrection(EfficiencyCorrection);
+      break;
+    }
+  }
   return 0; // There is no specific physical volume to return
 }
   

@@ -53,7 +53,7 @@
   type: "box",
   size: [160.0,160.0,32.5],
   position: [-400.0, -400.0, -200.0],
-  material: "acrylic_berkeley",
+  material: "chsrc_uvt_acrylic",
   color: [0.1, 0.3, 0.8, 0.1],
 }
 
@@ -70,7 +70,7 @@
   type: "box",
   size: [160.0,160.0,0.5],
   position: [0.0,0.0,32.0],
-  material: "acrylic_berkeley", //mirror
+  material: "chsrc_uvt_acrylic", //mirror
   color: [0.5, 0.2, 0.1, 0.1],
 //  surface: "mirror",
 }
@@ -86,7 +86,7 @@
   r_max: 50.0,
   size_z: 0.5,
   position: [0.0,0.0,0.0],
-  material: "acrylic_berkeley",
+  material: "chsrc_uvt_acrylic",
   color: [0.1, 0.3, 0.8, 0.1],
 }
 
@@ -150,7 +150,7 @@
   r_max: 50.0,
   size_z: 15.0,
   position: [-400.0, -400.0, -152.5],
-  material: "acrylic_berkeley",
+  material: "chsrc_uvt_acrylic",
   color: [0.1, 0.3, 0.8, 0.1],
 }
 
