@@ -471,7 +471,7 @@ namespace RAT {
         ev->SetDeltaT( (float) (data_times[(int)master_index] - data_times[(int)master_index-1]) );
       }
 
-      std::cout<<" DeltaT "<<master_index<<" "<<data_times[(int)master_index]<<" "<<data_times[(int)master_index-1]<<" "<<ev->GetDeltaT()<<std::endl;
+      if(DEBUG) std::cout<<" DeltaT "<<master_index<<" "<<data_times[(int)master_index]<<" "<<data_times[(int)master_index-1]<<" "<<ev->GetDeltaT()<<std::endl;
 
       for(mw_t::iterator iwaveform = waveforms.begin(); iwaveform != waveforms.end(); iwaveform++){
         if(iwaveform->first == 999) continue;
@@ -528,10 +528,6 @@ namespace RAT {
       run->SetDAQHeader(daqHeaderV1742,"V1742");
 
       const RAT::DS::PMTInfo *pmtInfo = &PMTFactoryBase::GetPMTInfo();
-      for (int ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
-        int pmtType = pmtInfo->GetType(ipmt);
-        //        std::cout<<" PMT "<<ipmt<<" "<<pmtType<<std::endl;
-      }
       run->SetPMTInfo(&PMTFactoryBase::GetPMTInfo());
       DS::RunStore::AddNewRun(run);
 

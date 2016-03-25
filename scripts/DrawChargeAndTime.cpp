@@ -384,7 +384,7 @@ void GetHistos(){
       // if(panel_charge[1]>400. || panel_charge[2]>400. || panel_charge[3]>400.) continue; //Veto cut
 
       //Cuts for SPE
-      //if(panel_charge[0]>50 || panel_charge[1]>50 || panel_charge[2]>50 || panel_charge[3]>50) continue;
+      if(panel_charge[0]>50 || panel_charge[1]>50 || panel_charge[2]>50 || panel_charge[3]>50) continue;
       //if(ring_time < 170) continue;
 
       //Calculate event time
@@ -412,7 +412,7 @@ void GetHistos(){
         qshort = ev->GetPMT(ipmt)->GetQShort();
         //if(pmtfcn > 1000) continue;
         //if(pmttime < 170) continue;
-        if(charge < 50) continue;
+        //if(charge < 50) continue;
         charge_ring[pmtidtopos[pmtid]] += charge;
         npes_ring[pmtidtopos[pmtid]] += npes;
         double timeres = pmttime - tof - time_delay[pmtid];
