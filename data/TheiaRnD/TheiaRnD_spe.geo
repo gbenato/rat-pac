@@ -182,7 +182,6 @@
   mother: "inner",
   type: "tube",
   position: [-400.0, -400.0, -135.913],
-// rotation:  [0.0, 90.0, 0.0],
   r_max: 12.808,
   size_z: 1.587, //half height
   material: "acrylic_black",

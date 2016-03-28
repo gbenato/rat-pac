@@ -9,7 +9,7 @@
     "input_file": "../../results/TheiaRnD_cosmics_cher_WBLS1MOD.root", // Analysis ROOT file
 
     //Geometry files: used only if 'draw_geo==1'
-    "geo_file": "/Users/snoplus/Work/TheiaRnD/rat-pac/data/TheiaRnD/TheiaRnD_water.geo",
+    "geo_file": "/Users/snoplus/Work/TheiaRnD/rat-pac/data/TheiaRnD/TheiaRnD_labppo.geo",
     "corr_file": "/Users/snoplus/Work/TheiaRnD/rat-pac/data/TheiaRnD/SCINTCORR.ratdb",
     "material": "LABPPO", //LAB, LABPPO, WBLS1pct, WBLS10pct
 
@@ -18,8 +18,8 @@
 
     //Flags
     "event_number": -1,     // Event number to draw: Negative -> Event by event mode
-    "initial_track": 0,     // First track to be drawn
-    "final_track": 5000,      // Last track to be drawn: Negative -> Set to max
+    "initial_track": 4500,     // First track to be drawn
+    "final_track": 4600,      // Last track to be drawn: Negative -> Set to max
     "draw_geo": 1,          // 1 -> Draw Detector geometry
     "draw_pmts": 1,         // 1 -> Draw PMTs stored in PMTINFO
 

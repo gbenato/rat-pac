@@ -93,9 +93,11 @@ EventDisplay::EventDisplay(std::string _inputFileName){
 
   //DAQ event
   hTime = new TH1F("hTime", "hTime", 60, -1., 1.);
+  npeVsR = new TH1F("npeVsR", "npeVsR", 3, 0., 100.);
   chargeVsR = new TH1F("chargeVsR", "chargeVsR", 3, 0., 100.);
   chargeVsRScint = new TH1F("chargeVsRScint", "chargeVsRScint", 3, 0., 100.);
   chargeVsRCorr = new TH1F("chargeVsRCorr", "chargeVsRCorr", 3, 0., 100.);
+  npeVsR->GetYaxis()->SetLabelSize(.06);
   chargeVsR->GetYaxis()->SetLabelSize(.06);
   chargeVsRScint->GetYaxis()->SetLabelSize(.06);
   chargeVsRCorr->GetYaxis()->SetLabelSize(.06);
@@ -372,6 +374,7 @@ bool EventDisplay::LoadEvent(int ievt){
     npeVsPos->SetMinimum(0.0);
     chargeVsPos->Reset();
     chargeVsPosCorr->Reset();
+    npeVsR->Reset();
     chargeVsR->Reset();
     chargeVsRScint->Reset();
     chargeVsRCorr->Reset();
@@ -485,6 +488,7 @@ bool EventDisplay::LoadEvent(int ievt){
       chargeVsPosScint->Fill(pmtpos.X(), pmtpos.Y(), pmtGeoCorr[ipmt]);
       // chargeVsPosCorr->Fill(pmtpos.X(), pmtpos.Y(), (pmtCharge[ipmt] - pmtGeoCorr[ipmt])/pmtGeoCorrErr[ipmt] );
       chargeVsPosCorr->Fill(pmtpos.X(), pmtpos.Y(), pmtCharge[ipmt] - pmtGeoCorr[ipmt]);
+      npeVsR->Fill(XYdist, pmtCharge[ipmt]/spe[ipmt]);
       chargeVsR->Fill(XYdist, pmtCharge[ipmt]);
       //chargeVsR->Fill(XYdist, pmtQShort[ipmt]);
       chargeVsRScint->Fill(XYdist, pmtGeoCorr[ipmt]);
@@ -745,16 +749,18 @@ void EventDisplay::DisplayEvent(int ievt){
     if(debugLevel > 0) std::cout<<"Display canvas 3 and 9"<<std::endl;
     //Charge
     canvas_event->cd(3);
-    // npeVsPos->SetMarkerColor(0);
-    // npeVsPos->Draw("colz text");
+    npeVsPos->SetMarkerColor(0);
     chargeVsPos->SetMarkerColor(0);
     chargeVsPosCorr->SetMarkerColor(0);
-    chargeVsPos->Draw("colz text");
+    //chargeVsPos->Draw("colz text");
+    npeVsPos->Draw("colz text");
     //chargeVsPosCorr->Draw("colz text");
     canvas_event->cd(9);
+    npeVsR->SetLineWidth(3);
     chargeVsR->SetLineWidth(3);
     chargeVsRCorr->SetLineWidth(3);
-    chargeVsR->Draw("");
+    npeVsR->Draw("");
+    //chargeVsR->Draw("");
     //chargeVsRCorr->Draw("");
 
     //Time

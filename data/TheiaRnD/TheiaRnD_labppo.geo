@@ -23,7 +23,7 @@
   mother: "world",
   type: "box",
   size: [762.0,762.0,508.0], //mm, half-lenght
-  material: "acrylic_black", //acrylic_black
+  material: "acrylic_black",
   color: [0.5, 0.2, 0.1, 0.1],
 }
 
@@ -70,9 +70,9 @@
   type: "box",
   size: [160.0,160.0,0.5],
   position: [0.0,0.0,32.0],
-  material: "chsrc_uvt_acrylic", //mirror
+  material: "chsrc_uvt_acrylic", //chsrc_uvt_acrylic, acrylic_black
   color: [0.5, 0.2, 0.1, 0.1],
-//  surface: "mirror",
+//  surface: "acrylic_black", //mirror, 
 }
 
 {
@@ -147,7 +147,7 @@
   invisible: 0, // omitted for visualization
   mother: "inner",
   type: "tube",
-  r_max: 50.0,
+  r_max: 50.0, //50.0
   size_z: 15.0,
   position: [-400.0, -400.0, -152.5],
   material: "chsrc_uvt_acrylic",
@@ -162,10 +162,10 @@
   invisible: 0, // omitted for visualization
   mother: "container",
   type: "tube",
-  r_max: 45.0, //LAB->35.0, WBLS->30.0
+  r_max: 45.0, //LAB->45.0, WBLS->30.0
   size_z: 14.0,
   position: [0.0, 0.0, 1.0],
-  material: "labppo_scintillator", //water, wbls_1pct_mod, wbls_1pct, wbls_5pct, wbls_10pct, labppo_scintillator
+  material: "labppo_scintillator",
   color: [0.5, 0.1, 0.5, 0.5],
 }
 

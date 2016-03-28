@@ -126,6 +126,7 @@ protected:
   TH2F *chargeVsPos;
   TH2F *chargeVsPosScint;
   TH2F *chargeVsPosCorr;
+  TH1F *npeVsR;
   TH1F *chargeVsR;
   TH1F *chargeVsRScint;
   TH1F *chargeVsRCorr;

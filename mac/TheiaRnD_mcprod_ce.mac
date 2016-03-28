@@ -70,7 +70,7 @@
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "../../results/TheiaRnD_mcprod_ce.root"
+/rat/procset file "../../results/TheiaRnD_mcprod_ce_test.root"
 #########################################
 
 ##### GENERATORS #################
@@ -98,4 +98,4 @@
 #######################################
 
 ##### RUN ###########
-/run/beamOn 1000000
+/run/beamOn 10000
