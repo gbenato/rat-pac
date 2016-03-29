@@ -19,7 +19,7 @@
   index: "darkbox",
   valid_begin: [0, 0],
   valid_end: [0, 0],
-  invisible: 0, // omitted for visualization
+  invisible: 1, // omitted for visualization
   mother: "world",
   type: "box",
   size: [762.0,762.0,508.0], //mm, half-lenght
@@ -32,7 +32,7 @@
   index: "inner",
   valid_begin: [0, 0],
   valid_end: [0, 0],
-  invisible: 0, // omitted for visualization
+  invisible: 1, // omitted for visualization
   mother: "darkbox",
   type: "box",
   size: [711.2,711.2,457.2], //mm, half-lenght
@@ -52,7 +52,7 @@
   mother: "inner",
   type: "box",
   size: [160.0,160.0,32.5],
-  position: [-400.0, -400.0, -200.0],
+  position: [-398.0, -367.0, -270.0],
   material: "chsrc_uvt_acrylic",
   color: [0.1, 0.3, 0.8, 0.1],
 }
@@ -70,7 +70,7 @@
   type: "box",
   size: [160.0,160.0,0.5],
   position: [0.0,0.0,32.0],
-  material: "chsrc_uvt_acrylic", //mirror
+  material: "chsrc_uvt_acrylic",
   color: [0.5, 0.2, 0.1, 0.1],
 //  surface: "mirror",
 }
@@ -141,15 +141,16 @@
 /////////////////
 {
   name: "GEO",
-  index: "container",
+  index: "vessel",
   valid_begin: [0, 0],
   valid_end: [0, 0],
   invisible: 0, // omitted for visualization
-  mother: "inner", //inner_vessel
-  type: "tube",
+  mother: "inner",
+  type: "CheSSVessel",
   r_max: 50.0,
   size_z: 15.0,
-  position: [-400.0, -400.0, -152.5],
+  rotation:  [0.0, 0.0, 135.0],
+  position: [-398.0, -367.0, -222.5],
   material: "chsrc_uvt_acrylic",
   color: [0.1, 0.3, 0.8, 0.1],
 }
@@ -160,15 +161,14 @@
   valid_begin: [0, 0],
   valid_end: [0, 0],
   invisible: 0, // omitted for visualization
-  mother: "container",
+  mother: "vessel",
   type: "tube",
   r_max: 45.0, //LAB->35.0, WBLS->30.0
   size_z: 14.0,
   position: [0.0, 0.0, 1.0],
-  material: "water", //water, wbls_1pct_mod, wbls_1pct, wbls_5pct, wbls_10pct, labppo_scintillator
+  material: "water",
   color: [0.5, 0.1, 0.5, 0.5],
 }
-
 
 /////////////////////////////
 // RADIACTIVE SOURCES
@@ -181,7 +181,7 @@
   invisible: 0, // omitted for visualization
   mother: "inner",
   type: "tube",
-  position: [-400.0, -400.0, -135.913],
+  position: [-398.0, -367.0, -205.6],
   r_max: 12.808,
   size_z: 1.587, //half height
   material: "acrylic_black",
@@ -246,13 +246,13 @@
   valid_end: [0, 0],
   mother: "inner",
   type: "pmtarray",
-  pmt_model: "r7081_hqe", //r7081_hqe, r11780_hqe
+  pmt_model: "r7081_hqe",
   pmt_detector_type: "idpmt",
   sensitive_detector: "/mydet/pmt/inner",
   efficiency_correction: 1.0,
   pos_table: "PMTINFO_FAR",
   orientation: "point",
-  orient_point: [-400.0, -400.0, -200.0],
+  orient_point: [-398.0, -367.0, -237.0],
 }
 
 {
@@ -262,13 +262,13 @@
    valid_end: [0, 0],
    mother: "inner",
    type: "pmtarray",
-   pmt_model: "h11934", //r7081_hqe, r11780_hqe, fast_test
+   pmt_model: "h11934",
    pmt_detector_type: "idpmt",
    sensitive_detector: "/mydet/pmt/inner",
    efficiency_correction: 1.0,
    pos_table: "PMTINFO_TRIGGER",
-   orientation: "manual",
-   orient_point: [0.0, 0.0, 400.0],
+   orientation: "point",
+   orient_point: [-398.0, -367.0, -222.2],
 }
 
 {
@@ -278,7 +278,7 @@
   valid_end: [0, 0],
   mother: "world",
   type: "pmtarray",
-  pmt_model: "h11934", //r7081_hqe, r11780_hqe
+  pmt_model: "h11934",
   pmt_detector_type: "idpmt",
   sensitive_detector: "/mydet/pmt/inner",
   efficiency_correction: 1.0,

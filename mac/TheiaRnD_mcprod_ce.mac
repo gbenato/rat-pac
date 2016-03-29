@@ -8,7 +8,7 @@
 #/process/inactivate Cerenkov
 #/glg4scint/off
 #/glg4scint/reemission off
-/tracking/storeTrajectory 0
+/tracking/storeTrajectory 1
 
 ##### Visualization ##########################
 
@@ -93,7 +93,7 @@
 
 ###RADIACTIVE SOURCE DECAYCHAIN
 /generator/add decaychain 90Y:fill:uniform
-/generator/pos/set -400.0 -451.587 -152.5
+/generator/pos/set -408.76 -417.98 -223.0
 /generator/pos/set source
 #######################################
 

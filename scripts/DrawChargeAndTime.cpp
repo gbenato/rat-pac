@@ -85,8 +85,8 @@ TH2F* h_mcpmt_npevspos; //MC NPE vs PMT position
 
 //Hit level (PMT)
 int t_nbins = 100;
-double t_min = -4.0;
-double t_max = 4.0;
+double t_min = -2.0;
+double t_max = 5.0;
 std::vector<double> q_xmin;
 std::vector<double> q_xmax;
 std::vector<double> npes_xmax;
@@ -200,8 +200,8 @@ void GetPMTInfo(char* inputfile){
   }
   centerpos = centerpos*(1./pmtTypeCount);
 
-  //  Color_t mycolors[] = {1, 1, 1, 1, 1, 1,  kBlue, kRed,  kRed, 1, 1, 1,  kOrange, kBlue, kRed, kRed, kBlue, kOrange, kOrange, kBlue, kRed, kRed, kBlue, kOrange, 1}; //By Position (WATER)
-  Color_t mycolors[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, kBlue, kOrange, kRed, kRed, kOrange, kBlue, kBlue, kOrange, kRed, kRed, kOrange, kBlue, 1}; //By Position (LAB)
+  Color_t mycolors[] = {1, 1, 1, 1, 1, 1,  kBlue, kRed,  kRed, 1, 1, 1,  kOrange, kBlue, kRed, kRed, kBlue, kOrange, kOrange, kBlue, kRed, kRed, kBlue, kOrange, 1}; //By Position (WATER)
+  //Color_t mycolors[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, kBlue, kOrange, kRed, kRed, kOrange, kBlue, kBlue, kOrange, kRed, kRed, kOrange, kBlue, 1}; //By Position (LAB)
   //  Color_t mycolors[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, kBlue-2, kOrange-2, kRed-2, kRed-1, kOrange-1, kBlue-1, kBlue, kOrange, kRed, kRed+1, kOrange+1, kBlue+1, 1}; //By Position
   //  Color_t mycolors[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, kBlue, kBlue, kBlue, kBlue, kOrange, kOrange, kOrange, kOrange, kRed, kRed, kRed, kRed, 1}; //By Digitizer group
   //  Color_t mycolors[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, kBlue, kOrange, kRed, kCyan, kBlack, kGray, kGreen, kTeal, kAzure, kViolet, kPink, kYellow, 1}; //Individual
@@ -217,7 +217,7 @@ void GetPMTInfo(char* inputfile){
   q_xmin.insert(q_xmin.begin(), myqxmins, myqxmins + pmtInfo->GetPMTCount() );
   double myqxmaxs[] = {1000,1000,1000,1000,1000,1000, 20000,20000, 100000,100000,100000,100000, 400,400,400,400,400,400,400,400,400,400,400,400, 40};
   q_xmax.insert(q_xmax.begin(), myqxmaxs, myqxmaxs + pmtInfo->GetPMTCount() );
-  double mynpesxmaxs[] = {10,10,10,10,10,10, 100,100, 100,100,100,100, 200,200,200,200,200,200,200,200,200,200,200,200, 10};
+  double mynpesxmaxs[] = {10,10,10,10,10,10, 100,100, 100,100,100,100, 20,20,20,20,20,20,20,20,20,20,20,20, 10};
   npes_xmax.insert(npes_xmax.begin(), mynpesxmaxs, mynpesxmaxs + pmtInfo->GetPMTCount() );
 
 }
@@ -384,17 +384,17 @@ void GetHistos(){
       // if(panel_charge[1]>400. || panel_charge[2]>400. || panel_charge[3]>400.) continue; //Veto cut
 
       //Cuts for SPE
-      event_time = ring_timeres;
+      //event_time = ring_timeres;
       //if(panel_charge[0]>50 || panel_charge[1]>50 || panel_charge[2]>50 || panel_charge[3]>50) continue;
-      if(ring_time < 170) continue;
+      //if(ring_time < 170) continue;
 
       //Calculate event time
       // if(ringPMTTimes.size() > 1){
       //   event_time = TMath::KOrdStat((int)ringPMTTimes.size(), &ringPMTTimes[0], 1);
       // }
-      // if(ringPMTTimes.size() > 2){
-      //   event_time = (ringPMTTimes[0] + ringPMTTimes[1] + ringPMTTimes[2])/3.;
-      // }
+      if(ringPMTTimes.size() > 2){
+        event_time = (ringPMTTimes[0] + ringPMTTimes[1] + ringPMTTimes[2])/3.;
+      }
 
       h_event_time->Fill(event_time);
 
@@ -412,7 +412,7 @@ void GetHistos(){
         npes = charge/spe[pmtid];
         qshort = ev->GetPMT(ipmt)->GetQShort();
         //if(pmtfcn > 1000) continue;
-        if(pmttime < 170) continue;
+        //if(pmttime < 170) continue;
         //if(charge < 50) continue;
         charge_ring[pmtidtopos[pmtid]] += charge;
         npes_ring[pmtidtopos[pmtid]] += npes;
