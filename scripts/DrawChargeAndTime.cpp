@@ -58,9 +58,10 @@ Double_t fmultigaus(Double_t *x, Double_t *par) {
   Double_t gaus_noise = 1./(par[2]*sqrt(2.*3.14159)) * exp( -0.5 * pow( ( x[0] - par[1] )/par[2] , 2.) );
   Double_t gaus_spe = 1./(par[5]*sqrt(2.*3.14159)) * exp( -0.5 * pow( ( x[0] - par[4] )/par[5] , 2.) );
   Double_t gaus_2pe = 1./(par[5]*sqrt(2.)*sqrt(2.*3.14159)) * exp( -0.5 * pow( ( x[0] - par[4]*2. )/(par[5]*sqrt(2.)), 2.) );
-  // Double_t gaus_3pe = 1./(par[5]*sqrt(3.)*sqrt(2.*3.14159)) * exp( -0.5 * pow( ( x[0] - par[4]*3. )/(par[5]*sqrt(3.)), 2.) );
+  Double_t gaus_3pe = 1./(par[5]*sqrt(3.)*sqrt(2.*3.14159)) * exp( -0.5 * pow( ( x[0] - par[4]*3. )/(par[5]*sqrt(3.)), 2.) );
   //  gaus_noise = 0.;
-  return par[0]*gaus_noise + par[3]*gaus_spe + par[6]*gaus_2pe;
+  return par[0]*gaus_noise + par[3]*gaus_spe;
+//  return par[0]*gaus_noise + par[3]*gaus_spe + par[6]*gaus_2pe + par[7]*gaus_3pe;
   //  return par[0]*gaus_noise + par[3]*gaus_spe;
 }
 
@@ -130,7 +131,7 @@ int main(int argc, char **argv){
   GetDBTables();
   GetHistos();
   NormalizeHistos();
-  //GetPMTCalibration();
+  GetPMTCalibration();
 
   DrawHistos();
   if(gOutFile){
@@ -215,7 +216,7 @@ void GetPMTInfo(char* inputfile){
   //Plot axis limits
   double myqxmins[] = {-100,-100,-100,-100,-100,-100, -100,-100, -100,-100,-100,-100, -100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100, -10};
   q_xmin.insert(q_xmin.begin(), myqxmins, myqxmins + pmtInfo->GetPMTCount() );
-  double myqxmaxs[] = {1000,1000,1000,1000,1000,1000, 20000,20000, 100000,100000,100000,100000, 400,400,400,400,400,400,400,400,400,400,400,400, 40};
+  double myqxmaxs[] = {1500,1500,1500,1500,1500,1500, 20000,20000, 100000,100000,100000,100000, 400,400,400,400,400,400,400,400,400,400,400,400, 40};
   q_xmax.insert(q_xmax.begin(), myqxmaxs, myqxmaxs + pmtInfo->GetPMTCount() );
   double mynpesxmaxs[] = {10,10,10,10,10,10, 100,100, 100,100,100,100, 20,20,20,20,20,20,20,20,20,20,20,20, 10};
   npes_xmax.insert(npes_xmax.begin(), mynpesxmaxs, mynpesxmaxs + pmtInfo->GetPMTCount() );
@@ -254,7 +255,7 @@ void GetHistos(){
     h_time.push_back(new TH1F(Form("h_time_%i",ih),"h_time",t_nbins,t_min,t_max));
     h_time_bottom.push_back(new TH1F(Form("h_time_bottom_%i",ih),"h_time_bottom",t_nbins,t_min,t_max));
     h_time_trigger.push_back(new TH1F(Form("h_time_trigger%i",ih),"h_time_trigger",t_nbins,t_min,t_max));
-    f_spe.push_back(new TF1(Form("f_spe_%i",ih),fmultigaus,0,50,7));
+    f_spe.push_back(new TF1(Form("f_spe_%i",ih),fmultigaus,-60,400,8));
   }
   h_charge_muontrigs = new TH2F("h_charge_muontrigs","h_charge_muontrigs",100,0,q_xmax[6],100,0,q_xmax[7]);
   h_time_muontrigs = new TH1F("h_time_muontrigs","h_time_muontrigs",100,-5,5);
@@ -385,7 +386,7 @@ void GetHistos(){
 
       //Cuts for SPE
       //event_time = ring_timeres;
-      //if(panel_charge[0]>50 || panel_charge[1]>50 || panel_charge[2]>50 || panel_charge[3]>50) continue;
+      if(panel_charge[0]>50 || panel_charge[1]>50 || panel_charge[2]>50 || panel_charge[3]>50) continue;
       //if(ring_time < 170) continue;
 
       //Calculate event time
@@ -413,7 +414,7 @@ void GetHistos(){
         qshort = ev->GetPMT(ipmt)->GetQShort();
         //if(pmtfcn > 1000) continue;
         //if(pmttime < 170) continue;
-        //if(charge < 50) continue;
+        // if(charge < 50) continue;
         charge_ring[pmtidtopos[pmtid]] += charge;
         npes_ring[pmtidtopos[pmtid]] += npes;
         double timeres = pmttime - tof - time_delay[pmtid];
@@ -482,21 +483,22 @@ void GetPMTCalibration(){
 
 //    if(pmtInfo->GetType(ipmt)!=1 && pmtInfo->GetType(ipmt)!=2) continue;
 
-    f_spe[ipmt]->SetParameters(1.,0.,10.,1.,50.,50.,1.);
-    f_spe[ipmt]->SetParLimits(0.,0.,99999999.); //Noise norm
-    f_spe[ipmt]->SetParLimits(1.,-60.,60.); //Noise mean
-    f_spe[ipmt]->SetParLimits(2.,0.,100.); //Noise sigma
-    f_spe[ipmt]->SetParLimits(3.,0.,99999999.); //SPE norm
-    f_spe[ipmt]->SetParLimits(4.,0.,400.); //SPE mean
+    f_spe[ipmt]->SetParameters(1.5e7,0.,10.,1e6,50.,50.,1e4,1e3);
+    f_spe[ipmt]->SetParLimits(0.,1e6,1e8); //Noise norm
+    f_spe[ipmt]->SetParLimits(1.,-30.,30.); //Noise mean
+    f_spe[ipmt]->SetParLimits(2.,0.,30.); //Noise sigma
+    f_spe[ipmt]->SetParLimits(3.,1e5,1e7); //SPE norm
+    f_spe[ipmt]->SetParLimits(4.,20.,400.); //SPE mean
     f_spe[ipmt]->SetParLimits(5.,0.,200.); //SPE sigma
-    f_spe[ipmt]->SetParLimits(6.,0.,99999999.); //2PE norm
+    f_spe[ipmt]->SetParLimits(6.,1e3,1e6); //2PE norm
+    f_spe[ipmt]->SetParLimits(7.,1e2,2e5); //3PE norm
 
     // ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Simplex");
-    // h_charge[ipmt]->Fit(Form("f_spe_%i",ipmt),"Q","",-60,500);
-    h_charge[ipmt]->Fit(Form("f_spe_%i",ipmt),"Q M","",-60,500);
+    // h_charge[ipmt]->Fit(Form("f_spe_%i",ipmt),"Q","",-60,400);
+    h_charge[ipmt]->Fit(Form("f_spe_%i",ipmt),"Q M","",-60,400);
     pspe = f_spe[ipmt]->GetParameters();
     f_spe_mean.push_back(pspe[4]);
-    f_spe_sigma.push_back(pspe[5]);
+    f_spe_sigma.push_back(sqrt(pspe[5]*pspe[5] - pspe[2]*pspe[2]));
 
     h_time[ipmt]->Fit("gaus","Q M","",-0.7,0.7);
     if(h_time[ipmt]->GetFunction("gaus") == NULL){
@@ -518,6 +520,7 @@ void GetPMTCalibration(){
     std::cout<<"  |-> Noise norm: "<<pspe[0]<<" mean: "<<pspe[1]<<" sigma: "<<pspe[2]<<std::endl;
     std::cout<<"  |-> SPE norm: "<<pspe[3]<<" mean: "<<pspe[4]<<" sigma: "<<pspe[5]<<std::endl;
     std::cout<<"  |-> 2PE norm: "<<pspe[6]<<std::endl;
+    std::cout<<"  |-> 3PE norm: "<<pspe[7]<<std::endl;
     std::cout<<"  |-> Delay: "<<ptime[1]<<" +- "<<ptime_err[1]<<" jitter: "<<ptime[2]<<std::endl;
 
   }
