@@ -19,7 +19,6 @@ G4VSolid *GeoCheSSVesselFactory::ConstructSolid(DBLinkPtr table)
   G4Tubs *hollow = new G4Tubs("hollow", r_min * CLHEP::mm, 20.0 * CLHEP::mm, 3.81 * CLHEP::mm, 0., CLHEP::twopi);
   G4Box *flat = new G4Box("flat", 5.0 * CLHEP::mm, size_z * CLHEP::mm, size_z * CLHEP::mm);
 
-//  G4ThreeVector *trans = new G4ThreeVector(0., 0., (size_z + 3.18/2. - 3.81/2.) * CLHEP::mm);
   G4ThreeVector *trans = new G4ThreeVector(0., 0., (size_z + 3.18/2.) * CLHEP::mm);
   G4RotationMatrix *rotation = new G4RotationMatrix();
   G4Transform3D *transf = new G4Transform3D(*rotation, *trans);
@@ -27,7 +26,8 @@ G4VSolid *GeoCheSSVesselFactory::ConstructSolid(DBLinkPtr table)
 
   trans = new G4ThreeVector((r_max - 5.0) * CLHEP::mm, 0., -3.18/2.);
   transf = new G4Transform3D(*rotation,*trans);
-  G4UnionSolid *unionVolume = new G4UnionSolid("union0", subtractionVolume, flat, *transf);
+  G4UnionSolid *unionVolume = new G4UnionSolid("union0", cup, flat, *transf);
+  //G4UnionSolid *unionVolume = new G4UnionSolid("union0", subtractionVolume, flat, *transf);
 
   trans->rotateZ(2*atan(size_z/r_max) * CLHEP::rad);
   rotation->rotateZ(2*atan(size_z/r_max) * CLHEP::rad);
