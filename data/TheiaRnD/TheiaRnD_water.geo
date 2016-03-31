@@ -156,6 +156,21 @@
 
 {
   name: "GEO",
+  index: "cavity",
+  valid_begin: [0, 0],
+  valid_end: [0, 0],
+  invisible: 0, // omitted for visualization
+  mother: "vessel",
+  type: "tube",
+  r_max: 20.0,
+  size_z: 1.905,
+  position: [0.0, 0.0, 14.685],
+  material: "air",
+  color: [0.0, 0.0, 0.0, 0.1],
+}
+
+{
+  name: "GEO",
   index: "content",
   valid_begin: [0, 0],
   valid_end: [0, 0],
