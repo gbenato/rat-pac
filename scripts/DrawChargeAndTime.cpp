@@ -28,8 +28,8 @@
 #define REFTUBE 20
 #define MCPHOTONLOOP false
 #define NLOGENTRIES 10
-#define FIT_LIMIT_MIN -60
-#define FIT_LIMIT_MAX 800
+#define FIT_LIMIT_MIN 50. //-60.
+#define FIT_LIMIT_MAX 800.
 
 //Constants
 double cspeed = 300/1.4; // (mm/ns)/rindex
@@ -63,7 +63,8 @@ Double_t fmultigaus(Double_t *x, Double_t *par) {
   Double_t gaus_3pe = 1./(par[5]*sqrt(3.)*sqrt(2.*3.14159)) * exp( -0.5 * pow( ( x[0] - par[4]*3. )/(par[5]*sqrt(3.)), 2.) );
   //  gaus_noise = 0.;
   //  return par[0]*gaus_noise + par[3]*gaus_spe;
-  return par[0]*gaus_noise + par[3]*gaus_spe + par[6]*gaus_2pe + par[7]*gaus_3pe;
+  //  return par[0]*gaus_noise + par[3]*gaus_spe + par[6]*gaus_2pe + par[7]*gaus_3pe;
+  return par[3]*gaus_spe + par[6]*gaus_2pe + par[7]*gaus_3pe;
   //  return par[0]*gaus_noise + par[3]*gaus_spe;
 }
 
@@ -218,7 +219,7 @@ void GetPMTInfo(char* inputfile){
   //Plot axis limits
   double myqxmins[] = {-100,-100,-100,-100,-100,-100, -100,-100, -100,-100,-100,-100, -100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100, -10};
   q_xmin.insert(q_xmin.begin(), myqxmins, myqxmins + pmtInfo->GetPMTCount() );
-  double myqxmaxs[] = {1500,1500,1500,1500,1500,1500, 20000,20000, 100000,100000,100000,100000, 1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000, 40};
+  double myqxmaxs[] = {500,500,500,500,500,500, 20000,20000, 100000,100000,100000,100000, 1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000, 40};
   q_xmax.insert(q_xmax.begin(), myqxmaxs, myqxmaxs + pmtInfo->GetPMTCount() );
   double mynpesxmaxs[] = {10,10,10,10,10,10, 100,100, 100,100,100,100, 20,20,20,20,20,20,20,20,20,20,20,20, 10};
   npes_xmax.insert(npes_xmax.begin(), mynpesxmaxs, mynpesxmaxs + pmtInfo->GetPMTCount() );
@@ -416,7 +417,7 @@ void GetHistos(){
         qshort = ev->GetPMT(ipmt)->GetQShort();
         //if(pmtfcn > 1000) continue;
         //if(pmttime < 170) continue;
-        if(charge < 50) continue;
+        // if(charge < 50) continue;
         charge_ring[pmtidtopos[pmtid]] += charge;
         npes_ring[pmtidtopos[pmtid]] += npes;
         double timeres = pmttime - tof - time_delay[pmtid];
