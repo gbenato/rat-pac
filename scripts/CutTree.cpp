@@ -83,20 +83,24 @@ int main(int argc, char **argv){
       pmt = ev->GetPMTWithID(11);
       if(pmt!=NULL) panel_charge[3] = pmt->GetCharge();
 
-      int ringPMTs = 0;
+      int ringPMTs = 0, lightPMTs = 0;
       for(int ipmt=0; ipmt<ev->GetPMTCount(); ipmt++){
         int pmtid = ev->GetPMT(ipmt)->GetID();
         int pmttype = pmtInfo->GetType(pmtid);
         if(pmttype==1) {
           ringPMTs++;
         }
+        if(pmttype==2) {
+          lightPMTs++;
+	}
       }
 
       //Cuts
       //Cuts for cherenkov imaging
+      if(lightPMTs==0) continue; //More than 3 hits
       //if(ringPMTs<3) continue; //More than 3 hits
-      if(bottommuon_charge<200.0) continue;
-      if(topmuon_charge<200.0) continue;
+      //if(bottommuon_charge<200.0) continue;
+      //if(topmuon_charge<200.0) continue;
       // if(bottommuon_time - topmuon_time < 0.4) continue;
       // if(bottommuon_time - topmuon_time > 0.8 ) continue;
       // if(panel_charge[0]<2000.) continue; //Veto cut
