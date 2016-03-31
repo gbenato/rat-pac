@@ -28,6 +28,8 @@
 #define REFTUBE 20
 #define MCPHOTONLOOP false
 #define NLOGENTRIES 10
+#define FIT_LIMIT_MIN -60
+#define FIT_LIMIT_MAX 800
 
 //Constants
 double cspeed = 300/1.4; // (mm/ns)/rindex
@@ -60,8 +62,8 @@ Double_t fmultigaus(Double_t *x, Double_t *par) {
   Double_t gaus_2pe = 1./(par[5]*sqrt(2.)*sqrt(2.*3.14159)) * exp( -0.5 * pow( ( x[0] - par[4]*2. )/(par[5]*sqrt(2.)), 2.) );
   Double_t gaus_3pe = 1./(par[5]*sqrt(3.)*sqrt(2.*3.14159)) * exp( -0.5 * pow( ( x[0] - par[4]*3. )/(par[5]*sqrt(3.)), 2.) );
   //  gaus_noise = 0.;
-  return par[0]*gaus_noise + par[3]*gaus_spe;
-//  return par[0]*gaus_noise + par[3]*gaus_spe + par[6]*gaus_2pe + par[7]*gaus_3pe;
+  //  return par[0]*gaus_noise + par[3]*gaus_spe;
+  return par[0]*gaus_noise + par[3]*gaus_spe + par[6]*gaus_2pe + par[7]*gaus_3pe;
   //  return par[0]*gaus_noise + par[3]*gaus_spe;
 }
 
@@ -131,7 +133,7 @@ int main(int argc, char **argv){
   GetDBTables();
   GetHistos();
   NormalizeHistos();
-  GetPMTCalibration();
+//  GetPMTCalibration();
 
   DrawHistos();
   if(gOutFile){
@@ -255,7 +257,7 @@ void GetHistos(){
     h_time.push_back(new TH1F(Form("h_time_%i",ih),"h_time",t_nbins,t_min,t_max));
     h_time_bottom.push_back(new TH1F(Form("h_time_bottom_%i",ih),"h_time_bottom",t_nbins,t_min,t_max));
     h_time_trigger.push_back(new TH1F(Form("h_time_trigger%i",ih),"h_time_trigger",t_nbins,t_min,t_max));
-    f_spe.push_back(new TF1(Form("f_spe_%i",ih),fmultigaus,-60,400,8));
+    f_spe.push_back(new TF1(Form("f_spe_%i",ih),fmultigaus,FIT_LIMIT_MIN,FIT_LIMIT_MAX,8));
   }
   h_charge_muontrigs = new TH2F("h_charge_muontrigs","h_charge_muontrigs",100,0,q_xmax[6],100,0,q_xmax[7]);
   h_time_muontrigs = new TH1F("h_time_muontrigs","h_time_muontrigs",100,-5,5);
@@ -386,8 +388,8 @@ void GetHistos(){
 
       //Cuts for SPE
       event_time = ring_timeres;
-      //if(panel_charge[0]>50 || panel_charge[1]>50 || panel_charge[2]>50 || panel_charge[3]>50) continue;
-      if(ring_time < 170) continue;
+      if(panel_charge[0]>50 || panel_charge[1]>50 || panel_charge[2]>50 || panel_charge[3]>50) continue;
+      //if(ring_time < 170) continue;
 
       //Calculate event time
       // if(ringPMTTimes.size() > 1){
@@ -413,8 +415,8 @@ void GetHistos(){
         npes = charge/spe[pmtid];
         qshort = ev->GetPMT(ipmt)->GetQShort();
         //if(pmtfcn > 1000) continue;
-        if(pmttime < 170) continue;
-        // if(charge < 50) continue;
+        //if(pmttime < 170) continue;
+        if(charge < 50) continue;
         charge_ring[pmtidtopos[pmtid]] += charge;
         npes_ring[pmtidtopos[pmtid]] += npes;
         double timeres = pmttime - tof - time_delay[pmtid];
@@ -490,12 +492,12 @@ void GetPMTCalibration(){
     f_spe[ipmt]->SetParLimits(3.,1e5,1e7); //SPE norm
     f_spe[ipmt]->SetParLimits(4.,20.,400.); //SPE mean
     f_spe[ipmt]->SetParLimits(5.,0.,200.); //SPE sigma
-    f_spe[ipmt]->SetParLimits(6.,1e3,1e6); //2PE norm
-    f_spe[ipmt]->SetParLimits(7.,1e2,2e5); //3PE norm
+    f_spe[ipmt]->SetParLimits(6.,1e3,1e7); //2PE norm
+    f_spe[ipmt]->SetParLimits(7.,1e2,2e6); //3PE norm
 
-    // ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Simplex");
-    // h_charge[ipmt]->Fit(Form("f_spe_%i",ipmt),"Q","",-60,400);
-    h_charge[ipmt]->Fit(Form("f_spe_%i",ipmt),"Q M","",-60,400);
+    ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Simplex");
+    h_charge[ipmt]->Fit(Form("f_spe_%i",ipmt),"Q","",FIT_LIMIT_MIN,FIT_LIMIT_MAX);
+    h_charge[ipmt]->Fit(Form("f_spe_%i",ipmt),"Q M","",FIT_LIMIT_MIN,FIT_LIMIT_MAX);
     pspe = f_spe[ipmt]->GetParameters();
     f_spe_mean.push_back(pspe[4]);
     f_spe_sigma.push_back(sqrt(pspe[5]*pspe[5] - pspe[2]*pspe[2]));
