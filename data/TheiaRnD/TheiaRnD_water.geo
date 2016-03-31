@@ -113,9 +113,9 @@
   invisible: 0, // omitted for visualization
   mother: "block",
   type: "tube",
-  position: [0.0, 0.0, -0.5],
+  position: [0.0, 0.0, 0.5],
   r_max: 5.0,
-  size_z: 32.0,
+  size_z: 31.0,
   material: "acrylic_black",
   color: [0.0, 0.0, 0.0, 0.1],
 }
@@ -130,7 +130,6 @@
   type: "tube",
   position: [0.0, 0.0, -31.5],
   r_max: 10.0,
-  r_min: 5.0,
   size_z: 1.0,
   material: "air",
   color: [0.0, 0.0, 0.0, 0.1],
@@ -150,7 +149,7 @@
   r_max: 50.0,
   size_z: 15.0,
   rotation:  [0.0, 0.0, 135.0],
-  position: [-398.0, -367.0, -222.5],
+  position: [-398.0, -367.0, -220.91],
   material: "chsrc_uvt_acrylic",
   color: [0.1, 0.3, 0.8, 0.1],
 }
@@ -163,9 +162,9 @@
   invisible: 0, // omitted for visualization
   mother: "vessel",
   type: "tube",
-  r_max: 45.0, //LAB->35.0, WBLS->30.0
-  size_z: 14.0,
-  position: [0.0, 0.0, 1.0],
+  r_max: 45.0, //LAB->45mm, WBLS->35mm
+  size_z: 12.89,
+  position: [0.0, 0.0, -1.7],
   material: "water",
   color: [0.5, 0.1, 0.5, 0.5],
 }
@@ -173,7 +172,6 @@
 ///////////////////////
 // COSMIC TAGS
 ///////////////////////
-
 {
   name: "GEO",
   index: "tag1",
@@ -182,10 +180,10 @@
   invisible: 0, // omitted for visualization
   mother: "inner",
   type: "tube",
-  position: [-398.0, -367.0, -182.2],
+  position: [-398.0, -367.0, -182.987],
   r_max: 5.0,
   size_z: 25.0,
-  material: "air",
+  material: "acrylic_black",
   color: [0.0, 0.0, 0.0, 0.1],
 }
 
@@ -197,10 +195,10 @@
   invisible: 0, // omitted for visualization
   mother: "inner",
   type: "tube",
-  position: [-398.0, -367.0, -327.2],
+  position: [-398.0, -367.0, -327.5],
   r_max: 5.0,
   size_z: 25.0,
-  material: "air",
+  material: "acrylic_black",
   color: [0.0, 0.0, 0.0, 0.1],
 }
 /////////////////////////////////

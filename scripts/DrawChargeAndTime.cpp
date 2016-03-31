@@ -86,7 +86,7 @@ TH2F* h_mcpmt_npevspos; //MC NPE vs PMT position
 
 //Hit level (PMT)
 int t_nbins = 100;
-double t_min = -2.0;
+double t_min = -5.0;
 double t_max = 5.0;
 std::vector<double> q_xmin;
 std::vector<double> q_xmax;
@@ -148,7 +148,7 @@ void GetDBTables(){
   std::cout<<" Get DB scint correction tables for "<<gTargetMaterial<<std::endl;
 
   RAT::DB* db = RAT::DB::Get();
-  db->Load("/Users/snoplus/Work/TheiaRnD/rat-pac/data/TheiaRnD/SCINTCORR.ratdb");
+  db->Load("/Users/snoplus/Work/Chess/rat-pac/data/TheiaRnD/SCINTCORR.ratdb");
   RAT::DBLinkPtr dbScintCorr = db->GetLink("SCINTCORR",gTargetMaterial);
   qScintCorr = dbScintCorr->GetDArray("corr");
   qScintCorrErr = dbScintCorr->GetDArray("corr_err");
@@ -216,7 +216,7 @@ void GetPMTInfo(char* inputfile){
   //Plot axis limits
   double myqxmins[] = {-100,-100,-100,-100,-100,-100, -100,-100, -100,-100,-100,-100, -100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100, -10};
   q_xmin.insert(q_xmin.begin(), myqxmins, myqxmins + pmtInfo->GetPMTCount() );
-  double myqxmaxs[] = {1500,1500,1500,1500,1500,1500, 20000,20000, 100000,100000,100000,100000, 400,400,400,400,400,400,400,400,400,400,400,400, 40};
+  double myqxmaxs[] = {1500,1500,1500,1500,1500,1500, 20000,20000, 100000,100000,100000,100000, 1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000, 40};
   q_xmax.insert(q_xmax.begin(), myqxmaxs, myqxmaxs + pmtInfo->GetPMTCount() );
   double mynpesxmaxs[] = {10,10,10,10,10,10, 100,100, 100,100,100,100, 20,20,20,20,20,20,20,20,20,20,20,20, 10};
   npes_xmax.insert(npes_xmax.begin(), mynpesxmaxs, mynpesxmaxs + pmtInfo->GetPMTCount() );
@@ -237,7 +237,7 @@ void GetHistos(){
   //Ring PMTs radius level
   for(int ih=0; ih<4; ih++){
     h_npes_ring.push_back(new TH1F(Form("h_npes_ring_%i",ih),"Ring Tube NPEs",50,0,npes_xmax[13]*4));
-    h_charge_ring.push_back(new TH1F(Form("h_charge_ring_%i",ih),"Ring Tube Charges",100,q_xmin[13],q_xmax[13]*4));
+    h_charge_ring.push_back(new TH1F(Form("h_charge_ring_%i",ih),"Ring Tube Charges",25,q_xmin[13],q_xmax[13]*4));
     h_time_ring.push_back(new TH1F(Form("h_time_ring_%i",ih),"Ring Tube Event Time",t_nbins,t_min,t_max));
     h_time_bottom_ring.push_back(new TH1F(Form("h_time_bottom_ring_%i",ih),"Ring Tube Bottom Time",t_nbins,t_min,t_max));
   }
@@ -385,17 +385,17 @@ void GetHistos(){
       // if(panel_charge[1]>400. || panel_charge[2]>400. || panel_charge[3]>400.) continue; //Veto cut
 
       //Cuts for SPE
-      //event_time = ring_timeres;
-      if(panel_charge[0]>50 || panel_charge[1]>50 || panel_charge[2]>50 || panel_charge[3]>50) continue;
-      //if(ring_time < 170) continue;
+      event_time = ring_timeres;
+      //if(panel_charge[0]>50 || panel_charge[1]>50 || panel_charge[2]>50 || panel_charge[3]>50) continue;
+      if(ring_time < 170) continue;
 
       //Calculate event time
       // if(ringPMTTimes.size() > 1){
       //   event_time = TMath::KOrdStat((int)ringPMTTimes.size(), &ringPMTTimes[0], 1);
       // }
-      if(ringPMTTimes.size() > 2){
-        event_time = (ringPMTTimes[0] + ringPMTTimes[1] + ringPMTTimes[2])/3.;
-      }
+      // if(ringPMTTimes.size() > 2){
+      //   event_time = (ringPMTTimes[0] + ringPMTTimes[1] + ringPMTTimes[2])/3.;
+      // }
 
       h_event_time->Fill(event_time);
 
@@ -413,7 +413,7 @@ void GetHistos(){
         npes = charge/spe[pmtid];
         qshort = ev->GetPMT(ipmt)->GetQShort();
         //if(pmtfcn > 1000) continue;
-        //if(pmttime < 170) continue;
+        if(pmttime < 170) continue;
         // if(charge < 50) continue;
         charge_ring[pmtidtopos[pmtid]] += charge;
         npes_ring[pmtidtopos[pmtid]] += npes;

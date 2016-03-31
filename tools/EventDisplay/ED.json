@@ -9,8 +9,8 @@
     "input_file": "../../results/TheiaRnD_cosmics_cher_WBLS1MOD.root", // Analysis ROOT file
 
     //Geometry files: used only if 'draw_geo==1'
-    "geo_file": "/Users/snoplus/Work/TheiaRnD/rat-pac/data/TheiaRnD/TheiaRnD_ce.geo",
-    "corr_file": "/Users/snoplus/Work/TheiaRnD/rat-pac/data/TheiaRnD/SCINTCORR.ratdb",
+    "geo_file": "/Users/snoplus/Work/Chess/rat-pac/data/TheiaRnD/TheiaRnD_ce.geo",
+    "corr_file": "/Users/snoplus/Work/Chess/rat-pac/data/TheiaRnD/SCINTCORR.ratdb",
     "material": "LABPPO", //LAB, LABPPO, WBLS1pct, WBLS10pct
 
     //XY plane for ring imaging

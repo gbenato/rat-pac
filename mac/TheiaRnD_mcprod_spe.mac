@@ -66,7 +66,7 @@
 /rat/procset trigger "triggerpmt" #triggerpmt allpmts simple external
 /rat/proc analysis
 /rat/proc count
-/rat/procset update 100
+/rat/procset update 1000
 
 #Output file
 /rat/proclast outroot
@@ -93,7 +93,7 @@
 
 ###RADIACTIVE SOURCE DECAYCHAIN
 /generator/add decaychain 90Y:fill:uniform
-/generator/pos/set -400.0 -400.0 -135.913
+/generator/pos/set -398.0 -367.0 -206.4
 /generator/pos/set source
 #######################################
 

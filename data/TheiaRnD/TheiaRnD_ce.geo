@@ -19,7 +19,7 @@
   index: "darkbox",
   valid_begin: [0, 0],
   valid_end: [0, 0],
-  invisible: 0, // omitted for visualization
+  invisible: 1, // omitted for visualization
   mother: "world",
   type: "box",
   size: [762.0,762.0,508.0], //mm, half-lenght
@@ -32,7 +32,7 @@
   index: "inner",
   valid_begin: [0, 0],
   valid_end: [0, 0],
-  invisible: 0, // omitted for visualization
+  invisible: 1, // omitted for visualization
   mother: "darkbox",
   type: "box",
   size: [711.2,711.2,457.2], //mm, half-lenght
@@ -150,7 +150,7 @@
   r_max: 50.0,
   size_z: 15.0,
   rotation:  [0.0, 0.0, 135.0],
-  position: [-398.0, -367.0, -222.5],
+  position: [-398.0, -367.0, -220.91],
   material: "chsrc_uvt_acrylic",
   color: [0.1, 0.3, 0.8, 0.1],
 }
@@ -163,9 +163,9 @@
   invisible: 0, // omitted for visualization
   mother: "vessel",
   type: "tube",
-  r_max: 45.0, //LAB->35.0, WBLS->30.0
-  size_z: 14.0,
-  position: [0.0, 0.0, 1.0],
+  r_max: 45.0, //LAB->45mm, WBLS->35mm
+  size_z: 12.89,
+  position: [0.0, 0.0, -1.7],
   material: "water",
   color: [0.5, 0.1, 0.5, 0.5],
 }
@@ -181,7 +181,7 @@
   invisible: 0, // omitted for visualization
   mother: "inner",
   type: "tube",
-  position: [-408.76, -417.98, -223.0],
+  position: [-408.76, -417.98, -222.5],
   rotation:  [90.0, -11.914, 0.0],
   r_max: 12.808,
   size_z: 1.587, //half height

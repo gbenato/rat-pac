@@ -14,7 +14,7 @@ volt_low: -1000.0, //lower voltage limit in mV
 offset: -500.0, //voltage offset in mV
 resistance: 1.0, //resistance of the output circuit in Ohms
 trigger_threshold: -5.0, //PMT threshold to issue a trigger mV
-gate_delay: -400.0, //time before discriminator fires that sampling gate opens (in ns)
+gate_delay: -410.0, //time before discriminator fires that sampling gate opens (in ns)
 
 }
 

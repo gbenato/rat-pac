@@ -8,7 +8,7 @@
 #/process/inactivate Cerenkov
 #/glg4scint/off
 #/glg4scint/reemission off
-/tracking/storeTrajectory 1
+/tracking/storeTrajectory 0
 
 ##### Visualization ##########################
 

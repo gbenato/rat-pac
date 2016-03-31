@@ -21,5 +21,4 @@ sampling_time: 500.0, //for Analogue WF drawing
 trigger_delay: 24.0,   // ns
 trigger_jitter: 0.25, // ns
 
-
 }
