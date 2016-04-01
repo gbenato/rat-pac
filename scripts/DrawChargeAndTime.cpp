@@ -219,7 +219,7 @@ void GetPMTInfo(char* inputfile){
   //Plot axis limits
   double myqxmins[] = {-100,-100,-100,-100,-100,-100, -100,-100, -100,-100,-100,-100, -100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100, -10};
   q_xmin.insert(q_xmin.begin(), myqxmins, myqxmins + pmtInfo->GetPMTCount() );
-  double myqxmaxs[] = {500,500,500,500,500,500, 20000,20000, 100000,100000,100000,100000, 1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000, 40};
+  double myqxmaxs[] = {1500,1500,1500,1500,1500,1500, 20000,20000, 100000,100000,100000,100000, 400,400,400,400,400,400,400,400,400,400,400,400, 40};
   q_xmax.insert(q_xmax.begin(), myqxmaxs, myqxmaxs + pmtInfo->GetPMTCount() );
   double mynpesxmaxs[] = {10,10,10,10,10,10, 100,100, 100,100,100,100, 20,20,20,20,20,20,20,20,20,20,20,20, 10};
   npes_xmax.insert(npes_xmax.begin(), mynpesxmaxs, mynpesxmaxs + pmtInfo->GetPMTCount() );
@@ -390,7 +390,7 @@ void GetHistos(){
       //Cuts for SPE
       event_time = ring_timeres;
       if(panel_charge[0]>50 || panel_charge[1]>50 || panel_charge[2]>50 || panel_charge[3]>50) continue;
-      //if(ring_time < 170) continue;
+      //if(ring_time < 150) continue;
 
       //Calculate event time
       // if(ringPMTTimes.size() > 1){
@@ -416,8 +416,8 @@ void GetHistos(){
         npes = charge/spe[pmtid];
         qshort = ev->GetPMT(ipmt)->GetQShort();
         //if(pmtfcn > 1000) continue;
-        //if(pmttime < 170) continue;
-        // if(charge < 50) continue;
+        //if(pmttime < 150) continue;
+        if(charge < 30) continue;
         charge_ring[pmtidtopos[pmtid]] += charge;
         npes_ring[pmtidtopos[pmtid]] += npes;
         double timeres = pmttime - tof - time_delay[pmtid];
