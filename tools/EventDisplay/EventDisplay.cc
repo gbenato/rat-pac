@@ -518,17 +518,6 @@ bool EventDisplay::LoadEvent(int ievt){
       int pmtID = pmt->GetID();
       int pmtType = pmtInfo->GetType(pmtID);
 
-      double timeStep = 0;
-      double timeDelay = 0;
-
-      if(pmtType==2 || pmtType==4){
-        timeStep = daqHeaderV1730->GetDoubleAttribute("TIME_RES");
-        //      timeDelay = daqHeaderV1730->GetDoubleAttribute("TIME_DELAY");
-      } else if(pmtType==1 || pmtType==3 || pmtType==0){
-        timeStep = daqHeaderV1742->GetDoubleAttribute("TIME_RES");
-        //      timeDelay = daqHeaderV1742->GetDoubleAttribute("TIME_DELAY");
-      }
-
       vPMTDigitizedWaveforms[ipmt] = pmt->GetWaveform();
       vWaveformTimes[ipmt] = pmt->GetWaveformTime();
       if(debugLevel > 1) std::cout<<" EventDisplay::LoadEvent - DigitWF: PMT " << ipmt<<" nsamples "<<vPMTDigitizedWaveforms[ipmt].size()<<std::endl;

@@ -5,10 +5,10 @@
 /rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_labppo.geo"
 
 /run/initialize
-/process/inactivate Cerenkov
+#/process/inactivate Cerenkov
 #/glg4scint/off
 #/glg4scint/reemission off
-/tracking/storeTrajectory 1
+/tracking/storeTrajectory 0
 
 ##### Visualization ##########################
 
@@ -70,7 +70,7 @@
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "../../results/TheiaRnD_mcprod_labppo_cosmics_nocher_largeblock_tr.root"
+/rat/procset file "../../results/TheiaRnD_mcprod_labppo_cosmics_5Ghz_airtags_test.root"
 #########################################
 
 ##### GENERATORS #################
@@ -81,7 +81,7 @@
 
 ###COSMIC
 # cosmic generator
-/generator/add cosmics -400.0 -400.0 -112.5 tag1 : -400.0 -400.0 -257.5 tag2
+/generator/add cosmics -398.0 -367.0 -182.2 tag1 : -398.0 -367.0 -327.2 tag2
 
 #/generator/add combo gun2:point
 # vertical muon
@@ -109,4 +109,4 @@
 #######################################
 
 ##### RUN ###########
-/run/beamOn 300
+/run/beamOn 100

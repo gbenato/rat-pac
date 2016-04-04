@@ -198,7 +198,7 @@
   position: [-398.0, -367.0, -182.987],
   r_max: 5.0,
   size_z: 25.0,
-  material: "acrylic_black",
+  material: "air", //acrylic_black
   color: [0.0, 0.0, 0.0, 0.1],
 }
 
@@ -213,7 +213,7 @@
   position: [-398.0, -367.0, -327.5],
   r_max: 5.0,
   size_z: 25.0,
-  material: "acrylic_black",
+  material: "air", //acrylic_black
   color: [0.0, 0.0, 0.0, 0.1],
 }
 /////////////////////////////////

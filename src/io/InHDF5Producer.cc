@@ -174,7 +174,9 @@ namespace RAT {
     json::Reader reader(calibfile);
     json::Value calib;
     reader.getValue(calib);
-    json::Value fTimeCalibV1742 = calib["2.5GHz"];
+    //    json::Value fTimeCalibV1742 = calib["1GHz"];
+    //    json::Value fTimeCalibV1742 = calib["2.5GHz"];
+    json::Value fTimeCalibV1742 = calib["5GHz"];
 
     //Get waveforms from FAST group
     H5::H5File *h5file = new H5::H5File(inputfilename, H5F_ACC_RDONLY);

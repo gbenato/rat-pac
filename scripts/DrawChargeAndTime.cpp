@@ -89,7 +89,7 @@ TH2F* h_mcpmt_npevspos; //MC NPE vs PMT position
 
 //Hit level (PMT)
 int t_nbins = 100;
-double t_min = -5.0;
+double t_min = -2.0;
 double t_max = 5.0;
 std::vector<double> q_xmin;
 std::vector<double> q_xmax;

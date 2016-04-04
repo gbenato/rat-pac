@@ -19,7 +19,7 @@ ped_max_fluc: 50.0, //maximum allowed pedestal fluctuation in mV
 time_thres: -5.0,  //threshold from pedestal to define a pulse time (dt: -0.3)
 time_thres_frac: 0.20,    //threshold from pedestal in fraction of max pulse high
 
-prune_wf: true,
+prune_wf: false,
 
 }
 
@@ -44,6 +44,6 @@ ped_max_fluc: 50.0,  //maximum allowed pedestal fluctuation in mV
 time_thres: -5.0,    //threshold from pedestal to define a pulse time (dt: -0.3, mc:-0.04)
 time_thres_frac: 0.20,    //threshold from pedestal in fraction of max pulse high
 
-prune_wf: true,
+prune_wf: false,
 
 }
