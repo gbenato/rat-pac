@@ -33,6 +33,9 @@ protected:
   G4UIcommand *readDefaultCmd;
 
   DBLinkPtr fLCalibV1742;
+  std::vector<int> FastChtoID;
+  std::vector<int> SlowChtoID;
+  std::map<int,int> IDToDAQ;
 
 };
 

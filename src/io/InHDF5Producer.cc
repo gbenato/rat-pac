@@ -56,6 +56,10 @@ namespace RAT {
     readDefaultCmd = new G4UIcommand("/rat/inhdf5/read_default", this);
     readDefaultCmd->SetGuidance("read from IO.default_input_filename");
 
+    DBLinkPtr lRun = DB::Get()->GetLink("RUN");
+    FastChtoID = lRun->GetIArray("CHANNELS_V1742");
+    SlowChtoID = lRun->GetIArray("CHANNELS_V1730");
+
   }
 
   G4String InHDF5Producer::GetCurrentValue(G4UIcommand * /*command*/)
@@ -103,65 +107,13 @@ namespace RAT {
       return 0;
     }
 
-    //Fill map digitizer channel - pmtID. FIXME: eventually this should go in a ratdb table
     bool DEBUG = false;
-    std::map<int,int> FastChtoID;
-    std::map<int,int> SlowChtoID;
     std::map<int,int> IDToDAQ;
-    FastChtoID[0]=12;
-    FastChtoID[1]=999;
-    FastChtoID[2]=13;
-    FastChtoID[3]=999;
-    FastChtoID[4]=14;
-    FastChtoID[5]=999;
-    FastChtoID[6]=15;
-    FastChtoID[7]=999;
-    FastChtoID[8]=16;
-    FastChtoID[9]=999;
-    FastChtoID[10]=17;
-    FastChtoID[11]=999;
-    FastChtoID[12]=18;
-    FastChtoID[13]=999;
-    FastChtoID[14]=19;
-    FastChtoID[15]=999;
-    FastChtoID[16]=20;
-    FastChtoID[17]=999;
-    FastChtoID[18]=21;
-    FastChtoID[19]=999;
-    FastChtoID[20]=22;
-    FastChtoID[21]=999;
-    FastChtoID[22]=23;
-    FastChtoID[23]=999;
-    FastChtoID[24]=6;
-    FastChtoID[25]=999;
-    FastChtoID[26]=7;
-    FastChtoID[27]=999;
-    FastChtoID[28]=999;
-    FastChtoID[29]=999;
-    FastChtoID[30]=999;
-    FastChtoID[31]=999;
-    SlowChtoID[0]=24;
-    SlowChtoID[1]=0;
-    SlowChtoID[2]=1;
-    SlowChtoID[3]=2;
-    SlowChtoID[4]=3;
-    SlowChtoID[5]=4;
-    SlowChtoID[6]=5;
-    SlowChtoID[7]=999;
-    SlowChtoID[8]=8;
-    SlowChtoID[9]=9;
-    SlowChtoID[10]=10;
-    SlowChtoID[11]=11;
-    SlowChtoID[12]=999;
-    SlowChtoID[13]=999;
-    SlowChtoID[14]=999;
-    SlowChtoID[15]=999;
-
-    for(std::map<int,int>::iterator ich = SlowChtoID.begin(); ich != SlowChtoID.end(); ich++){
-      IDToDAQ[ich->second] = 0;
+    for(int ich = 0; ich < SlowChtoID.size(); ich++){
+      IDToDAQ[SlowChtoID[ich]] = 0;
     }
-    for(std::map<int,int>::iterator ich = FastChtoID.begin(); ich != FastChtoID.end(); ich++){
-      IDToDAQ[ich->second] = 1;
+    for(int ich = 0; ich < FastChtoID.size(); ich++){
+      IDToDAQ[FastChtoID[ich]] = 1;
     }
 
     if(DEBUG) info<<"Opening FAST group..... \n";

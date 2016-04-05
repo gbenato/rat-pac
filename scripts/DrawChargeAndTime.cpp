@@ -25,7 +25,7 @@
 #include <RAT/DB.hh>
 #include <RAT/DS/RunStore.hh>
 
-#define REFTUBE 20
+#define REFTUBE 13
 #define MCPHOTONLOOP false
 #define NLOGENTRIES 10
 #define FIT_LIMIT_MIN 50. //-60.
@@ -417,7 +417,7 @@ void GetHistos(){
         qshort = ev->GetPMT(ipmt)->GetQShort();
         //if(pmtfcn > 1000) continue;
         //if(pmttime < 150) continue;
-        if(charge < 30) continue;
+        //if(charge < 30) continue;
         charge_ring[pmtidtopos[pmtid]] += charge;
         npes_ring[pmtidtopos[pmtid]] += npes;
         double timeres = pmttime - tof - time_delay[pmtid];
