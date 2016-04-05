@@ -97,8 +97,10 @@ int main(int argc, char **argv){
 
       //Cuts
       //Cuts for cherenkov imaging
+      if(topmuon_charge<200.0) continue;
+      if(panel_charge[1]>500. || panel_charge[2]>1000. || panel_charge[3]>1100.) continue; //Veto cut
       //if(lightPMTs==0) continue; //More than 3 hits
-      if(ringPMTs==0) continue; //More than 3 hits
+      //if(ringPMTs==0) continue; //More than 3 hits
       //if(ringPMTs<3) continue; //More than 3 hits
       //if(bottommuon_charge<200.0) continue;
       //if(topmuon_charge<200.0) continue;

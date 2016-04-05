@@ -25,7 +25,7 @@
 #include <RAT/DB.hh>
 #include <RAT/DS/RunStore.hh>
 
-#define REFTUBE 13
+#define REFTUBE 14
 #define MCPHOTONLOOP false
 #define NLOGENTRIES 10
 #define FIT_LIMIT_MIN 50. //-60.
@@ -44,6 +44,7 @@ char *gInputFile = NULL;
 char *gOutFile = NULL;
 char *gTargetMaterial = "LAB";
 RAT::DS::PMTInfo *pmtInfo;
+bool isCherenkovData = false, isSPEData = false;
 
 //Methods
 void ParseArgs(int argc, char **argv);
@@ -68,6 +69,43 @@ Double_t fmultigaus(Double_t *x, Double_t *par) {
   //  return par[0]*gaus_noise + par[3]*gaus_spe;
 }
 
+//Log Scale
+void BinLogX(TH1*h)
+{
+
+   TAxis *axis = h->GetXaxis();
+   int bins = axis->GetNbins();
+
+   Axis_t from = TMath::Log10(axis->GetXmin());
+   Axis_t to = TMath::Log10(axis->GetXmax());
+   Axis_t width = (to - from) / bins;
+   Axis_t *new_bins = new Axis_t[bins + 1];
+
+   for (int i = 0; i <= bins; i++) {
+     new_bins[i] = TMath::Power(10, from + i * width);
+   }
+   axis->Set(bins, new_bins);
+   delete new_bins;
+}
+
+void BinLogY(TH1*h)
+{
+
+   TAxis *axis = h->GetYaxis();
+   int bins = axis->GetNbins();
+
+   Axis_t from = TMath::Log10(axis->GetXmin());
+   Axis_t to = TMath::Log10(axis->GetXmax());
+   Axis_t width = (to - from) / bins;
+   Axis_t *new_bins = new Axis_t[bins + 1];
+
+   for (int i = 0; i <= bins; i++) {
+     new_bins[i] = TMath::Power(10, from + i * width);
+   }
+   axis->Set(bins, new_bins);
+   delete new_bins;
+}
+
 //Global variables
 std::vector<Color_t> pmtidtocolor;
 std::vector<int> pmtidtopos;
@@ -78,8 +116,9 @@ vector<double> spe; //SPE
 
 //// Histograms
 //Event level
+ULong64_t lastbursttime = 0;
 TH1F* h_event_time;
-TH1F* h_event_timestamp;
+TH1F* h_event_deltat;
 TH1F* h_charge_total; //Total charge in the event
 TH2F* h_pmt_chargevspos; //PMT charge vs PMT position
 TH2F* h_pmt_npevspos; //NPE vs PMT position
@@ -92,6 +131,7 @@ TH2F* h_mcpmt_npevspos; //MC NPE vs PMT position
 int t_nbins = 100;
 double t_min = -2.0;
 double t_max = 5.0;
+std::vector<char*> pmtname;
 std::vector<double> q_xmin;
 std::vector<double> q_xmax;
 std::vector<double> npes_xmax;
@@ -218,12 +258,14 @@ void GetPMTInfo(char* inputfile){
   pmtidtopos.insert(pmtidtopos.begin(), mypmtpos, mypmtpos + pmtInfo->GetPMTCount() );
 
   //Plot axis limits
-  double myqxmins[] = {-100,-100,-100,-100,-100,-100, -100,-100, -100,-100,-100,-100, -100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100, -10};
+  double myqxmins[] = {-100,-100,-100,-100,-100,-100, 1.,1., 1.,1.,1.,1., -100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100, -10};
   q_xmin.insert(q_xmin.begin(), myqxmins, myqxmins + pmtInfo->GetPMTCount() );
-  double myqxmaxs[] = {1500,1500,1500,1500,1500,1500, 20000,20000, 100000,100000,100000,100000, 400,400,400,400,400,400,400,400,400,400,400,400, 40};
+  double myqxmaxs[] = {1500,1500,1500,1500,1500,1500, 5e4,5e4, 1e6,1e6,1e6,1e6, 400,400,400,400,400,400,400,400,400,400,400,400, 40};
   q_xmax.insert(q_xmax.begin(), myqxmaxs, myqxmaxs + pmtInfo->GetPMTCount() );
   double mynpesxmaxs[] = {10,10,10,10,10,10, 100,100, 100,100,100,100, 20,20,20,20,20,20,20,20,20,20,20,20, 10};
   npes_xmax.insert(npes_xmax.begin(), mynpesxmaxs, mynpesxmaxs + pmtInfo->GetPMTCount() );
+  char* mypmtname[] = {"Light PMT 0", "Light PMT 1", "Light PMT 2", "Light PMT 3" ,"Light PMT 4", "Light PMT 5", "Top Muon Tag", "Bottom Muon Tag", "North Floor Panel", "South Floor Panel", "North Side Panel", "East Side Panel", "Ring PMT 0", "Ring PMT 1", "Ring PMT 2", "Ring PMT 3", "Ring PMT 4", "Ring PMT 5", "Ring PMT 6", "Ring PMT 7", "Ring PMT 8", "Ring PMT 9", "Ring PMT 10", "Ring PMT 11" , "Trigger PMT" };
+  pmtname.insert(pmtname.begin(), mypmtname, mypmtname + pmtInfo->GetPMTCount() );
 
 }
 
@@ -254,18 +296,23 @@ void GetHistos(){
     h_mcpmt_fetime.push_back(new TH1F(Form("h_mcpmt_fetime_%i",ih),"h_mcpmt_fetime",200,5,10));
     //DAQ
     h_npes.push_back(new TH1F(Form("h_npes_%i",ih),"h_npes",npes_xmax[ih]*3,0,npes_xmax[ih]));
-    h_charge.push_back(new TH1F(Form("h_charge_%i",ih),"h_charge",100,q_xmin[ih],q_xmax[ih]));
+    h_charge.push_back(new TH1F(Form("h_charge_%i",ih),pmtname[ih],100,q_xmin[ih],q_xmax[ih]));
+    if(ih>=6 && ih<=11){
+      BinLogX(h_charge.back());
+    }
     h_charge_vs_trigq.push_back(new TH2F(Form("h_charge_vs_trigq_%i",ih),"h_charge_vs_trigq",200,0,100,200,0,100));
     h_time.push_back(new TH1F(Form("h_time_%i",ih),"h_time",t_nbins,t_min,t_max));
     h_time_bottom.push_back(new TH1F(Form("h_time_bottom_%i",ih),"h_time_bottom",t_nbins,t_min,t_max));
     h_time_trigger.push_back(new TH1F(Form("h_time_trigger%i",ih),"h_time_trigger",t_nbins,t_min,t_max));
     f_spe.push_back(new TF1(Form("f_spe_%i",ih),fmultigaus,FIT_LIMIT_MIN,FIT_LIMIT_MAX,8));
   }
-  h_charge_muontrigs = new TH2F("h_charge_muontrigs","h_charge_muontrigs",100,0,q_xmax[6],100,0,q_xmax[7]);
-  h_time_muontrigs = new TH1F("h_time_muontrigs","h_time_muontrigs",100,-5,5);
-  h_event_time = new TH1F("h_event_time","h_event_time",300,150,250);
-  h_event_timestamp = new TH1F("h_event_timestamp","h_event_timestamp",300,0,1e10);
-  h_charge_total = new TH1F("h_charge_total","h_charge_total",200,-20,50000);
+  h_charge_muontrigs = new TH2F("h_charge_muontrigs","Top Tag vs Bottom Tag Charges",100,q_xmin[6],q_xmax[6],100,q_xmin[7],q_xmax[7]);
+  BinLogX(h_charge_muontrigs);
+  BinLogY(h_charge_muontrigs);
+  h_time_muontrigs = new TH1F("h_time_muontrigs","Bottom Tag Time - Top Tag Time",100,-5.,5.);
+  h_event_time = new TH1F("h_event_time","Event Time",300,150,250);
+  h_event_deltat = new TH1F("h_event_deltat","Event DeltaT",300,0,1e11);
+  h_charge_total = new TH1F("h_charge_total","Total charge",200,-20,50000);
   h_chi2 = new TH1F("h_chi2","h_chi2",50,0,200);
 
   RAT::DS::Root *rds;
@@ -383,27 +430,37 @@ void GetHistos(){
       std::sort(ringPMTTimes.begin(), ringPMTTimes.end());
 
       //Cuts for cherenkov imaging
-      // if(bottommuon_charge<500.0 || topmuon_charge<500.0) continue; //Charge cut
-      // if(bottommuon_time - topmuon_time < 0. || bottommuon_time - topmuon_time > 1. ) continue; //Time cut
-      // if(panel_charge[0]<500.) continue; //Veto cut
-      // if(panel_charge[0]>8000.) continue; //Veto cut
-      // if(panel_charge[1]>400. || panel_charge[2]>400. || panel_charge[3]>400.) continue; //Veto cut
+      if(panel_charge[1]>100. || panel_charge[2]>100. || panel_charge[3]>100.) { //Veto cut
+        lastbursttime = ev->GetClockTime();
+      }
+      if(isCherenkovData){
+        if(panel_charge[1]>500. || panel_charge[2]>1000. || panel_charge[3]>1100.) { //Veto cut
+          continue;
+        }
+        if(topmuon_charge<200.0) continue;
+        //if(bottommuon_charge<500.0) continue;
+        // if(bottommuon_time - topmuon_time < 0. || bottommuon_time - topmuon_time > 1. ) continue; //Time cut
+        // if(panel_charge[0]<500.) continue; //Veto cut
+        // if(panel_charge[0]>8000.) continue; //Veto cut
 
-      //Cuts for SPE
-      event_time = ring_timeres;
-      if(panel_charge[0]>50 || panel_charge[1]>50 || panel_charge[2]>50 || panel_charge[3]>50) continue;
-      //if(ring_time < 150) continue;
-
-      //Calculate event time
-      // if(ringPMTTimes.size() > 1){
-      //   event_time = TMath::KOrdStat((int)ringPMTTimes.size(), &ringPMTTimes[0], 1);
-      // }
-      // if(ringPMTTimes.size() > 2){
-      //   event_time = (ringPMTTimes[0] + ringPMTTimes[1] + ringPMTTimes[2])/3.;
-      // }
+        //Calculate event time
+        // if(ringPMTTimes.size() > 1){
+        //   event_time = TMath::KOrdStat((int)ringPMTTimes.size(), &ringPMTTimes[0], 1);
+        // }
+        if(ringPMTTimes.size() > 2){
+          event_time = (ringPMTTimes[0] + ringPMTTimes[1] + ringPMTTimes[2])/3.;
+        }
+      }
+      else if(isSPEData){ //Cuts for SPE
+        event_time = ring_timeres;
+        if(panel_charge[0]>50 || panel_charge[1]>50 || panel_charge[2]>50 || panel_charge[3]>50) continue;
+        if(ring_time < 150) continue;
+      }
 
       h_event_time->Fill(event_time);
-      h_event_timestamp->Fill(ev->GetDeltaT());
+      double deltat = (ev->GetClockTime() - lastbursttime) *2;
+      // if(deltat < 10e9) continue;
+      h_event_deltat->Fill(deltat); //2ns resolution
 
       //Fill Histograms
       std::vector<double> charge_ring(4,0.);
@@ -417,9 +474,13 @@ void GetHistos(){
         charge = ev->GetPMT(ipmt)->GetCharge();
         npes = charge/spe[pmtid];
         qshort = ev->GetPMT(ipmt)->GetQShort();
-        //if(pmtfcn > 1000) continue;
-        //if(pmttime < 150) continue;
-        //if(charge < 30) continue;
+        if(isCherenkovData){
+          if(charge < 50) continue;
+        }else if(isSPEData){
+          //if(pmtfcn > 1000) continue;
+          if(pmttime < 150) continue;
+          //if(charge < 30) continue;
+        }
         charge_ring[pmtidtopos[pmtid]] += charge;
         npes_ring[pmtidtopos[pmtid]] += npes;
         double timeres = pmttime - tof - time_delay[pmtid];
@@ -580,7 +641,7 @@ void DrawHistos(){
   c_ring_event->cd(4);
   h_event_time->Draw();
   c_ring_event->cd(5);
-  h_event_timestamp->Draw();
+  h_event_deltat->Draw();
   TCanvas *c_charge[5];
   c_charge[0] = new TCanvas("c_charge_0","Charge Ring Tubes",1200,900);
   c_charge[1] = new TCanvas("c_charge_1","Charge Light Tubes",900,600);
@@ -641,7 +702,8 @@ void DrawHistos(){
       h_time[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
       h_time[pmtid]->Draw();
     } else if(pmttype==3){ //Muon tags
-      c_charge[2]->cd(++cc2)->SetLogy();
+      c_charge[2]->cd(++cc2)->SetLogx();
+      c_charge[2]->cd(cc2)->SetLogy();
       h_charge[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
       h_charge[pmtid]->Draw();
     } else if(pmttype==0){ //Trigger tube
@@ -653,6 +715,7 @@ void DrawHistos(){
       h_time[pmtid]->Draw();
     } else if(pmttype==4){ //Muon panels
       c_charge[4]->cd(++cc4)->SetLogy();
+      c_charge[4]->cd(cc4)->SetLogx();
       h_charge[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
       h_charge[pmtid]->Draw();
       c_time[4]->cd(cc4);
@@ -661,7 +724,8 @@ void DrawHistos(){
     }
   }
 
-  c_charge[2]->cd(3);
+  c_charge[2]->cd(3)->SetLogx();
+  c_charge[2]->cd(3)->SetLogy();
   h_charge_muontrigs->Draw("colz");
   c_charge[2]->cd(4);
   h_time_muontrigs->Draw();
@@ -826,10 +890,12 @@ void ParseArgs(int argc, char **argv){
     if(std::string(argv[i]) == "-i") {gInputFile = argv[++i];}
     if(std::string(argv[i]) == "-o")  {gOutFile = argv[++i];}
     if(std::string(argv[i]) == "-m")  {gTargetMaterial = argv[++i];}
+    if(std::string(argv[i]) == "-cher") {isCherenkovData = true;}
+    if(std::string(argv[i]) == "-spe") {isSPEData = true;}
   }
 
-  if(argc==1){
-    std::cerr<<" Usage: ./DrawChargeAndTime.exe -i INPUTFILE [Optional: -o OUTPUTFILE]"<<std::endl;
+  if(argc<=1 || (!isCherenkovData && !isSPEData) || (isCherenkovData && isSPEData)){
+    std::cerr<<" Usage: ./DrawChargeAndTime.exe (-cher || -spe) -i INPUT_FILE [-o OUTPUT_FILE -m TARGET_MATERIAL]"<<std::endl;
     exit(0);
   }
 }

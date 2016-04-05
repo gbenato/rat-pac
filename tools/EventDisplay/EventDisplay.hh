@@ -119,6 +119,7 @@ protected:
   //DAQ event
   double event_id;
   double event_time;
+  ULong64_t event_timestamp;
   std::vector<double> pmtGeoCorr; // Geometry correction
   std::vector<double> pmtGeoCorrErr; //Error
   TH1F *hTime;

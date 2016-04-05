@@ -41,7 +41,7 @@ qshort_int: 10,
 peak_window: 10.0,   //width in ns of the sampling window to look for a peak
 peak_qthres: 5.0,    //charge threshold in 'peak_window' for looking for a peak
 ped_max_fluc: 50.0,  //maximum allowed pedestal fluctuation in mV
-time_thres: -5.0,    //threshold from pedestal to define a pulse time (dt: -0.3, mc:-0.04)
+time_thres: -4.4,    //threshold from pedestal to define a pulse time
 time_thres_frac: 0.20,    //threshold from pedestal in fraction of max pulse high
 
 prune_wf: false,

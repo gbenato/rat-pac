@@ -326,7 +326,8 @@ bool EventDisplay::LoadEvent(int ievt){
     /////////////////////////////////////
 
     ev = rds->GetEV(0); //FIXME: so far get only first event
-    event_id = ev->GetID(); //FIXME: so far get only first event
+    event_id = ev->GetID();
+    event_timestamp = ev->GetClockTime();
     //Apply cuts before loading the whole event for speed
     for (int ipmt = 0; ipmt < charge_cut_pmts.size(); ipmt++) {
       int pmtID = charge_cut_pmts[ipmt];
@@ -433,11 +434,11 @@ bool EventDisplay::LoadEvent(int ievt){
       pmtQShort[pmtID] = ev->GetPMT(ipmt)->GetQShort();
       pmtTime[pmtID] = ev->GetPMT(ipmt)->GetTime();
       pmtTimeCorr[pmtID] = ev->GetPMT(ipmt)->GetTime() - time_delay[pmtID] - tof;
-      if(pmtInfo->GetType(pmtID)==4 || pmtInfo->GetType(pmtID)==3){
+      // if(pmtInfo->GetType(pmtID)==4 || pmtInfo->GetType(pmtID)==3){
         std::cout<<" pmtCharge "<<pmtID<<" "<<pmtCharge[pmtID]<<std::endl;
         std::cout<<" pmtQShort "<<pmtID<<" "<<pmtQShort[pmtID]<<std::endl;
-        // std::cout<<" pmtTime "<<pmtID<<" "<<pmtTime[pmtID]<<std::endl;
-      }
+        std::cout<<" pmtTime "<<pmtID<<" "<<pmtTime[pmtID]<<std::endl;
+      // }
       if(pmtTimeCorr[pmtID]<=-9000){
         pmtTimeCorr[pmtID] = -400.;
       } else{
@@ -465,8 +466,8 @@ bool EventDisplay::LoadEvent(int ievt){
 
     //Calculate event time
     if(ringPMTTimes.size() > 2){
-      //event_time = (ringPMTTimes[0] + ringPMTTimes[1] + ringPMTTimes[2])/3.;
-      event_time = (ringPMTTimes[1] + ringPMTTimes[2])/2.;
+      event_time = (ringPMTTimes[0] + ringPMTTimes[1] + ringPMTTimes[2])/3.;
+      //event_time = (ringPMTTimes[1] + ringPMTTimes[2])/2.;
     } else{
       event_time = -9999.;
     }
@@ -683,7 +684,8 @@ void EventDisplay::DumpEventInfo(int ievt){
 
   std::cout<<"****** DAQ EVENT "<<ievt<<"/"<<nevents<<"********"<<std::endl;
   std::cout<<" Event ID "<<event_id<<std::endl;
-  std::cout<<" Event Time "<<event_time<<std::endl;
+  std::cout<<" Event Timestamp "<<<<std::endl;
+  std::cout<<" Event PMT Time "<<event_time<<std::endl;
   std::cout<<"***********************************"<<std::endl;
 
 }
