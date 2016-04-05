@@ -53,7 +53,7 @@ int main(int argc, char **argv){
 
   for (Long64_t ient=0; ient<nentries; ient++) {
 
-    if(ient%10000 == 0) std::cout<<"   Entry "<<ient<<std::endl;
+    if(ient%100000 == 0) std::cout<<"   Entry "<<ient<<std::endl;
     oldtree->GetEntry(ient);
 
     for(int iev=0; iev<ds->GetEVCount(); iev++){
@@ -97,7 +97,8 @@ int main(int argc, char **argv){
 
       //Cuts
       //Cuts for cherenkov imaging
-      if(lightPMTs==0) continue; //More than 3 hits
+      //if(lightPMTs==0) continue; //More than 3 hits
+      if(ringPMTs==0) continue; //More than 3 hits
       //if(ringPMTs<3) continue; //More than 3 hits
       //if(bottommuon_charge<200.0) continue;
       //if(topmuon_charge<200.0) continue;
