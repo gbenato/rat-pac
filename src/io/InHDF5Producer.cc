@@ -19,7 +19,6 @@
 #include <assert.h>
 #include <regex>
 #include <fstream>
-#include <cstdint> //64bits integer
 
 typedef std::map< int, std::vector< std::vector<UShort_t> > > mw_t; //channel:[event,waveform]
 typedef std::map< int, std::vector< std::vector<double> > > mwt_t; //channel:[event,waveformtime]
@@ -118,10 +117,6 @@ namespace RAT {
 
     if(DEBUG) info<<"Opening FAST group..... \n";
 
-    //Get calibration from ratdb
-    // fLCalibV1742 = DB::Get()->GetLink("CALIB","V1742");
-    // json::Value fTimeCalibV1742 = fLCalibV1742->GetJSON("2.5GHz");
-
     ifstream calibfile(Form("%s/data/CALIB.ratdb", getenv("RATROOT") ) ) ;
     json::Reader reader(calibfile);
     json::Value calib;
@@ -141,7 +136,7 @@ namespace RAT {
     }
     //Loop over groups (each group should be a different channel)
     //and fill the waveforms in event order and the DAQHeader.
-    uint64_t *data_times;
+    ULong64_t *data_times;
     mw_t waveforms;
     mwt_t waveformTimes;
     std::map< int, uint16_t* > start_cell; //For time calibrations (PMTID:[EV:CELL])
@@ -352,7 +347,7 @@ namespace RAT {
       hsize_t *dims_times = new hsize_t[rank_times];
       dataspace_times.getSimpleExtentDims(dims_times);
       const int nevents_times = dims_times[0];
-      data_times = new uint64_t[nevents_times];
+      data_times = new ULong64_t[nevents_times];
       dataset_times->read(data_times,H5::PredType::NATIVE_UINT64,dataspace_times);
 
       for(int iev=0; iev<nevents; iev++){
@@ -418,14 +413,9 @@ namespace RAT {
       ds->SetRunID(1);
       RAT::DS::EV *ev = ds->AddNewEV();
       ev->SetID((int)event_id);
-      if(master_index==0){
-        ev->SetDeltaT(-9999.);
-      }
-      else{
-        ev->SetDeltaT( (float) (data_times[(int)master_index] - data_times[(int)master_index-1]) );
-      }
+      ev->SetClockTime( data_times[(int)master_index] );
 
-      if(DEBUG) std::cout<<" DeltaT "<<master_index<<" "<<data_times[(int)master_index]<<" "<<data_times[(int)master_index-1]<<" "<<ev->GetDeltaT()<<std::endl;
+      if(DEBUG) std::cout<<" ClockTime "<<master_index<<" "<<ev->GetClockTime()<<std::endl;
 
       for(mw_t::iterator iwaveform = waveforms.begin(); iwaveform != waveforms.end(); iwaveform++){
         if(iwaveform->first == 999) continue;

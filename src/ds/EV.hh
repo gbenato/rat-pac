@@ -54,9 +54,13 @@ public:
     return &pmt.back();
   }
   virtual void PrunePMT() { pmt.resize(0); }
-  
+
   /** Number of PMTs which were hit at least once. (Convenience method) */
   virtual Int_t Nhits() const { return GetPMTCount(); }
+
+  /** Time in clock ticks */
+  ULong64_t GetClockTime() const { return evtime; }
+  void SetClockTime(ULong64_t _evtime) { evtime = _evtime; }
 
   /** Time since last trigger in ns. */
   Float_t GetDeltaT() const { return deltat; }
@@ -75,7 +79,7 @@ public:
   }
   virtual bool ExistCentroid() const { return !centroid.empty(); }
   virtual void PruneCentroid() { centroid.resize(0); }
-  
+
   /** PathFit position, direction, time fitter. */
   virtual PathFit* GetPathFit() {
     if (pathfit.empty()) {
@@ -93,6 +97,7 @@ protected:
   Float_t qTotal;
   Float_t calibratedTriggerTime;
   Float_t deltat;
+  ULong64_t evtime;
   TTimeStamp utc;
   std::vector<PMT> pmt;
   std::vector<Centroid> centroid;
@@ -103,4 +108,3 @@ protected:
 } // namespace RAT
 
 #endif
-

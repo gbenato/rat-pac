@@ -60,6 +60,7 @@ namespace RAT {
     anaV1742.time_thres_frac = fLAnalysis->GetD("time_thres_frac");
 
     gotDAQHeader = false;
+    lastevtime = 0;
 
   }
 
@@ -89,6 +90,8 @@ namespace RAT {
     //Event loop: each MCEvent may have several real events
     for(int iev=0; iev<ds->GetEVCount(); iev++){
       DS::EV *ev = ds->GetEV(iev);
+      ULong64_t evtime = ev->GetClockTime();
+      ev->SetDeltaT((float)(evtime - lastevtime) *2); //2ns resolution
       for (int ipmt=0; ipmt < ev->GetPMTCount(); ipmt++){
         DS::PMT* pmt = ev->GetPMT(ipmt);
         int pmtID = pmt->GetID();
@@ -142,7 +145,21 @@ namespace RAT {
 
       }//end PMT loop
 
-    }
+      //Set event timestamp
+      double panel_charge[] = {0., 0., 0., 0.};
+      DS::PMT* pmt = ev->GetPMTWithID(8); //pannels
+      if(pmt!=NULL) panel_charge[0] = pmt->GetCharge();
+      pmt = ev->GetPMTWithID(9);
+      if(pmt!=NULL) panel_charge[1] = pmt->GetCharge();
+      pmt = ev->GetPMTWithID(10);
+      if(pmt!=NULL) panel_charge[2] = pmt->GetCharge();
+      pmt = ev->GetPMTWithID(11);
+      if(pmt!=NULL) panel_charge[3] = pmt->GetCharge();
+      if(panel_charge[0]<50 && panel_charge[1]<50 && panel_charge[2]<50 && panel_charge[3]<50){
+        lastevtime = evtime;
+      }
+
+    } //end EV loop
 
     return Processor::OK;
 

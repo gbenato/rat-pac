@@ -79,6 +79,7 @@ vector<double> spe; //SPE
 //// Histograms
 //Event level
 TH1F* h_event_time;
+TH1F* h_event_timestamp;
 TH1F* h_charge_total; //Total charge in the event
 TH2F* h_pmt_chargevspos; //PMT charge vs PMT position
 TH2F* h_pmt_npevspos; //NPE vs PMT position
@@ -263,6 +264,7 @@ void GetHistos(){
   h_charge_muontrigs = new TH2F("h_charge_muontrigs","h_charge_muontrigs",100,0,q_xmax[6],100,0,q_xmax[7]);
   h_time_muontrigs = new TH1F("h_time_muontrigs","h_time_muontrigs",100,-5,5);
   h_event_time = new TH1F("h_event_time","h_event_time",300,150,250);
+  h_event_timestamp = new TH1F("h_event_timestamp","h_event_timestamp",300,0,1e10);
   h_charge_total = new TH1F("h_charge_total","h_charge_total",200,-20,50000);
   h_chi2 = new TH1F("h_chi2","h_chi2",50,0,200);
 
@@ -401,7 +403,7 @@ void GetHistos(){
       // }
 
       h_event_time->Fill(event_time);
-
+      h_event_timestamp->Fill(ev->GetDeltaT());
 
       //Fill Histograms
       std::vector<double> charge_ring(4,0.);
@@ -566,8 +568,8 @@ void DrawHistos(){
   h_chi2->Draw();
 
   //General plots
-  TCanvas *c_ring_event = new TCanvas("c_ring_event","Ring Event",900,900);
-  c_ring_event->Divide(2,2);
+  TCanvas *c_ring_event = new TCanvas("c_ring_event","Ring Event",1200,900);
+  c_ring_event->Divide(3,2);
   c_ring_event->cd(1);
   //h_pmt_chargevspos->Draw("colz text"); //Average charge per pmt vs position
   h_pmt_npevspos->Draw("colz text"); //Average charge per pmt vs position
@@ -577,7 +579,8 @@ void DrawHistos(){
   h_pmt_timevspos->Draw("colz text"); //Average charge per pmt vs position
   c_ring_event->cd(4);
   h_event_time->Draw();
-  std::cout<<" Total Q: "<<h_charge_total->Integral(20,200)<<std::endl;
+  c_ring_event->cd(5);
+  h_event_timestamp->Draw();
   TCanvas *c_charge[5];
   c_charge[0] = new TCanvas("c_charge_0","Charge Ring Tubes",1200,900);
   c_charge[1] = new TCanvas("c_charge_1","Charge Light Tubes",900,600);

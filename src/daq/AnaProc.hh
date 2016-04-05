@@ -10,7 +10,6 @@
 #include <RAT/DS/RunStore.hh>
 #include <RAT/DB.hh>
 
-
 namespace RAT {
 
 Double_t mylognormal(Double_t *x, Double_t *par);
@@ -61,6 +60,7 @@ protected:
   DBLinkPtr fLAnalysis;
 
   AnaParams anaV1730, anaV1742;
+  ULong64_t lastevtime;
 
 };
 
