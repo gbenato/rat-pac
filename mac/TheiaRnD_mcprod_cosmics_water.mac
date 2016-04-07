@@ -70,7 +70,7 @@
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "../../results/TheiaRnD_mcprod_water_cosmics_5Ghz_test.root"
+/rat/procset file "../../results/TheiaRnD_mcprod_water_cosmics.root"
 #########################################
 
 ##### GENERATORS #################
@@ -109,4 +109,4 @@
 #######################################
 
 ##### RUN ###########
-/run/beamOn 100
+/run/beamOn 1000

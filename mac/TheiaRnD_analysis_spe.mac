@@ -2,7 +2,7 @@
 /glg4debug/glg4param omit_hadronic_processes  1.0
 
 /rat/db/set DETECTOR experiment "TheiaRnD"
-/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_water.geo"
+/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_spe.geo"
 
 /run/initialize
 
@@ -13,10 +13,9 @@
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "../../results/spe-feb-10_22Mar2016-204725_0_timestamp.root"
+/rat/procset file "../../results/spe-ring-tubes-march_04Apr2016-171612_0_reana.root"
 #########################################
 
-/rat/inhdf5/read ../../results/spe-feb-10.0.h5
-#/rat/inroot/read ../../results/spe-feb-10_22Mar2016-204725_0.root
-#/rat/inroot/read ../../results/TheiaRnD_mcprod_labppo_cosmics_qhs.root
+#/rat/inhdf5/read ../../data/spe-ring-tubes-march/spe-ring-tubes-march_04Apr2016-171612_0.h5
+/rat/inroot/read ../../results/spe-ring-tubes-march_04Apr2016-171612_0.root
 exit

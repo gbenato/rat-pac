@@ -102,8 +102,8 @@ namespace RAT {
         if(pmtType==1 || pmtType==3){
 
           if(pmtType==1){
-            pmt->SetTime( GetTimeAtFraction(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
             pmt->SetCharge( IntegrateCharge(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
+            pmt->SetTime( GetTimeAtFraction(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742) );
 
             // GetChargeAndTimeByFitting(dWaveform, dWaveformTime, daqHeaderV1742, anaV1742);
             // pmt->SetFCN(fcn_fit);
@@ -155,7 +155,7 @@ namespace RAT {
       if(pmt!=NULL) panel_charge[2] = pmt->GetCharge();
       pmt = ev->GetPMTWithID(11);
       if(pmt!=NULL) panel_charge[3] = pmt->GetCharge();
-      if(panel_charge[0]<50 && panel_charge[1]<50 && panel_charge[2]<50 && panel_charge[3]<50){
+      if(panel_charge[0] > 10000 || panel_charge[1]>500 || panel_charge[2]>1000 || panel_charge[3]>1100){
         lastevtime = evtime;
       }
 
@@ -269,12 +269,12 @@ namespace RAT {
       }
     }
 
-    double Vthres = anaParams.time_thres;
     double VthresFrac = high_peak*anaParams.time_thres_frac;
     int s_af_thres = -1;
     for(UShort_t isample=s_int_start; isample<s_int_end; isample++){
       //      std::cout<<" AnaProc::GetTimeAtThreshold: "<<isample<<"/"<<values.size()<<": "<<values[isample]<<" "<<Vthres<<" "<<VthresFrac<<std::endl;
-      if(dWaveformPedCorr[isample]<Vthres && dWaveformPedCorr[isample]<VthresFrac) {
+      //if(dWaveformPedCorr[isample]<Vthres && dWaveformPedCorr[isample]<VthresFrac) {
+      if(dWaveformPedCorr[isample]<VthresFrac) {
         s_af_thres = isample;
         break;
       }
@@ -475,10 +475,11 @@ namespace RAT {
       if (ped_min < voltage) ped_min = voltage;
       if (ped_max > voltage) ped_max = voltage;
       ped_mean += voltage;
+      // std::cout<<" ped "<<isample<<" "<<fTimeStep<<" "<<(dWaveformTime[isample+1] - dWaveformTime[isample])<<std::endl;
     }
     ped_mean /= (double)(s_ped_end-s_ped_start);
     if (ped_max - ped_min > anaParams.ped_max_fluc) {
-      std::cout<<" Charge: Pedestal above fluctuations "<<ped_max<<" "<<ped_min<<" "<<ped_max-ped_min<<" "<<anaParams.ped_max_fluc<<std::endl;
+      std::cout<<" >>> Charge Integration: Pedestal above fluctuations "<<ped_max<<" "<<ped_min<<" "<<ped_max-ped_min<<" "<<anaParams.ped_max_fluc<<std::endl;
       return -9999.;
     }
 
@@ -488,6 +489,7 @@ namespace RAT {
     double charge = 0.;
     for (size_t isample = s_int_start; isample < s_int_end; isample++) {
       charge += ((double)dWaveform[isample]*voltsperadc + fVLow - fVOffSet)*fTimeStep/fResistance - ped_mean; //ADC to charge
+      // std::cout<<" charge "<<isample<<" "<<fTimeStep<<" "<<(dWaveformTime[isample+1] - dWaveformTime[isample])<<std::endl;
       //    std::cout<<" charge "<<isample<<"/"<<dWaveform.size()<<" "<<charge<<std::endl;
     }
 

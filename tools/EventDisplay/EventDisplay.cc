@@ -103,11 +103,11 @@ EventDisplay::EventDisplay(std::string _inputFileName){
   chargeVsRCorr->GetYaxis()->SetLabelSize(.06);
 
   //Custom palette
-  Double_t r[]    = {1.0, 0.0, 0.0};
-  Double_t g[]    = {0.0, 0.0, 0.0};
-  Double_t b[]    = {0.0, 0.0, 1.0};
-  Double_t stop[] = {0.0, .45, 1.0};
-  Int_t FI = TColor::CreateGradientColorTable(3, stop, b, g, r, 100);
+  Double_t r[]    = {0.0, 1.0};
+  Double_t g[]    = {0.0, 0.0};
+  Double_t b[]    = {0.0, 0.0};
+  Double_t stop[] = {0.0, .3};
+  Int_t FI = TColor::CreateGradientColorTable(2, stop, r, g, b, 100);
 
   SetGeometry();
 
@@ -371,8 +371,8 @@ bool EventDisplay::LoadEvent(int ievt){
     chargeVsPosCorr->SetMinimum(-3000.);
     npeVsPos = new TH2F("NPE", "NPE", 1, 0., 1., 1, 0., 1.);
     npeVsPos->SetStats(0);
-    npeVsPos->SetMaximum(15.);
-    npeVsPos->SetMinimum(0.0);
+    npeVsPos->SetMaximum(30);
+    npeVsPos->SetMinimum(-0.5);
     chargeVsPos->Reset();
     chargeVsPosCorr->Reset();
     npeVsR->Reset();
@@ -434,18 +434,14 @@ bool EventDisplay::LoadEvent(int ievt){
       pmtQShort[pmtID] = ev->GetPMT(ipmt)->GetQShort();
       pmtTime[pmtID] = ev->GetPMT(ipmt)->GetTime();
       pmtTimeCorr[pmtID] = ev->GetPMT(ipmt)->GetTime() - time_delay[pmtID] - tof;
-      // if(pmtInfo->GetType(pmtID)==4 || pmtInfo->GetType(pmtID)==3){
+      if(pmtInfo->GetType(pmtID)==1 || pmtInfo->GetType(pmtID)==1){
         std::cout<<" pmtCharge "<<pmtID<<" "<<pmtCharge[pmtID]<<std::endl;
-        std::cout<<" pmtQShort "<<pmtID<<" "<<pmtQShort[pmtID]<<std::endl;
+        // std::cout<<" pmtQShort "<<pmtID<<" "<<pmtQShort[pmtID]<<std::endl;
         std::cout<<" pmtTime "<<pmtID<<" "<<pmtTime[pmtID]<<std::endl;
-      // }
-      if(pmtTimeCorr[pmtID]<=-9000){
-        pmtTimeCorr[pmtID] = -400.;
-      } else{
-        EDGeo->HitPMT(pmtID,1); //If time>0 means that the WF crossed threshold
       }
-      if(pmtInfo->GetType(pmtID)==1 && pmtTimeCorr[pmtID] != -400){
-        ringPMTTimes.push_back(pmtTimeCorr[pmtID]);
+      if(pmtTime[pmtID]>0){
+        EDGeo->HitPMT(pmtID,1); //If time>0 means that the WF crossed threshold
+        if(pmtInfo->GetType(pmtID)==1) ringPMTTimes.push_back(pmtTimeCorr[pmtID]);
       }
     }
     //Sort in ascending order
@@ -466,8 +462,10 @@ bool EventDisplay::LoadEvent(int ievt){
 
     //Calculate event time
     if(ringPMTTimes.size() > 2){
-      event_time = (ringPMTTimes[0] + ringPMTTimes[1] + ringPMTTimes[2])/3.;
-      //event_time = (ringPMTTimes[1] + ringPMTTimes[2])/2.;
+      //event_time = (ringPMTTimes[0] + ringPMTTimes[1] + ringPMTTimes[2])/3.;
+      event_time = (ringPMTTimes[1] + ringPMTTimes[2])/2.;
+      timeVsPos->SetMaximum(ringPMTTimes.back() - event_time);
+      timeVsPos->SetMinimum(ringPMTTimes[0] - event_time - 1e-6);
     } else{
       event_time = -9999.;
     }
@@ -481,8 +479,10 @@ bool EventDisplay::LoadEvent(int ievt){
       XYdist = sqrt(XYdist);
 
       // Geometry PMT charge correction
-      hTime->Fill( pmtTimeCorr[ipmt] - event_time );
-      timeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtTimeCorr[ipmt] - event_time);
+      if(pmtCharge[ipmt] > spe[ipmt]/2.){
+        hTime->Fill( pmtTimeCorr[ipmt] - event_time );
+        timeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtTimeCorr[ipmt] - event_time);
+      }
       npeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtCharge[ipmt]/spe[ipmt]);
       chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtCharge[ipmt]);
       //chargeVsPos->Fill(pmtpos.X(), pmtpos.Y(), pmtQShort[ipmt]);
@@ -684,7 +684,7 @@ void EventDisplay::DumpEventInfo(int ievt){
 
   std::cout<<"****** DAQ EVENT "<<ievt<<"/"<<nevents<<"********"<<std::endl;
   std::cout<<" Event ID "<<event_id<<std::endl;
-  std::cout<<" Event Timestamp "<<<<std::endl;
+  std::cout<<" Event Timestamp "<<event_timestamp<<std::endl;
   std::cout<<" Event PMT Time "<<event_time<<std::endl;
   std::cout<<"***********************************"<<std::endl;
 
