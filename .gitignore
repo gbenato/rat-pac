@@ -22,3 +22,4 @@ src/core/config.hh
 data/TheiaRnD/Acrylic*
 data/TheiaRnD/Sample*
 scripts/Makefile
+src/core/Config.hh
