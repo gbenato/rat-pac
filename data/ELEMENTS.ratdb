@@ -413,3 +413,14 @@ SYMBOL: "Sr",
 z: 38,
 a: 87.6,
 }
+
+{
+name: "ELEMENT",
+index: "Tellurium",
+valid_begin: [0, 0],
+valid_end: [0, 0],
+
+SYMBOL: "Te",
+z: 52,
+a: 127.6,
+}
