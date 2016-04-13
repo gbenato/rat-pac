@@ -88,7 +88,7 @@ env.Append(ENV=os.environ,
            CPPPATH=['$RATROOT/include','$RATROOT/include/RAT'],  # FIXME: remove second
            CPPDEFINES=[('KL_USE_ROOT', 1)
                        ],
-           LIBPATH=['#/lib']
+           LIBPATH=['#/lib','/project/projectdirs/cuore/scratch/gbenato/CuoreSoftware/install/hdf5/linux-scientific-6.4-x86_64/1.8.16/lib']
            )
 
 # Add architecture-dependent flags, GEANT4, and ROOT
