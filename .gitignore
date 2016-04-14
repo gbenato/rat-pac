@@ -23,3 +23,4 @@ data/TheiaRnD/Acrylic*
 data/TheiaRnD/Sample*
 scripts/Makefile
 src/core/Config.hh
+mac/*log
