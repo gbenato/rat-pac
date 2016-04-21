@@ -1000,7 +1000,7 @@ PROPERTY_LIST: ["REFLECTIVITY", "ABSLENGTH", ]
 
 {
 name: "OPTICS",
-index: "tellurium_dioxide",
+index: "tellurium_dioxyde",
 valid_begin : [0, 0],
 valid_end : [0, 0],
 RINDEX_option: "wavelength", // average between n_0 and n_e. Values from eq. 2 and Tab. 1 of N. Casali, arXiv:1604.01587
