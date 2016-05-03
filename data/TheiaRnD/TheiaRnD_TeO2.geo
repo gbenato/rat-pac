@@ -294,7 +294,7 @@
   valid_end: [0, 0],
   mother: "inner",
   type: "pmtarray",
-  pmt_model: "h11934", //h11934
+  pmt_model: "h11934", //h11934, 1-inch cubic
   pmt_detector_type: "idpmt",
   sensitive_detector: "/mydet/pmt/inner",
   efficiency_correction: 1.0,
@@ -309,7 +309,7 @@
   valid_end: [0, 0],
   mother: "inner",
   type: "pmtarray",
-  pmt_model: "r7081_hqe",
+  pmt_model: "r7081_hqe", // big ones, for light yield measurement
   pmt_detector_type: "idpmt",
   sensitive_detector: "/mydet/pmt/inner",
   efficiency_correction: 1.0,
@@ -325,7 +325,7 @@
    valid_end: [0, 0],
    mother: "inner",
    type: "pmtarray",
-   pmt_model: "h11934",
+   pmt_model: "h11934",// again small, 1-inch cubic
    pmt_detector_type: "idpmt",
    sensitive_detector: "/mydet/pmt/inner",
    efficiency_correction: 1.0,
