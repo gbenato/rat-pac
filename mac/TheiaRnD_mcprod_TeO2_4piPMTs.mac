@@ -6,29 +6,30 @@
 /rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_TeO2_4piPMTs.geo"
 
 /run/initialize
+/process/activate Cerenkov
+/tracking/storeTrajectory 1
+
 #/process/inactivate Cerenkov
 #/glg4scint/off
 #/glg4scint/reemission off
-/tracking/storeTrajectory 0
 
 ##### Visualization ##########################
 
-/run/initialize
-/vis/open VRML2FILE
-/vis/heprep/setFileDir ../../results/vrml/
-/vis/scene/create
-/vis/scene/add/volume
-/vis/sceneHandler/attach
-/vis/viewer/set/style s
-/vis/scene/add/trajectories
-/vis/scene/add/hits
-/vis/viewer/set/viewpointThetaPhi 30 30
-/vis/viewer/flush
+#/run/initialize
+#/vis/open VRML2FILE
+#/vis/scene/create
+#/vis/scene/add/volume
+#/vis/sceneHandler/attach
+#/vis/viewer/set/style s
+#/vis/scene/add/trajectories
+#/vis/scene/add/hits
+#/vis/viewer/set/viewpointThetaPhi 30 30
+#/vis/viewer/flush
 
 ###HEPREP
 #/run/initialize
 #/vis/open HepRepFile
-#/vis/heprep/setFileDir ../../results/heprep/
+#/vis/heprep/setFileDir ../results/heprep/
 #/vis/scene/create
 #/vis/scene/add/volume
 #/vis/sceneHandler/attach
@@ -83,14 +84,17 @@
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "../../results/TheiaRnD_mcprod_ce_TeO2.root"
+/rat/procset file "../results/TheiaRnD_mcprod_ce_TeO2_NoRayleigh.root"
 #########################################
 
 ##### GENERATORS #################
 ###ELECTRON GUN
-#/generator/add combo gun2:point
+/generator/add combo gun2:point
 #/generator/vtx/set e- 0 0 -1.0 0 5.5 5.5
+# isotropic e gun with 2.528 MeV
+/generator/vtx/set e- 0 0 -1.0 90 2.528 2.528 
 #/generator/pos/set -400.0 -400.0 -135.0
+/generator/pos/set -398.0 -367.0 -200.0
 
 ###PHOTON BOMB
 #/generator/add combo pbomb:point:uniform    # Photonbomb generator from fixed point, uniform in time
@@ -105,13 +109,29 @@
 # /generator/pos/set photons
 
 ###RADIACTIVE SOURCE DECAYCHAIN
-/generator/add decaychain 90Y:fill:uniform
-/generator/pos/set -398.0, -367.0, -185.9
-/generator/pos/set source
+#/generator/add decaychain 90Y:fill:uniform
+#/generator/pos/set -398.0, -367.0, -185.9
+#/generator/pos/set source
+
+###COSMIC
+# cosmic generator
+#/generator/add cosmics -398.0 -367.0 -182.2 tag1 : -398.0 -367.0 -327.2 tag2
+
+#/generator/add combo gun2:point
+# vertical muon
+#/generator/vtx/set mu- 0.0 0.0 -1.0 0 1000.0 1000.0
+#/generator/pos/set -400.0 -400.0 280.0
+# tilted muon
+#/generator/vtx/set mu- 0.0 -10.0 -70.0 0 3000.0 3000.0
+#/generator/pos/set 0.0 13.0 250.0
+# in a volume
+#/generator/add combo gun2:fill
+#/generator/vtx/set mu- 0.0 0.0 -1.0 0 3000.0 3000.0
+#/generator/pos/set cosmics
 #######################################
 
 ##### RUN ###########
-/run/beamOn 1
+/run/beamOn 3000
 
 
 
