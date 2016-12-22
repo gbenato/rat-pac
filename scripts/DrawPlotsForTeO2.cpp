@@ -19,8 +19,9 @@
 #include <RAT/DB.hh>
 
 #define NORM_ATT 1.e-3/1.4
-#define NPMTs 2
+#define NPMTs 4
 #define LOOPTRACKS true
+#define DETECTORPLOT true
 
 char * fInputFile = NULL;
 void ParseArgs(int argc, char **argv);
@@ -36,13 +37,16 @@ int main(int argc, char **argv){
   db->Load("../data/OPTICS.ratdb");
   std::cout<<" Optics database loaded. "<<std::endl;
   
-  std::vector<TH1F*> h_MCPMT_charge; //MC charge
+  std::vector<TH1F*> h_MCPMT_lambda; //photon wavelength per PMT
+  std::vector<TH1F*> h_MCPMT_charge; //MC charge per PMT
   std::vector<TH1F*> h_charge; //Measured charge
   for(int ih=0; ih<NPMTs; ih++){
     h_MCPMT_charge.push_back(new TH1F(Form("h_mcpmt_charge_%i",ih),"h_mcpmt_charge",100,0,50));
+    h_MCPMT_lambda.push_back(new TH1F(Form("h_mcpmt_lambda_%i",ih),"h_mcpmt_lambda",300,0,1e-3));
     h_charge.push_back(new TH1F(Form("h_charge_%i",ih),"h_charge",100,0,50));
   }
   TH1F* h_charge_total = new TH1F("h_charge_total","h_charge_total",100,0,50);
+  TH2F* h_MCPMT_photon_pos_total = new TH2F("h_pmt_total","h_pmt_total",200,-20,20, 200, -20, -20);
   
   TH1F* h_procinit = new TH1F("h_procinit","h_procinit",1,0,1);
   TH1F* h_proclast = new TH1F("h_proclast","h_proclast",1,0,1);
@@ -155,13 +159,16 @@ int main(int argc, char **argv){
     for (int imcpmt=0; imcpmt < mc->GetMCPMTCount(); imcpmt++) {
       RAT::DS::MCPMT *mcpmt = mc->GetMCPMT(imcpmt);
       int pmtid = mcpmt->GetID();
-      std::cout << "Working on mcpmt "<< pmtid << std::endl;
-      std::cout << "Start loop over MCPMT MCPhotonCount! " << mcpmt->GetMCPhotonCount() << std::endl;
+//      std::cout << "Working on mcpmt "<< pmtid << std::endl;
+//      std::cout << "Start loop over MCPMT MCPhotonCount! " << mcpmt->GetMCPhotonCount() << std::endl;
 
       for (int iph=0; iph < mcpmt->GetMCPhotonCount(); iph++){
-        std::cout << mcpmt->GetMCPhoton(iph) << std::endl;
+        std::cout << mcpmt->GetMCPhoton(iph)->GetPosition().x() <<  " " << mcpmt->GetMCPhoton(iph)->GetPosition().y()<< std::endl;
+        std::cout << mcpmt->GetMCPhoton(iph)->GetLambda() << std::endl;
 
 	h_MCPMT_isdh->Fill(mcpmt->GetMCPhoton(iph)->IsDarkHit());
+        h_MCPMT_photon_pos_total->Fill(mcpmt->GetMCPhoton(iph)->GetPosition().x(), mcpmt->GetMCPhoton(iph)->GetPosition().y());
+	h_MCPMT_lambda[pmtid]->Fill(mcpmt->GetMCPhoton(iph)->GetLambda());
 //        std::cout<<" IsDarkHit "<< iph << " "<< mcpmt->GetMCPhoton(iph)->IsDarkHit() <<std::endl;
 //	h_MCPMT_charge[pmtid]->Fill(mcpmt->GetMCPhoton(iph)->GetCharge());
 //        std::cout<<" IsDarkHit "<< iph << mcpmt->GetMCPhoton(iph)->IsDarkHit() <<std::endl;
@@ -272,6 +279,15 @@ int main(int argc, char **argv){
 //  TCanvas *c_time = new TCanvas("c_time","c_time",600,600);
 //  c_time->cd();
 //  h_MCPMT_time->Draw();
+  //MCPMT results
+  TCanvas *c_mcpmt1 = new TCanvas("c_mcpmt_photon_pos", "c_mcpmt_photon_pos", 600,600);
+  h_MCPMT_photon_pos_total->Draw("colz");
+  TCanvas *c_mcpmt2 = new TCanvas("c_mcpmt_lambda", "c_mcpmt_lambda", 1400,600);
+  c_mcpmt2->Divide(2,2);
+  for (int ipmt =0; ipmt < NPMTs; ipmt++){
+    c_mcpmt2->cd(ipmt+1);
+    h_MCPMT_lambda[ipmt]->Draw();
+  }
   //NTracks
   TCanvas *c_ntracks = new TCanvas("c_ntracks","c_ntracks",1400,600);
   c_ntracks->Divide(2,1);
@@ -348,8 +364,9 @@ int main(int argc, char **argv){
   //  double ph_hitpmt = h_cp_length->Integral((int)600.*300./6000.,(int)850.*300./6000.); //OLDDB
   //  double ph_hitpmt_total = h_ph_last->Integral((int)(100.+4000)*500./8000.,(int)(220.+4000)*500./8000.); //OLDDB
   double ph_hitpmt_total = h_cp_length->Integral((int)580.*300./6000.,(int)1000.*300./6000.); //NEWDB
-  double ph_elec = h_MCPMT_isdh->GetEntries();
-  std::cout<<" # e- sttopped at acrylic: "<<h_e_length->Integral(0,20)<<std::endl;
+  double ph_elec = h_MCPMT_isdh->GetEntries(); // What has dark hits to do with ph_electrons - naming???
+  std::cout<< " For now assume that all quantities below are wrong!!!! " << std::endl;
+  std::cout<<" # e- sttopped at acrylic: "<<h_e_length->Integral(0,20)<<std::endl; // na not okay
   std::cout<<" # e- sttopped at PMT: "<<h_e_length->Integral(20,50)<<std::endl;
   std::cout<<" # Cherenkov photons: "<<ph_total<<" (in "<<ph_total/nentries<<" per event)"<<std::endl;
   std::cout<<" # photons attenuated: "<<ph_att<<" ("<<ph_att/ph_total*100<<"\%)"<<std::endl;
