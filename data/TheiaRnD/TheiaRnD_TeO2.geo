@@ -206,36 +206,36 @@
 /////////////////////////////
 // RADIACTIVE SOURCES
 /////////////////////////////
-{
-  name: "GEO",
-  index: "envelope",
-  valid_begin: [0, 0],
-  valid_end: [0, 0],
-  invisible: 0, // omitted for visualization
-  mother: "inner",
-  type: "tube",
-  position: [-398.0, -367.0, -185.9],
-  rotation:  [0.0, 0.0, 0.0],
-  r_max: 12.808,
-  size_z: 1.587, //half height
-  material: "acrylic_black",
-  color: [0.1, 1.0, 0.3, 0.8],
-}
+//{
+//  name: "GEO",
+//  index: "envelope",
+//  valid_begin: [0, 0],
+//  valid_end: [0, 0],
+//  invisible: 0, // omitted for visualization
+//  mother: "inner",
+//  type: "tube",
+//  position: [-398.0, -367.0, -185.9],
+//  rotation:  [0.0, 0.0, 0.0],
+//  r_max: 12.808,
+//  size_z: 1.587, //half height
+//  material: "acrylic_black",
+//  color: [0.1, 1.0, 0.3, 0.8],
+//}
 
-{
-  name: "GEO",
-  index: "source",
-  valid_begin: [0, 0],
-  valid_end: [0, 0],
-  invisible: 0, // omitted for visualization
-  mother: "envelope",
-  type: "tube",
-  position: [0.0, 0.0, -0.254],
-  r_max: 3.175,
-  size_z: 1.333, //half height
-  material: "strontium", //strontium
-  color: [0.1, 1.0, 1.0, 0.8],
-}
+//{
+//  name: "GEO",
+//  index: "source",
+//  valid_begin: [0, 0],
+//  valid_end: [0, 0],
+//  invisible: 0, // omitted for visualization
+//  mother: "envelope",
+//  type: "tube",
+//  position: [0.0, 0.0, -0.254],
+//  r_max: 3.175,
+//  size_z: 1.333, //half height
+//  material: "strontium", //strontium
+//  color: [0.1, 1.0, 1.0, 0.8],
+//}
 
 //{
 //  name: "GEO",
