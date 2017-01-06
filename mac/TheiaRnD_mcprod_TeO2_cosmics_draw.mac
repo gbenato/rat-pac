@@ -4,7 +4,9 @@
 /rat/db/set DETECTOR experiment "TheiaRnD"
 #/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_ce.geo"
 #/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_TeO2.geo"
-/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_TeO2_cosmics.geo"
+#/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_TeO2_cosmics.geo" # TeO2 crystal on standard rectangular block (note tagger moved in z)
+#/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_TeO2_cosmics_v1.geo" # TeO2 crystal with different material blocks on the side on acrylic
+/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_TeO2_cosmics_v2.geo" # acrylic block enclosing TeO2 (allows crystal standing on edge studies)
 
 /run/initialize
 #/process/inactivate Cerenkov
@@ -112,7 +114,7 @@
 
 ###COSMIC
 # cosmic generator
-/generator/add cosmics -398.0 -367.0 -182.2 tag1 : -398.0 -367.0 -327.2 tag2
+/generator/add cosmics -398.0 -367.0 -132.0 tag1 : -398.0 -367.0 -327.2 tag2
 
 #/generator/add combo gun2:point
 # vertical muon

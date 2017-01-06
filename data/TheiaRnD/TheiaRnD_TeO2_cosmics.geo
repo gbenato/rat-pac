@@ -59,6 +59,20 @@
 
 {
   name: "GEO",
+  index: "blockk",
+  valid_begin: [0, 0],
+  valid_end: [0, 0],
+  invisible: 0, // omitted for visualization
+  mother: "inner",
+  type: "box",
+  size: [160.0,160.0,25.0],
+  position: [-398.0, -367.0, -220.0],
+  material: "chsrc_uvt_acrylic",
+  color: [0.1, 0.3, 0.8, 0.1],
+}
+
+{
+  name: "GEO",
   index: "block1",
   valid_begin: [0, 0],
   valid_end: [0, 0],
@@ -66,7 +80,7 @@
   mother: "inner",
   type: "box",
   size: [75.0,25.0,25.0],
-  position: [-498.0, -367.0, -212.5],
+  position: [-498.0, -367.0, -170.0],
   material: "chsrc_uvt_acrylic",
   color: [0.1, 0.3, 0.8, 0.1],
 }
@@ -81,7 +95,7 @@
   mother: "inner",
   type: "box",
   size: [75.0,25.0,25.0],
-  position: [-298.0, -367.0, -212.5],
+  position: [-298.0, -367.0, -170.0],
   material: "chsrc_uvt_acrylic",
   color: [0.1, 0.3, 0.8, 0.1],
 }
@@ -95,7 +109,7 @@
   mother: "inner",
   type: "box",
   size: [100.0,60,25.0],
-  position: [-398.0, -452.0, -212.5],
+  position: [-398.0, -452.0, -170],
   material: "chsrc_uvt_acrylic",
   color: [0.1, 0.3, 0.8, 0.1],
 }
@@ -109,7 +123,7 @@
   mother: "inner",
   type: "box",
   size: [100.0,60.0,25.0],
-  position: [-398.0, -282.0, -212.5],
+  position: [-398.0, -282.0, -170],
   material: "chsrc_uvt_acrylic",
   color: [0.1, 0.3, 0.8, 0.1],
 }
@@ -206,7 +220,8 @@
   mother: "inner",
   type: "box",
   size: [25.0,25.0,25.0], //mm, half-lenght
-  position: [-398.0, -367.0, -212.5],
+  position: [-398.0, -367.0, -170.0]
+// z was -212.5,
   material: "tellurium_dioxyde", //tellurium_dioxyde
   color: [0.8, 0.8, 0.8, 0.1],
 }
@@ -336,7 +351,8 @@
   invisible: 0, // omitted for visualization
   mother: "inner",
   type: "tube",
-  position: [-398.0, -367.0, -162.0],
+  position: [-398.0, -367.0, -100.0],
+// z was -160
   r_max: 5.0,
   size_z: 25.0,
   material: "acrylic_black",

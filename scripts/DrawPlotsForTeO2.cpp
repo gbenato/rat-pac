@@ -48,7 +48,7 @@ int main(int argc, char **argv){
     h_charge.push_back(new TH1F(Form("h_charge_%i",ih),"h_charge",100,0,50));
   }
   TH1F* h_charge_total = new TH1F("h_charge_total","h_charge_total",100,0,50);
-  TH2F* h_MCPMT_photon_pos_total = new TH2F("h_pmt_total","h_pmt_total",200,-20,20, 200, -20, -20);
+  TH2F* h_MCPMT_photon_pos_total = new TH2F("h_pmt_total","h_pmt_total",200,-500,-100, 200, -500, -100);
   
   TH1F* h_procinit = new TH1F("h_procinit","h_procinit",1,0,1);
   TH1F* h_proclast = new TH1F("h_proclast","h_proclast",1,0,1);
@@ -93,6 +93,7 @@ int main(int argc, char **argv){
 
     if(ientry%(10000) == 0) std::cout<<" Entry "<<ientry<<std::endl;
     RAT::DS::Root *rds = dsreader->GetEvent(ientry);
+    std::cout<< "seg fault is here" << std::endl;
     RAT::DS::MC *mc = rds->GetMC();
 
     // ***********MC TRUTH
@@ -171,17 +172,20 @@ int main(int argc, char **argv){
       float pmtx = pmtInfo->GetPosition(pmtid).x();
       float pmty = pmtInfo->GetPosition(pmtid).y();
       float pmtz = pmtInfo->GetPosition(pmtid).z();
-      std::cout << "Working on mcpmt "<< pmtid << std::endl;
+//      float pmtz = pmtInfo->GetPosition(pmtid).z();
+// Note check whether pmtid is the correct identifier for the position....
+      std::cout << "Working on mcpmt "<< pmtid << ", " << mcpmt->GetMCPhotonCount() << std::endl;
       std::cout << "with position "<< pmtx << " " << pmty << " " << pmtz << std::endl;
 //      std::cout << "Start loop over MCPMT MCPhotonCount! " << mcpmt->GetMCPhotonCount() << std::endl;
 
       for (int iph=0; iph < mcpmt->GetMCPhotonCount(); iph++){
+        std::cout << iph << " photon " << mcpmt->GetMCPhoton(iph)<< std::endl;
         std::cout << pmtInfo->GetPosition(pmtid).x()+mcpmt->GetMCPhoton(iph)->GetPosition().x() <<  " " << mcpmt->GetMCPhoton(iph)->GetPosition().y()<< std::endl;
-//        std::cout << mcpmt->GetMCPhoton(iph)->GetLambda() << std::endl;
+        std::cout << mcpmt->GetMCPhoton(iph)->GetLambda() << std::endl;
 
-	h_MCPMT_isdh->Fill(mcpmt->GetMCPhoton(iph)->IsDarkHit());
+//	h_MCPMT_isdh->Fill(mcpmt->GetMCPhoton(iph)->IsDarkHit());
         h_MCPMT_photon_pos_total->Fill(pmtx+mcpmt->GetMCPhoton(iph)->GetPosition().x(), pmty+mcpmt->GetMCPhoton(iph)->GetPosition().y());
-	h_MCPMT_lambda[pmtid]->Fill(mcpmt->GetMCPhoton(iph)->GetLambda());
+//	h_MCPMT_lambda[pmtid]->Fill(mcpmt->GetMCPhoton(iph)->GetLambda());
 //        std::cout<<" IsDarkHit "<< iph << " "<< mcpmt->GetMCPhoton(iph)->IsDarkHit() <<std::endl;
 //	h_MCPMT_charge[pmtid]->Fill(mcpmt->GetMCPhoton(iph)->GetCharge());
 //        std::cout<<" IsDarkHit "<< iph << mcpmt->GetMCPhoton(iph)->IsDarkHit() <<std::endl;
