@@ -21,11 +21,14 @@
 
 
 #define NORM_ATT 1.e-3/1.4
-#define NPMTs 4
+//#define NPMTs 4
+#define NPMTs 30
 #define LOOPTRACKS true
 #define DETECTORPLOT true
+#define ISELECTRON false
 
 char * fInputFile = NULL;
+char * fOutRootFile = NULL;
 void ParseArgs(int argc, char **argv);
 
 int main(int argc, char **argv){
@@ -179,17 +182,17 @@ int main(int argc, char **argv){
 //      std::cout << "Start loop over MCPMT MCPhotonCount! " << mcpmt->GetMCPhotonCount() << std::endl;
 
       for (int iph=0; iph < mcpmt->GetMCPhotonCount(); iph++){
-        std::cout << iph << " photon " << mcpmt->GetMCPhoton(iph)<< std::endl;
-        std::cout << pmtInfo->GetPosition(pmtid).x()+mcpmt->GetMCPhoton(iph)->GetPosition().x() <<  " " << mcpmt->GetMCPhoton(iph)->GetPosition().y()<< std::endl;
-        std::cout << mcpmt->GetMCPhoton(iph)->GetLambda() << std::endl;
+//        std::cout << iph << " photon " << mcpmt->GetMCPhoton(iph)<< std::endl;
+//        std::cout << pmtInfo->GetPosition(pmtid).x()+mcpmt->GetMCPhoton(iph)->GetPosition().x() <<  " " << mcpmt->GetMCPhoton(iph)->GetPosition().y()<< std::endl;
+//        std::cout << mcpmt->GetMCPhoton(iph)->GetLambda() << std::endl;
 
-//	h_MCPMT_isdh->Fill(mcpmt->GetMCPhoton(iph)->IsDarkHit());
+	h_MCPMT_isdh->Fill(mcpmt->GetMCPhoton(iph)->IsDarkHit());
         h_MCPMT_photon_pos_total->Fill(pmtx+mcpmt->GetMCPhoton(iph)->GetPosition().x(), pmty+mcpmt->GetMCPhoton(iph)->GetPosition().y());
-//	h_MCPMT_lambda[pmtid]->Fill(mcpmt->GetMCPhoton(iph)->GetLambda());
+	h_MCPMT_lambda[pmtid]->Fill(mcpmt->GetMCPhoton(iph)->GetLambda());
 //        std::cout<<" IsDarkHit "<< iph << " "<< mcpmt->GetMCPhoton(iph)->IsDarkHit() <<std::endl;
-//	h_MCPMT_charge[pmtid]->Fill(mcpmt->GetMCPhoton(iph)->GetCharge());
+	h_MCPMT_charge[pmtid]->Fill(mcpmt->GetMCPhoton(iph)->GetCharge());
 //        std::cout<<" IsDarkHit "<< iph << mcpmt->GetMCPhoton(iph)->IsDarkHit() <<std::endl;
-//	h_MCPMT_time->Fill(mcpmt->GetMCPhoton(iph)->GetHitTime());
+	h_MCPMT_time->Fill(mcpmt->GetMCPhoton(iph)->GetHitTime());
       }
     }
     std::cout << "Finished MCPMT loop!" << std::endl;
@@ -259,74 +262,85 @@ int main(int argc, char **argv){
 
 
 
-
   
   //DRAW PLOTS
   //Charge
+/*
   TCanvas *c_charge = new TCanvas("c_charge","c_charge",1400,1400);
   c_charge->Divide(2,2);
   for(int ipmt=0; ipmt<NPMTs;ipmt++){
     c_charge->cd(ipmt+1);
     h_charge[ipmt]->Draw("");
   }
+*/
+  
   // c_charge->cd(1);
   // dsreader->GetT()->Draw("ds.ev.pmt.charge>>test(150,0,100)");
   // h_charge->SetLineColor(kRed);
   // h_charge->Draw("");
   // c_charge->cd(2);
   // h_dMCPMT_charge->Draw("same");
+
   //Process
-  TCanvas *c_process = new TCanvas("c_process","c_process",1400,600);
-  c_process->Divide(2,1);
+  TCanvas *c_process = new TCanvas("c_process","c_process",1400,800);
+  c_process->Divide(2,2);
   c_process->cd(1);
   h_procinit->Draw();
   c_process->cd(2);
   h_proclast->Draw();
-  TCanvas *c_process_gm = new TCanvas("c_process_gm","c_process_gm",1400,600);
-  c_process_gm->Divide(2,1);
-  c_process_gm->cd(1);
+  c_process->cd(3);
   h_procinit_gm->Draw();
-  c_process_gm->cd(2);
+  c_process->cd(4);
   h_proclast_gm->Draw();
-  //IsDarkHit
-//  TCanvas *c_isdh = new TCanvas("c_isdh","c_isdh",600,600);
-//  c_isdh->cd();
-//  h_MCPMT_isdh->Draw();
-  //Time
-//  TCanvas *c_time = new TCanvas("c_time","c_time",600,600);
-//  c_time->cd();
-//  h_MCPMT_time->Draw();
+  
+//IsDarkHit & Time
+  TCanvas *c_isdh = new TCanvas("c_isdh","c_isdh",1200,600);
+  c_isdh->Divide(2,1);
+  c_isdh->cd(1);
+  h_MCPMT_isdh->Draw();
+  c_isdh->cd(2);
+  h_MCPMT_time->Draw();
+
+
   //MCPMT results
   TCanvas *c_mcpmt1 = new TCanvas("c_mcpmt_photon_pos", "c_mcpmt_photon_pos", 600,600);
   h_MCPMT_photon_pos_total->Draw("colz");
+
+/*  
   TCanvas *c_mcpmt2 = new TCanvas("c_mcpmt_lambda", "c_mcpmt_lambda", 1400,600);
   c_mcpmt2->Divide(2,2);
   for (int ipmt =0; ipmt < NPMTs; ipmt++){
     c_mcpmt2->cd(ipmt+1);
     h_MCPMT_lambda[ipmt]->Draw();
   }
+*/
+
   //NTracks
   TCanvas *c_ntracks = new TCanvas("c_ntracks","c_ntracks",1400,600);
   c_ntracks->Divide(2,1);
   c_ntracks->cd(1);
   h_ntracks->Draw();
   c_ntracks->cd(2);
+
   //Generated electrons
-  TCanvas *c_e = new TCanvas("c_e","c_e",1400,1400);
-  c_e->Divide(3,2);
-  c_e->cd(1);
-  h_e_length->Draw();
-  c_e->cd(2);
-  h_npe->Draw();
-  c_e->cd(3);
-  h_e_lengthvsnph->Draw("colz");
-  c_e->cd(4);
-  h_e_lengthvsnpe->Draw("colz");
-  c_e->cd(5);
-  h_e_lengthvsq->Draw("colz");
-  c_e->cd(5);
-  h_qvspe->Draw();
+  if (ISELECTRON){
+    TCanvas *c_e = new TCanvas("c_e","c_e",1400,1400);
+    c_e->Divide(3,2);
+    c_e->cd(1);
+    h_e_length->Draw();
+    c_e->cd(2);
+    h_npe->Draw();
+    c_e->cd(3);
+    h_e_lengthvsnph->Draw("colz");
+    c_e->cd(4);
+    h_e_lengthvsnpe->Draw("colz");
+    c_e->cd(5);
+    h_e_lengthvsq->Draw("colz");
+    c_e->cd(5);
+    h_qvspe->Draw();
   //  h_cp_ke->Draw();
+  }
+
   //Cerenkov photons
   TCanvas *c_cp = new TCanvas("c_cp","c_cp",1400,1400);
   c_cp->Divide(2,2);
@@ -340,20 +354,6 @@ int main(int argc, char **argv){
   c_cp->cd(3);
   h_cp_wl->Scale(1e-4);
   h_cp_wl->Draw();
-
-
-/*  gAtt->Draw("same");
-  gB1->Draw("same");
-  gB2->Draw("same");
-  gB3->Draw("same");
-  gB4->Draw("same");
-  gB5->Draw("same");
-  gB6->Draw("same");
-  gB7->Draw("same");
-  gB8->Draw("same");
-  gQEff->Draw("same");
-*/
-  
   c_cp->cd(4);
   h_ph_last->Draw();
 
@@ -375,13 +375,37 @@ int main(int argc, char **argv){
   c_cp3->cd(2);
   h_cp_no_atten_length->Draw();
 
+
+
+/*  gAtt->Draw("same");
+  gB1->Draw("same");
+  gB2->Draw("same");
+  gB3->Draw("same");
+  gB4->Draw("same");
+  gB5->Draw("same");
+  gB6->Draw("same");
+  gB7->Draw("same");
+  gB8->Draw("same");
+  gQEff->Draw("same");
+*/
+  
+
+
   //DRAW TABLE
   double ph_total = h_cp_length->GetEntries();
   double ph_att = h_cp_length->Integral(0,(int)100.*300./6000.);
   //  double ph_hitpmt = h_cp_length->Integral((int)600.*300./6000.,(int)850.*300./6000.); //OLDDB
   //  double ph_hitpmt_total = h_ph_last->Integral((int)(100.+4000)*500./8000.,(int)(220.+4000)*500./8000.); //OLDDB
   double ph_hitpmt_total = h_cp_length->Integral((int)580.*300./6000.,(int)1000.*300./6000.); //NEWDB
-  double ph_elec = h_MCPMT_isdh->GetEntries(); // What has dark hits to do with ph_electrons - naming???
+  double ph_elec = h_MCPMT_isdh->GetEntries(); // Ah that is okay as long as isdh if false for all entries
+  int pmt3 = h_MCPMT_lambda[12]->GetEntries() + h_MCPMT_lambda[17]->GetEntries()+ \
+	h_MCPMT_lambda[18]->GetEntries() + h_MCPMT_lambda[23]->GetEntries();
+  int pmt2 = h_MCPMT_lambda[13]->GetEntries() + h_MCPMT_lambda[16]->GetEntries()+ \
+	h_MCPMT_lambda[19]->GetEntries() + h_MCPMT_lambda[22]->GetEntries();
+  int pmt1 = h_MCPMT_lambda[14]->GetEntries() + h_MCPMT_lambda[15]->GetEntries()+ \
+	h_MCPMT_lambda[20]->GetEntries() + h_MCPMT_lambda[21]->GetEntries();
+  std::cout<< " Photoelectrons in the ring PMT, (outside to inside)" << pmt3 << "\t" \
+	<< pmt2 << "\t" << pmt1 << std::endl;
   std::cout<< " For now assume that all quantities below are wrong!!!! " << std::endl;
   std::cout<<" # e- sttopped at acrylic: "<<h_e_length->Integral(0,20)<<std::endl; // na not okay
   std::cout<<" # e- sttopped at PMT: "<<h_e_length->Integral(20,50)<<std::endl;
@@ -393,9 +417,41 @@ int main(int argc, char **argv){
   std::cout<<" 1 photo-electrons: "<<h_npe->GetBinContent(2)<<" ("<<h_npe->GetBinContent(2)/nentries*100<<"\%)"<<std::endl;
   std::cout<<" Multi photo-electrons: "<<h_npe->Integral(3,10)<<" ("<<h_npe->Integral(3,10)/nentries*100<<"\%)"<<std::endl;
   std::cout<<" QEff: "<<ph_elec/ph_hitpmt_total*100<<"\%"<<std::endl;
-  
-  new TBrowser;
-  dummy.Run();
+
+  // write out the number of PEs in each PMT in each simulation into a tree 
+  TFile f(fOutRootFile, "Update", "photoelectrons per PMT");
+  const Int_t num_store_pmt = 12;
+  Int_t pmt_num_pe[num_store_pmt];
+  pmt_num_pe[0] = h_MCPMT_lambda[12]->GetEntries();
+  pmt_num_pe[1] = h_MCPMT_lambda[13]->GetEntries();
+  pmt_num_pe[2] = h_MCPMT_lambda[14]->GetEntries();
+  pmt_num_pe[3] = h_MCPMT_lambda[15]->GetEntries();
+  pmt_num_pe[4] = h_MCPMT_lambda[16]->GetEntries();
+  pmt_num_pe[5] = h_MCPMT_lambda[17]->GetEntries();
+  pmt_num_pe[6] = h_MCPMT_lambda[18]->GetEntries();
+  pmt_num_pe[7] = h_MCPMT_lambda[19]->GetEntries();
+  pmt_num_pe[8] = h_MCPMT_lambda[20]->GetEntries();
+  pmt_num_pe[9] = h_MCPMT_lambda[21]->GetEntries();
+  pmt_num_pe[10] = h_MCPMT_lambda[22]->GetEntries();
+  pmt_num_pe[11] = h_MCPMT_lambda[23]->GetEntries();
+  TTree *t = (TTree*) f.Get("t");
+  if (!t){
+    t = new TTree("t", "photoelectron per PMT tree");
+    t->Branch("pmt_num_pe",pmt_num_pe, TString::Format("pmt_num_pe[%i]/I", num_store_pmt));
+    t->Branch("pmt3", &pmt3, "pmt3/I");
+    t->Branch("pmt2", &pmt2, "pmt2/I");
+    t->Branch("pmt1", &pmt1, "pmt1/I"); 
+  }
+  t->SetBranchAddress("pmt_num_pe", pmt_num_pe);
+  t->SetBranchAddress("pmt3", &pmt3);
+  t->SetBranchAddress("pmt2", &pmt2);
+  t->SetBranchAddress("pmt1", &pmt1);
+  t->Fill();
+  t->Write();
+  f.Close();
+
+  //new TBrowser;
+  //dummy.Run();
   return 0;
 
 }
@@ -403,11 +459,18 @@ int main(int argc, char **argv){
 
 void ParseArgs(int argc, char **argv){
   bool exist_inputfile = false;
+  bool exist_outputfile = false;
   for(int i = 1; i < argc; i++){
     if(std::string(argv[i]) == "-i") {fInputFile = argv[++i]; exist_inputfile=true;}
+    if(std::string(argv[i]) == "-o") {fOutRootFile = argv[++i]; exist_outputfile=true;}
   }
   if(!exist_inputfile){
     std::cerr<<" Specify input file with option: '-i'"<<std::endl;
     exit(0);
   }
+  if(!exist_outputfile){
+    std::cerr<<" Specify output file with option: '-o'"<<std::endl;
+    exit(0);
+  }
+
 }
