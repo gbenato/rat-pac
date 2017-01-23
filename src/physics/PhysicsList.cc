@@ -74,9 +74,10 @@ void PhysicsList::ConstructOpticalProcesses() {
   opBoundaryProcess->SetVerboseLevel(verboseLevel-1);
 
   // Apply processes to all particles where applicable
-  theParticleIterator->reset();
-  while((*theParticleIterator)()) {
-    G4ParticleDefinition* particle = theParticleIterator->value();
+  auto particleIterator=GetParticleIterator();
+  particleIterator->reset();
+  while((*particleIterator)()) {
+    G4ParticleDefinition* particle = particleIterator->value();
     G4ProcessManager* pmanager = particle->GetProcessManager();
     G4String particleName = particle->GetParticleName();
     if (cerenkovProcess->IsApplicable(*particle)) {
@@ -93,9 +94,10 @@ void PhysicsList::ConstructOpticalProcesses() {
 void PhysicsList::AddParameterization() {
   G4FastSimulationManagerProcess* fastSimulationManagerProcess =
     new G4FastSimulationManagerProcess();
-  theParticleIterator->reset();
-  while((*theParticleIterator)()) {
-    G4ParticleDefinition* particle = theParticleIterator->value();
+  auto particleIterator=GetParticleIterator();
+  particleIterator->reset();
+  while((*particleIterator)()) {
+    G4ParticleDefinition* particle = particleIterator->value();
     G4ProcessManager* pmanager = particle->GetProcessManager();
     if (particle->GetParticleName() == "opticalphoton") {
       pmanager->AddProcess(fastSimulationManagerProcess, -1, -1, 1);
