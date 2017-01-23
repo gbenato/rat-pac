@@ -29,6 +29,7 @@
 
 char * fInputFile = NULL;
 char * fOutRootFile = NULL;
+bool fBatchMode = false;
 void ParseArgs(int argc, char **argv);
 
 int main(int argc, char **argv){
@@ -96,12 +97,11 @@ int main(int argc, char **argv){
 
     if(ientry%(10000) == 0) std::cout<<" Entry "<<ientry<<std::endl;
     RAT::DS::Root *rds = dsreader->GetEvent(ientry);
-    std::cout<< "seg fault is here" << std::endl;
     RAT::DS::MC *mc = rds->GetMC();
 
     // ***********MC TRUTH
     //track loop
-    std::cout<<" Looping over the mc truth. "<<std::endl;
+    //std::cout<<" Looping over the mc truth. "<<std::endl;
 
     int ntracks = mc->GetMCTrackCount();// awesome this function is creating a segfault!
     double elength = 0; //generated e- length
@@ -111,9 +111,9 @@ int main(int argc, char **argv){
     int ncerphotons_no_attenuation = 0; //number of cerenkov photons
 
     if(LOOPTRACKS){
-      std::cout<<" Looping over tracks "<<std::endl;
+      //std::cout<<" Looping over tracks "<<std::endl;
       h_ntracks->Fill(ntracks);
-      std::cout<<" Number of tracks in Event "<<ientry<<": "<<ntracks<<std::endl;
+      //std::cout<<" Number of tracks in Event "<<ientry<<": "<<ntracks<<std::endl;
       for (int itr = 0; itr < ntracks; itr++) {
 	RAT::DS::MCTrack *track = mc->GetMCTrack(itr);
 	RAT::DS::MCTrackStep *f_step = track->GetMCTrackStep(0);
@@ -163,12 +163,12 @@ int main(int argc, char **argv){
       h_e_lengthvsnpe->Fill(mc->GetNumPE(),elength);
       h_ncp->Fill(ncerphotons);
     }
-    std::cout << "Finished track loop!" << std::endl;
+    //std::cout << "Finished track loop!" << std::endl;
     // ***********MC
     //MCPMT loop
     h_npe->Fill(mc->GetNumPE());
-    std::cout << "Start MCPMT loop!" << std::endl;
-    std::cout << "MCPMT count: " << mc->GetMCPMTCount() << std::endl;
+    //std::cout << "Start MCPMT loop!" << std::endl;
+    //std::cout << "MCPMT count: " << mc->GetMCPMTCount() << std::endl;
     for (int imcpmt=0; imcpmt < mc->GetMCPMTCount(); imcpmt++) {
       RAT::DS::MCPMT *mcpmt = mc->GetMCPMT(imcpmt);
       int pmtid = mcpmt->GetID();
@@ -177,8 +177,8 @@ int main(int argc, char **argv){
       float pmtz = pmtInfo->GetPosition(pmtid).z();
 //      float pmtz = pmtInfo->GetPosition(pmtid).z();
 // Note check whether pmtid is the correct identifier for the position....
-      std::cout << "Working on mcpmt "<< pmtid << ", " << mcpmt->GetMCPhotonCount() << std::endl;
-      std::cout << "with position "<< pmtx << " " << pmty << " " << pmtz << std::endl;
+      //std::cout << "Working on mcpmt "<< pmtid << ", " << mcpmt->GetMCPhotonCount() << std::endl;
+      //std::cout << "with position "<< pmtx << " " << pmty << " " << pmtz << std::endl;
 //      std::cout << "Start loop over MCPMT MCPhotonCount! " << mcpmt->GetMCPhotonCount() << std::endl;
 
       for (int iph=0; iph < mcpmt->GetMCPhotonCount(); iph++){
@@ -195,7 +195,7 @@ int main(int argc, char **argv){
 	h_MCPMT_time->Fill(mcpmt->GetMCPhoton(iph)->GetHitTime());
       }
     }
-    std::cout << "Finished MCPMT loop!" << std::endl;
+    //std::cout << "Finished MCPMT loop!" << std::endl;
 
     //end MCPMT loop
 
@@ -262,7 +262,7 @@ int main(int argc, char **argv){
 
 
 
-  
+  if (!fBatchMode){
   //DRAW PLOTS
   //Charge
 /*
@@ -388,7 +388,7 @@ int main(int argc, char **argv){
   gB8->Draw("same");
   gQEff->Draw("same");
 */
-  
+  }
 
 
   //DRAW TABLE
@@ -450,8 +450,10 @@ int main(int argc, char **argv){
   t->Write();
   f.Close();
 
-  //new TBrowser;
-  //dummy.Run();
+  if (!fBatchMode){
+    new TBrowser;
+    dummy.Run();
+  }
   return 0;
 
 }
@@ -463,6 +465,7 @@ void ParseArgs(int argc, char **argv){
   for(int i = 1; i < argc; i++){
     if(std::string(argv[i]) == "-i") {fInputFile = argv[++i]; exist_inputfile=true;}
     if(std::string(argv[i]) == "-o") {fOutRootFile = argv[++i]; exist_outputfile=true;}
+    if(std::string(argv[i]) == "-b") {fBatchMode = true;}
   }
   if(!exist_inputfile){
     std::cerr<<" Specify input file with option: '-i'"<<std::endl;

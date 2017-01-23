@@ -137,27 +137,33 @@ class RunRAT(object):
       print 'Submit command:', command
 #      subprocess.call(command, shell=True, stdout=subprocess.PIPE)
       f = open(log_file, 'w')
-      p = subprocess.Popen(command, env=my_env, shell=True, stdout=f, stderr = subprocess.STDOUT, executable='/usr/local/bin/zsh')
+      p = subprocess.Popen(command, env=my_env, shell=True, stdout=f, stderr = subprocess.STDOUT )
       return (p,f)
 
 
 def main():
 #  ana_dir = sys.argv[1]
 #Configure the directories and simulation parameters
-  num_jobs= 130
+  num_jobs= 530
   n_evts = 35
   poisson = True
-  mac_file = '/Users/benschmidt/CUORE/analysis/chess-teo2/mac/TheiaRnD_mcprod_TeO2_cosmics_v1.mac'
-  out_file = 'TheiaRnD_mcprod_TeO2_cosmics_v1_.root'
-  out_dir = '/Users/benschmidt/CUORE/analysis/chess-teo2/results/TheiaRnD_TeO2_comiscs_1' 
+  mac_file = os.path.expandvars('${RATROOT}/mac/TheiaRnD_mcprod_TeO2_cosmics_v1.mac')
+  out_file = 'TheiaRnD_mcprod_TeO2_rough_cosmics_v1_.root'
+#  out_dir = os.path.expandvars('${RATROOT}/results/TheiaRnD_TeO2_rough_comiscs_1') 
+  out_dir = '/warehouse/rat_optics_simulation/TheiaRnD_TeO2_rough_comiscs_1'
   a_rat = RunRAT()
   a_rat.num_jobs = num_jobs
   a_rat.num_events = 35
+  a_rat.n_proc = 16
   a_rat.poisson = poisson
   a_rat.master_config = mac_file
   a_rat.out_dir = out_dir
   a_rat.out_file_name= out_file
 # run the simulation
+  print 'Determined macro and output file location from environment:'
+  print '\t mac_file \t', mac_file
+  print '\t out_dir \t', out_dir
+  raw_input('Hit enter to start the simulation with the other parameters you specified in the main method.')
   a_rat.do_sim()
 
 
