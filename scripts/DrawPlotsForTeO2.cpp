@@ -419,6 +419,7 @@ int main(int argc, char **argv){
   std::cout<<" QEff: "<<ph_elec/ph_hitpmt_total*100<<"\%"<<std::endl;
 
   // write out the number of PEs in each PMT in each simulation into a tree 
+  if (fOutRootFile){
   TFile f(fOutRootFile, "Update", "photoelectrons per PMT");
   const Int_t num_store_pmt = 12;
   Int_t pmt_num_pe[num_store_pmt];
@@ -441,14 +442,17 @@ int main(int argc, char **argv){
     t->Branch("pmt3", &pmt3, "pmt3/I");
     t->Branch("pmt2", &pmt2, "pmt2/I");
     t->Branch("pmt1", &pmt1, "pmt1/I"); 
+    t->Branch("evts_started", &nentries, "evts_started/I"); 
   }
   t->SetBranchAddress("pmt_num_pe", pmt_num_pe);
   t->SetBranchAddress("pmt3", &pmt3);
   t->SetBranchAddress("pmt2", &pmt2);
   t->SetBranchAddress("pmt1", &pmt1);
+  t->SetBranchAddress("evts_started", &nentries);
   t->Fill();
   t->Write();
   f.Close();
+  }
 
   if (!fBatchMode){
     new TBrowser;
