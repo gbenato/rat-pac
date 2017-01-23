@@ -55,9 +55,9 @@
   position: [-398.0, -367.0, -270.0],
 //  size: [160.0,160.0,77.5], //alternative box as mothervolume around the entire TeO2 (technically avoids pyramids...)
 //  position: [-398.0, -367.0, -235.0], // 45 mm higher center, 90 mm thicker can enclose Teo2 standing on edge 
-//  material: "chsrc_uvt_acrylic",
+  material: "chsrc_uvt_acrylic",
 //  material: "tellurium_dioxyde",
-  material: "air",
+//  material: "air",
   color: [0.1, 0.3, 0.8, 0.1],
 }
 

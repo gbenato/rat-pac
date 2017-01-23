@@ -4,14 +4,14 @@
 /rat/db/set DETECTOR experiment "TheiaRnD"
 #/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_ce.geo"
 #/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_TeO2.geo"
-#/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_TeO2_cosmics_v1.geo"
-/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_TeO2_cosmics_v2.geo"
+/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_TeO2_cosmics_v1.geo"
+#/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_TeO2_cosmics_v2.geo"
 
 /run/initialize
 #/process/inactivate Cerenkov
 #/glg4scint/off
 #/glg4scint/reemission off
-/tracking/storeTrajectory 1
+/tracking/storeTrajectory 0
 
 ##### Visualization ##########################
 
@@ -113,8 +113,8 @@
 
 ###COSMIC
 # cosmic generator
-#/generator/add cosmics -398.0 -367.0 -182.2 tag1 : -398.0 -367.0 -327.2 tag2 # good for v1 geometry
-/generator/add cosmics -398.0 -367.0 -132.2 tag1 : -398.0 -367.0 -327.2 tag2 # good for v2 geometry
+/generator/add cosmics -398.0 -367.0 -182.2 tag1 : -398.0 -367.0 -327.2 tag2 # good for v1 geometry
+#/generator/add cosmics -398.0 -367.0 -132.2 tag1 : -398.0 -367.0 -327.2 tag2 # good for v2 geometry
 
 #/generator/add combo gun2:point
 # vertical muon
