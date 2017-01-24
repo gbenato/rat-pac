@@ -7,23 +7,22 @@ analysis_dir = '/warehouse/rat_optics_simulation/TheiaRnD_TeO2_rough_comiscs_1/'
 out_file = '/warehouse/rat_optics_simulation/TheiaRnD_TeO2_rough_comiscs_1/PMT_out_v2.root'
 ana_exe = os.path.expandvars('${RATROOT}/scripts/DrawPlotsForTeO2.exe')
 
-analysis_list = ['/warehouse/rat_optics_simulation/results/TheiaRnD_noTeO2_cosmics_1/',
-  '/warehouse/rat_optics_simulation/results/TheiaRnD_TeO2_cosmics_1/',
+analysis_list = [ '/warehouse/rat_optics_simulation/results/TheiaRnD_TeO2_cosmics_1/',
   '/warehouse/rat_optics_simulation/results/TheiaRnD_TeO2_cosmics_2/',
   '/warehouse/rat_optics_simulation/results/TheiaRnD_TeO2_cosmics_scint_1/',
   '/warehouse/rat_optics_simulation/results/TheiaRnD_TeO2_cosmics_scint_2/']
 
-def run_list(ana_list, out_file = 'PMT_out_v2.root' ):
+def run_list(ana_list, o_file = 'PMT_out_v2.root' ):
   for a_dir in ana_list:
-    print a_dir, out_file
-    out_file = a_dir+out_file
-    run_analysis(a_dir, out_file)
+    print a_dir, o_file
+    my_file = a_dir+o_file
+    run_analysis(a_dir, my_file)
 
-def run_analysis(analysis_dir, out_file):
+def run_analysis(analysis_dir, my_file):
   list_sim = glob.glob(analysis_dir+'root/*.root')
   print list_sim
   for a_sim in list_sim:
-    command = ana_exe + ' -i '+a_sim + ' -o '+out_file + ' -b'
+    command = ana_exe + ' -i '+a_sim + ' -o '+my_file + ' -b'
     print 'Executing command', command
 #    subprocess.call(command, shell=True,  executable='/usr/local/bin/zsh')
     subprocess.call(command, shell=True)

@@ -144,13 +144,13 @@ class RunRAT(object):
 def main():
 #  ana_dir = sys.argv[1]
 #Configure the directories and simulation parameters
-  num_jobs= 530
+  num_jobs= 560
   n_evts = 35
   poisson = True
   mac_file = os.path.expandvars('${RATROOT}/mac/TheiaRnD_mcprod_TeO2_cosmics_v1.mac')
-  out_file = 'TheiaRnD_mcprod_TeO2_rough_cosmics_v1_.root'
+  out_file = 'TheiaRnD_mcprod_TeO2_rough_cosmics_scint_v1.root'
 #  out_dir = os.path.expandvars('${RATROOT}/results/TheiaRnD_TeO2_rough_comiscs_1') 
-  out_dir = '/warehouse/rat_optics_simulation/TheiaRnD_TeO2_rough_comiscs_1'
+  out_dir = '/warehouse/rat_optics_simulation/TheiaRnD_TeO2_rough_comiscs_scint_1'
   a_rat = RunRAT()
   a_rat.num_jobs = num_jobs
   a_rat.num_events = 35
