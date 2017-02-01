@@ -3,8 +3,8 @@ import subprocess
 
 # Give a directory as input and loop over all the root files inside to sum up
 # what can be detected in each PMT.
-analysis_dir = '/warehouse/rat_optics_simulation/TheiaRnD_TeO2_rough_comiscs_1/'
-out_file = '/warehouse/rat_optics_simulation/TheiaRnD_TeO2_rough_comiscs_1/PMT_out_v2.root'
+analysis_dir = '/warehouse/rat_optics_simulation/TheiaRnD_TeO2_rough_comiscs_scint_1/'
+out_file = '/warehouse/rat_optics_simulation/TheiaRnD_TeO2_rough_comiscs_scint_1/PMT_out_v2.root'
 ana_exe = os.path.expandvars('${RATROOT}/scripts/DrawPlotsForTeO2.exe')
 
 analysis_list = [ '/warehouse/rat_optics_simulation/results/TheiaRnD_TeO2_cosmics_1/',
@@ -29,5 +29,5 @@ def run_analysis(analysis_dir, my_file):
 #    raw_input('Hit enter to continue')
 
 if __name__ == '__main__':
-  run_list(analysis_list )
-#  run_analysis(analysis_dir, out_file)
+#  run_list(analysis_list )
+  run_analysis(analysis_dir, out_file)

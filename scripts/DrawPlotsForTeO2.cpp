@@ -475,9 +475,9 @@ void ParseArgs(int argc, char **argv){
     std::cerr<<" Specify input file with option: '-i'"<<std::endl;
     exit(0);
   }
-  if(!exist_outputfile){
-    std::cerr<<" Specify output file with option: '-o'"<<std::endl;
-    exit(0);
-  }
+//  if(!exist_outputfile){
+//    std::cerr<<" Specify output file with option: '-o'"<<std::endl;
+//    exit(0);
+//  }
 
 }
