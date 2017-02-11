@@ -2,45 +2,40 @@
 /glg4debug/glg4param omit_hadronic_processes  1.0
 
 /rat/db/set DETECTOR experiment "TheiaRnD"
-#/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_ce.geo"
-#/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_TeO2.geo"
-#/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_TeO2_cosmics.geo" # TeO2 crystal on standard rectangular block (note tagger moved in z)
-#/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_TeO2_cosmics_v1.geo" # TeO2 crystal with different material blocks on the side on acrylic
-#/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_TeO2_cosmics_v2.geo" # acrylic block enclosing TeO2 (allows crystal standing on edge studies)
-/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_TeO2_cosmics_anisotropy.geo" # acrylic block enclosing TeO2 (allows crystal standing on edge studies)
+/rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_TeO2_cosmics_anisotropy.geo"
 
 /run/initialize
 #/process/inactivate Cerenkov
 #/glg4scint/off
 #/glg4scint/reemission off
-/tracking/storeTrajectory 1
+/tracking/storeTrajectory 0
 
 ##### Visualization ##########################
 
 #/run/initialize
-/vis/open VRML2FILE
-/vis/heprep/setFileDir ../results/vrml/
-/vis/scene/create
-/vis/scene/add/volume
-/vis/sceneHandler/attach
-/vis/viewer/set/style s
-/vis/scene/add/trajectories
-/vis/scene/add/hits
-/vis/viewer/set/viewpointThetaPhi 30 30
-/vis/viewer/flush
+#/vis/open VRML2FILE
+#/vis/heprep/setFileDir ../results/vrml/
+#/vis/scene/create
+#/vis/scene/add/volume
+#/vis/sceneHandler/attach
+#/vis/viewer/set/style s
+#/vis/scene/add/trajectories
+#/vis/scene/add/hits
+#/vis/viewer/set/viewpointThetaPhi 30 30
+#/vis/viewer/flush
 
 ###HEPREP
 #/run/initialize
-/vis/open HepRepFile
-/vis/heprep/setFileDir /warehouse/rat_optics_simulation/results/heprep/
-/vis/scene/create
-/vis/scene/add/volume
-/vis/sceneHandler/attach
-/vis/viewer/set/style s
-/vis/scene/add/trajectories
-/vis/scene/add/hits
-/vis/viewer/set/viewpointThetaPhi 30 30
-/vis/viewer/flush
+#/vis/open HepRepFile
+#/vis/heprep/setFileDir ../results/heprep/
+#/vis/scene/create
+#/vis/scene/add/volume
+#/vis/sceneHandler/attach
+#/vis/viewer/set/style s
+#/vis/scene/add/trajectories
+#/vis/scene/add/hits
+#/vis/viewer/set/viewpointThetaPhi 30 30
+#/vis/viewer/flush
 
 #Extra useless commands
 #/vis/modeling/trajectories/create/generic
@@ -83,11 +78,11 @@
 /rat/procset trigger "external" #triggerpmt allpmts simple external
 /rat/proc analysis
 /rat/proc count
-/rat/procset update 1000
+/rat/procset update 20
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "/warehouse/rat_optics_simulation/results/TheiaRnD_mcprod_ce_TeO2_cosmics_anisotopy_draw.root"
+/rat/procset file "/warehouse/rat_optics_simulation/results/TheiaRnD_mcprod_teo2_cube_cosmics_anisotropy_rough.root"
 #########################################
 
 ##### GENERATORS #################
@@ -115,8 +110,9 @@
 
 ###COSMIC
 # cosmic generator
-/generator/add cosmics -398.0 -367.0 -147.2 tag1 : -398.0 -367.0 -327.2 tag2
-#/generator/add cosmics -398.0 -367.0 -132.0 tag1 : -398.0 -367.0 -327.2 tag2
+/generator/add cosmics -398.0 -367.0 -147.2 tag1 : -398.0 -367.0 -327.2 tag2 # good for v1 geometry; 3.5 cm higher up!
+#/generator/add cosmics -398.0 -367.0 -327.2 tag2 # is this only the lower tagger?
+
 
 #/generator/add combo gun2:point
 # vertical muon
@@ -132,7 +128,7 @@
 #######################################
 
 ##### RUN ###########
-/run/beamOn 1
+/run/beamOn 100
 
 
 

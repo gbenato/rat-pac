@@ -162,3 +162,32 @@ materials: ["lab", "ppo", "water"],
 matprop: [0.099670, 0.000330, 0.900000],
 }
 
+{
+"name" : "MATERIAL",
+"version" : 1,
+"index" : "teo2_acrylic_smooth",
+"run_range" : [0, 0],
+"pass" : 0,
+"comment" : "",
+"timestamp" : "",
+"density" : 1.14,
+"nelements" : 3,
+"nmaterials" : 0,
+"elements" : ["Hydrogen", "Carbon", "Oxygen"],
+"elemprop" : [0.0703, 0.558, 0.3717],
+}
+
+{
+"name" : "MATERIAL",
+"version" : 1,
+"index" : "teo2_acrylic_rough",
+"run_range" : [0, 0],
+"pass" : 0,
+"comment" : "",
+"timestamp" : "",
+"density" : 1.14,
+"nelements" : 3,
+"nmaterials" : 0,
+"elements" : ["Hydrogen", "Carbon", "Oxygen"],
+"elemprop" : [0.0703, 0.558, 0.3717],
+}
