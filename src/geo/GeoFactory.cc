@@ -94,7 +94,7 @@ GeoFactory::ConstructPhysicalVolume(G4LogicalVolume *logi,
 {
   string volume_name = table->GetIndex();
   G4VPhysicalVolume *pv;
-
+  info << "GeoFactory: Building volume " << volume_name << newline;
   // optional orienation and rotation, default is neither
   G4RotationMatrix *rotation = new G4RotationMatrix();
   try {

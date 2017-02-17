@@ -92,11 +92,14 @@ int main(int argc, char **argv){
   runT->GetEntry(0);
   RAT::DS::PMTInfo *pmtInfo;
   pmtInfo = run->GetPMTInfo();
+  int evts_triggered = 0;
 
   for(int ientry=0; ientry<nentries;++ientry){
-
     if(ientry%(10000) == 0) std::cout<<" Entry "<<ientry<<std::endl;
     RAT::DS::Root *rds = dsreader->GetEvent(ientry);
+    int nevents = rds->GetEVCount();
+    if (nevents == 0) continue; // only show data for triggered events 
+    evts_triggered++;
     RAT::DS::MC *mc = rds->GetMC();
 
     // ***********MC TRUTH
@@ -109,7 +112,7 @@ int main(int argc, char **argv){
     int ncerphotons_teo2 = 0; //number of cerenkov photons
     int ncerphotons_nteo2 = 0; //number of cerenkov photons
     int ncerphotons_no_attenuation = 0; //number of cerenkov photons
-
+    
     if(LOOPTRACKS){
       //std::cout<<" Looping over tracks "<<std::endl;
       h_ntracks->Fill(ntracks);
@@ -177,8 +180,8 @@ int main(int argc, char **argv){
       float pmtz = pmtInfo->GetPosition(pmtid).z();
 //      float pmtz = pmtInfo->GetPosition(pmtid).z();
 // Note check whether pmtid is the correct identifier for the position....
-      //std::cout << "Working on mcpmt "<< pmtid << ", " << mcpmt->GetMCPhotonCount() << std::endl;
-      //std::cout << "with position "<< pmtx << " " << pmty << " " << pmtz << std::endl;
+      std::cout << "Working on mcpmt "<< pmtid << ", " << mcpmt->GetMCPhotonCount() << std::endl;
+      std::cout << "with position "<< pmtx << " " << pmty << " " << pmtz << std::endl;
 //      std::cout << "Start loop over MCPMT MCPhotonCount! " << mcpmt->GetMCPhotonCount() << std::endl;
 
       for (int iph=0; iph < mcpmt->GetMCPhotonCount(); iph++){
@@ -199,10 +202,11 @@ int main(int argc, char **argv){
 
     //end MCPMT loop
 
-    /*
+    
     // *********REAL EVENTS
-    //Event loop
-    int nevents = rds->GetEVCount();
+    //Event loop - these are the events which actually triggered (a coincidence?)
+//    int nevents = rds->GetEVCount();
+//    if (nevents > 0) evts_triggered++;
     for(int ievt=0; ievt<nevents; ievt++){
       RAT::DS::EV *ev = rds->GetEV(ievt);
 
@@ -221,7 +225,7 @@ int main(int argc, char **argv){
 	h_qvspe->Fill(mc->GetNumPE(),totalcharge);
       }
     }
-    */
+    
        
   }//end entry loop
   
@@ -435,6 +439,7 @@ int main(int argc, char **argv){
   pmt_num_pe[9] = h_MCPMT_lambda[21]->GetEntries();
   pmt_num_pe[10] = h_MCPMT_lambda[22]->GetEntries();
   pmt_num_pe[11] = h_MCPMT_lambda[23]->GetEntries();
+  int ent = nentries-evts_triggered;
   TTree *t = (TTree*) f.Get("t");
   if (!t){
     t = new TTree("t", "photoelectron per PMT tree");
@@ -443,12 +448,16 @@ int main(int argc, char **argv){
     t->Branch("pmt2", &pmt2, "pmt2/I");
     t->Branch("pmt1", &pmt1, "pmt1/I"); 
     t->Branch("evts_started", &nentries, "evts_started/I"); 
+    t->Branch("evts_triggered", &evts_triggered, "evts_triggered/I"); 
+    t->Branch("evts_not_triggered", &ent, "evts_not_triggered/I"); 
   }
   t->SetBranchAddress("pmt_num_pe", pmt_num_pe);
   t->SetBranchAddress("pmt3", &pmt3);
   t->SetBranchAddress("pmt2", &pmt2);
   t->SetBranchAddress("pmt1", &pmt1);
   t->SetBranchAddress("evts_started", &nentries);
+  t->SetBranchAddress("evts_triggered", &evts_triggered);
+  t->SetBranchAddress("evts_not_triggered", &ent);
   t->Fill();
   t->Write();
   f.Close();
