@@ -3,6 +3,7 @@ import subprocess
 import sys, os, shutil
 import fileinput
 import glob, time
+import numpy as np
 from scipy.stats import poisson
 
 
@@ -17,7 +18,7 @@ class RunRAT(object):
   def __init__(self):
     self.rat = "rat"
     self.num_jobs = 1
-    self.num_events = 35 # a week worth of muon events
+    self.num_events = 200 # 25 muon events/per week
     self.poisson = True # Draw a random possion distributed number for num_events
     self.master_config = False 
     self.out_dir=False
@@ -50,7 +51,7 @@ class RunRAT(object):
 
   def alter_config(self, n_evts, out_file, mac_file):
     '''
-    Create a copy of the master_config stored as mac_file. Mofify the beamon and outfile
+    Create a copy of the master_config stored as mac_file. Modify the beamon and outfile
     directives.
     '''
     with open(self.master_config, 'r') as f:
@@ -69,6 +70,80 @@ class RunRAT(object):
 	    line = '/rat/procset file "'+ out_file + '"'
             print line
           outf.write(line)
+
+  def alter_optics(self, smooth= 1.0, rough=0.0):
+    '''
+    Specific function to alter the optics surface finish of the 6 different TeO2 sides specified in 
+    TheiaRnD_TeO2_cosmics_anisotropy.geo file and the corresponding OPTICS implemented in 
+    $RATROOT/data/OPTICS.radb and $RATROOT/data/TheiaRnD/OPTICS.ratdb.   
+    '''
+    smooth = float(smooth)
+    rough = float(rough)
+    if not (type(smooth) is float and type(rough) is float):
+      print 'Error you need to supply float variables for the surface roughness'
+      sys.exit()
+    optics_1 = os.path.expandvars("$RATROOT/data/OPTICS.ratdb")
+    optics_2 = os.path.expandvars("$RATROOT/data/TheiaRnD/OPTICS.ratdb")
+    # In practice, due to the cutting with respect to the crystal axis, it has 4 soft and 2 hard faces.
+    # For the simulation we assume that the 4 soft faces have a certain set of surface properties, 
+    # while the 2 hard faces can have a different set of surface properties. The geometriy specifies where 
+    # we have rough, smooth surfaces. For simulation purposes we associate the 4 soft faces with the "label"
+    # rough/matt. And the hard surfaces to two sides with labels smooth/glossy. We will scan the entire parameter
+    # space in the simulation e.g. a best fit could tell that the 2 hard faces labeled smooth/glossy should be rougher
+    # than the other 4 sides.... Probably a confusing nomenclature. 
+    trigger_pmt_smooth = 'teo2_glass_pmt_smooth'
+    trigger_pmt_rough = 'teo2_glass_pmt_rough'
+    teo2_acrylic_rough = 'teo2_acrylic_rough'
+    teo2_acrylic_smooth = 'teo2_acrylic_rough'
+    air_surface_rough = 'teo2_hard_glossy' 
+    air_surface_smooth = 'teo2_soft_matt'
+    list_smooth = []
+    all_lines =[]
+    all_out_lines = []
+    key_word =  'polish:'
+    with open(optics_1, 'r') as outf:
+        all_lines= outf.readlines()
+        all_out_lines = all_lines[:]
+        for idx,line in enumerate(all_lines):
+ 	  if 'teo2_soft_matt' in line:
+             out_lines = [ 'polish: '+str(rough)+',\n' if 'polish' in x  else x for x in all_lines[idx:idx+10] ] 
+             for idy,el in enumerate(out_lines):
+               all_out_lines[idx+idy] = el
+ 	  if 'teo2_hard_glossy' in line:
+             out_lines = [ 'polish: '+str(smooth)+',\n' if 'polish' in x  else x for x in all_lines[idx:idx+10] ] 
+             for idy,el in enumerate(out_lines):
+               all_out_lines[idx+idy] = el
+    with open(optics_1, 'w') as outf:
+        print all_out_lines 
+#        raw_input('Hit enter to modify the main optics files accordingly.')
+        outf.writelines(all_out_lines)
+    with open(optics_2, 'r') as outf:
+        all_lines= outf.readlines()
+        all_out_lines = all_lines[:]
+        for idx,line in enumerate(all_lines):
+ 	  if 'teo2_acrylic_rough' in line:
+             out_lines = [ 'polish: '+str(rough)+',\n' if 'polish' in x  else x for x in all_lines[idx:idx+10] ] 
+             for idy,el in enumerate(out_lines):
+               all_out_lines[idx+idy] = el
+ 	  if 'teo2_acrylic_smooth' in line:
+             out_lines = [ 'polish: '+str(smooth)+',\n' if 'polish' in x  else x for x in all_lines[idx:idx+10] ] 
+             for idy,el in enumerate(out_lines):
+               all_out_lines[idx+idy] = el
+ 	  if 'teo2_glass_pmt_rough' in line:
+             out_lines = [ 'polish: '+str(rough)+',\n' if 'polish' in x  else x for x in all_lines[idx:idx+10] ] 
+             for idy,el in enumerate(out_lines):
+               all_out_lines[idx+idy] = el
+ 	  if 'teo2_glass_pmt_smooth' in line:
+             out_lines = [ 'polish: '+str(smooth)+',\n' if 'polish' in x  else x for x in all_lines[idx:idx+10] ] 
+             for idy,el in enumerate(out_lines):
+               all_out_lines[idx+idy] = el
+    with open(optics_2, 'w') as outf:
+        print all_out_lines 
+#        raw_input('Hit enter to modify the 2nd optics files accordingly.')
+        outf.writelines(all_out_lines)
+
+
+
 
   def get_last_file(self):
     print self.config_dir
@@ -126,6 +201,7 @@ class RunRAT(object):
               os.remove(proc[3])
               os.remove(proc[4])
               self.killed_procs +=1
+              self.num_jobs +=1 # make sure to run one more job that completes
       return clean_list
 
   def  submit_process_run(self, mac_file, log_file ):   
@@ -140,6 +216,42 @@ class RunRAT(object):
       p = subprocess.Popen(command, env=my_env, shell=True, stdout=f, stderr = subprocess.STDOUT )
       return (p,f)
 
+
+def run_with_par(n_events, n_jobs, rough, smooth,  poisson=False):
+  '''
+  Main method to run over a large set of simulation not only running a single configuration,
+  but changing the optics of the simulation and really running an entire set of different 
+  simulations.
+  '''
+  mac_file = os.path.expandvars('${RATROOT}/mac/TheiaRnD_mcprod_TeO2_cosmics_anisotropy.mac')
+  out_file = 'TheiaRnD_mcprod_TeO2_anisotropy_Ch_r'+str(rough)+'_s'+str(smooth)+'_v1.root'
+#  out_dir = os.path.expandvars('${RATROOT}/results/TheiaRnD_TeO2_rough_comiscs_1')
+  out_dir = '/warehouse/rat_optics_simulation/TheiaRnD_TeO2_anisotropy_Ch_v1'
+  a_rat = RunRAT()
+  a_rat.num_jobs = n_jobs
+  a_rat.num_events = n_events
+  a_rat.n_proc = 16
+  a_rat.poisson = poisson
+  a_rat.master_config = mac_file
+  a_rat.out_dir = out_dir
+  a_rat.out_file_name= out_file
+  a_rat.alter_optics(smooth, rough)
+  a_rat.do_sim()
+
+
+def main_scan():
+  '''
+  Scan over parameter space in surface roughness
+  '''
+  l_smooth = np.arange(0.0,1.01,0.1)  
+  l_rough = np.arange(0.0, 1.01, 0.1)
+  print l_smooth, l_rough, len(l_smooth)
+  n_evts = 200
+  n_jobs = 50 # 12000 simulated events per 
+#  run_with_par(n_evts, n_jobs, 0.0, 0.0 )  
+  for smoo in l_smooth:
+    for ro in l_rough:
+      run_with_par(n_evts, n_jobs, ro, smoo )  
 
 def main():
 #  ana_dir = sys.argv[1]
@@ -168,4 +280,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+#    main()
+    main_scan()
