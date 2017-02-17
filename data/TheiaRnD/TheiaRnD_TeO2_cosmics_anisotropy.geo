@@ -302,7 +302,7 @@
   color: [0.8, 0.0, 0.0, 0.1],
 }
 
-{
+{ // This side is directly coupled to the trigger PMT
   name: "GEO",
   index: "TeO2_negY",
   valid_begin: [0, 0],
@@ -315,7 +315,7 @@
   rotation: [0.0, 0.0, 0.0]
 //  material: "chsrc_uvt_acrylic"
 //  material: "tellurium_dioxyde", //tellurium_dioxyde
-  material: "air", //tellurium_dioxyde
+  material: "glass", //tellurium_dioxyde
   color: [0.8, 0.0, 0.0, 0.1],
 }
 
@@ -639,8 +639,8 @@
    type: "border",
    volume1: "TeO2",
    volume2: "TeO2_negY",
-   surface: "teo2_soft_matt",
-//   surface: "teo2_hard_glossy",
+//   volume2: "trigger_pmt", //
+   surface: "teo2_glass_pmt_smooth",
    reverse: 1.0,
 }
 
