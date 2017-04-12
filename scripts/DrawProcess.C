@@ -1,4 +1,6 @@
-
+//Usage with ROOT: .L DrawProcess.C;
+// extractTree("../results/some_file.root", 2)
+// extractEvents("../results/some_file.root")
 
 class Particle {
     public:

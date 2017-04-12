@@ -72,6 +72,7 @@
   size: [75.0,25.0,25.0],
   position: [-498.0, -367.0, -212.5],
   material: "air",
+//  material: "chsrc_uvt_acrylic",
   color: [0.1, 0.3, 0.8, 0.1],
 }
 
@@ -86,6 +87,7 @@
   type: "box",
   size: [75.0,25.0,25.0],
   position: [-298.0, -367.0, -212.5],
+//  material: "chsrc_uvt_acrylic",
   material: "air",
   color: [0.1, 0.3, 0.8, 0.1],
 }
@@ -100,6 +102,7 @@
   type: "box",
   size: [100.0,60,25.0],
   position: [-398.0, -452.0, -212.5],
+//  material: "chsrc_uvt_acrylic",
   material: "air",
   color: [0.1, 0.3, 0.8, 0.1],
 }
@@ -114,6 +117,7 @@
   type: "box",
   size: [100.0,60.0,25.0],
   position: [-398.0, -282.0, -212.5],
+//  material: "chsrc_uvt_acrylic",
   material: "air",
   color: [0.1, 0.3, 0.8, 0.1],
 }
@@ -156,14 +160,14 @@
   index: "cover_hollow",
   valid_begin: [0, 0],
   valid_end: [0, 0],
-  invisible: 0, // omitted for visualization
+  invisible: 1, // omitted for visualization
   mother: "cover_window",
   type: "tube",
   r_max: 5.0,
   size_z: 0.5,
   position: [0.0,0.0,0.0],
   material: "acrylic_black",
-  color: [0.0, 0.0, 0.0, 0.1],
+  color: [1.0, 0.0, 0.0, 0.1],
 }
 
 {
@@ -171,14 +175,14 @@
   index: "hollow",
   valid_begin: [0, 0],
   valid_end: [0, 0],
-  invisible: 0, // omitted for visualization
+  invisible: 1, // omitted for visualization
   mother: "block",
   type: "tube",
   position: [0.0, 0.0, -0.5],
   r_max: 5.0,
   size_z: 32.0,
   material: "acrylic_black", // acrylic_black
-  color: [0.0, 0.0, 0.0, 0.1],
+  color: [1.0, 0.0, 0.0, 0.1],
 }
 
 {
@@ -211,7 +215,7 @@
   type: "box",
   size: [25.0,25.0,25.0], //mm, half-lenght
   position: [-398.0, -367.0, -212.5],
-  rotation: [0.0, 45.0, 45.0]
+  rotation: [0.0, 0.0, 0.0]
   material: "tellurium_dioxyde", //tellurium_dioxyde
 //  material: "air", //tellurium_dioxyde
   color: [0.8, 0.8, 0.8, 0.1],

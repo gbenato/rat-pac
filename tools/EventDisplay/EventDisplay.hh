@@ -97,6 +97,7 @@ protected:
   std::map< int, std::vector<double> > vWaveformTimes;
   std::map<std::string,TH2F*> hxyplane;
   TCanvas *canvas_event;
+  TCanvas *canvas_3d;
   double elength;
   std::vector<Color_t> pmtidtocolor;
   std::map<int, int> npe; //number of photoelectrons per PMT

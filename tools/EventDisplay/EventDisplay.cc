@@ -42,6 +42,7 @@ bool fexists(const char *filename)
 EventDisplay::EventDisplay(std::string _inputFileName){
 
   //Init
+  std::cout << "Event Display constructo called" << endl;
   event_cut = false;
   inputFileName = _inputFileName;
   SetParameters();
@@ -53,6 +54,7 @@ EventDisplay::EventDisplay(std::string _inputFileName){
   //Set canvas
   gStyle->SetGridWidth(1);
   canvas_event = new TCanvas("canvas_event", "Event", 1600, 1000);
+  canvas_3d  = new TCanvas("canvas_3d", "3D - Event", 1600, 1000);
   canvas_event->Divide(2,6);
   //MC tracks and geometry
   canvas_event->cd(1)->SetPad(.0, .5, .33, 1.);
@@ -214,7 +216,7 @@ bool EventDisplay::LoadEvent(int ievt){
       // std::cout<<"step "<<istep<<" "<<bottom_pos.X()<<" "<<bottom_pos.Y()<<" "<<bottom_pos.Z()<<std::endl;
       if(mctrack->GetPDGCode()!=0 && mctrack->GetPDGCode()!=9999) continue; //only for OPTICAL photons
 
-      if(debugLevel > 1) std::cout<<"    Intersectng Optical Photon "<<std::endl;
+      if(debugLevel > 1) std::cout<<"    Intersecting Optical Photon "<<std::endl;
 
       if(bottom_pos.Z()!=-9999.){ //we haven't found the point yet
         if(endpointstep.Z()>intersection_zplane[2]){
@@ -581,10 +583,13 @@ void EventDisplay::SetParameters(){
 
   //Get link to ratdb file
   RAT::DB* db = RAT::DB::Get();
+  std::cout << "Loading ED.json" << std::endl;
   db->Load("ED.json");
+  std::cout << "Getting Link EVENTDISPLAY" << std::endl;
   dbED = db->GetLink("EVENTDISPLAY");
 
   //Flags
+  std::cout << "Get Flags from ED.json" << std::endl;
   debugLevel = dbED->GetI("debug_level");
   drawGeometry = dbED->GetI("draw_geo");
   drawPMTs = dbED->GetI("draw_pmts");
@@ -592,7 +597,7 @@ void EventDisplay::SetParameters(){
   finalTrack = dbED->GetI("final_track");
   event_option = dbED->GetS("event_option");
   event_number = dbED->GetI("event_number");
-
+  std::cout << "Debug level " << debugLevel << std::endl;
   //XY plane
   intersection_zplane = dbED->GetDArray("intersection_zplane");
 
@@ -603,13 +608,15 @@ void EventDisplay::SetParameters(){
 
   //Analysis file
   if(inputFileName == "") inputFileName = dbED->GetS("input_file");
-
+  std::cout << "Input file " << inputFileName << std::endl;
+  
   //Geometry files
   geoFileName = dbED->GetS("geo_file");
 
   //Geometry correction
   corrFileName = dbED->GetS("corr_file");
   targetMaterial = dbED->GetS("material");
+  if(debugLevel > 1) std::cout<< "Load corr_file db" << std::endl; 
   db->Load(corrFileName);
 
   //Validate parameters
@@ -622,16 +629,19 @@ void EventDisplay::SetParameters(){
   else std::cout<<" EventDisplay >>> Draw PMTs disabled "<<std::endl;
 
   //Geometry PMT correction
+  if(debugLevel > 1 ) std::cout << "Getting SCINTCOOR and dbCorr stuff "<< std::endl;
   dbCorr = db->GetLink("SCINTCORR",targetMaterial);
   pmtGeoCorr = dbCorr->GetDArray("corr");
   pmtGeoCorrErr = dbCorr->GetDArray("corr_err");
 
   //Charge calibration
+  if(debugLevel > 1 ) std::cout << "Getting PMTGAUSCHARGE stuff "<< std::endl;
   db->Load("../../data/PMTGAUSCHARGE.ratdb");
   dbED = db->GetLink("PMTGAUSCHARGE");
   spe = dbED->GetDArray("gaus_mean");
 
   //Time calibration
+  if(debugLevel > 1 ) std::cout << "Getting PMTGAUSTIME stuff "<< std::endl;
   db->Load("../data/PMTGAUSTIME.ratdb");
   RAT::DBLinkPtr dbTime = db->GetLink("PMTGAUSTIME");
   time_delay = dbTime->GetDArray("cable_delay");
@@ -641,6 +651,7 @@ void EventDisplay::SetParameters(){
 
 //Define experiment geometry
 void EventDisplay::SetGeometry(){
+
 
   if(debugLevel > 0) std::cout<<" EventDisplay::SetGeometry "<<std::endl;
 
@@ -713,6 +724,15 @@ void EventDisplay::DisplayEvent(int ievt){
     if(itr==0) pl_tracks[itr].Draw("LINE");
     pl_tracks[itr].Draw("LINE same");
   }
+  //seperate Geo only canvas
+  canvas_3d->cd();
+  if(drawGeometry) EDGeo->DrawGeometry();
+  int max_step = 200; // implement an animated gif that shows photon tracks prgressing and dying out again
+  for (int itr = 0; itr < pl_tracks.size(); itr++) {
+    if(itr==0) pl_tracks[itr].Draw("LINE");
+    pl_tracks[itr].Draw("LINE same");
+  }
+  
 
   if(debugLevel > 0) std::cout<<"Display canvas 2 "<<std::endl;
 

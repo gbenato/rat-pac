@@ -85,7 +85,7 @@
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "../results/TheiaRnD_mcprod_ce_TeO2_cosmics_v7.root"
+/rat/procset file "../results/TheiaRnD_mcprod_TeO2_cosmics_scint_200evts.root"
 #########################################
 
 ##### GENERATORS #################
@@ -130,7 +130,7 @@
 #######################################
 
 ##### RUN ###########
-/run/beamOn 100
+/run/beamOn 200
 
 
 

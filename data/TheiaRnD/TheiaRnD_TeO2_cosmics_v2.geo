@@ -51,13 +51,29 @@
   invisible: 0, // omitted for visualization
   mother: "inner",
   type: "box",
-  size: [160.0,160.0,77.5], //alternative box as mothervolume around the entire TeO2 (technically avoids pyramids...)
-  position: [-398.0, -367.0, -235.0], // 45 mm higher center, 90 mm thicker can enclose Teo2 standing on edge 
+  size: [160.0,160.0,32.5], 
+  position: [-398.0, -367.0, -270.0],  
+  material: "chsrc_uvt_acrylic",
+//  material: "tellurium_dioxyde",
+//  material: "air",
+  color: [0.1, 0.3, 0.8, 0.1],
+}
+{
+  name: "GEO",
+  index: "block_top",
+  valid_begin: [0, 0],
+  valid_end: [0, 0],
+  invisible: 0, // omitted for visualization
+  mother: "inner",
+  type: "box",
+  size: [160.0,160.0,45], //alternative box as mothervolume around the entire TeO2 (technically avoids pyramids...)
+  position: [-398.0, -367.0, -192.5], // 45 mm higher center, 90 mm thicker can enclose Teo2 standing on edge 
 //  material: "chsrc_uvt_acrylic",
 //  material: "tellurium_dioxyde",
   material: "air",
   color: [0.1, 0.3, 0.8, 0.1],
 }
+
 
 
 /////////////////////
@@ -72,7 +88,7 @@
   mother: "block",
   type: "box",
   size: [160.0,160.0,0.5],
-  position: [0.0,0.0,-17.0],
+  position: [0.0,0.0,32.0],
   material: "chsrc_uvt_acrylic",
   color: [0.5, 0.2, 0.1, 0.1],
 //  surface: "mirror",
@@ -88,7 +104,7 @@
   type: "tube",
   r_max: 50.0,
   size_z: 0.5,
-  position: [0.0,0.0,-45.0],
+  position: [0.0,0.0,0.0],
   material: "chsrc_uvt_acrylic",
   color: [0.1, 0.3, 0.8, 0.1],
 }
@@ -103,7 +119,7 @@
   type: "tube",
   r_max: 5.0,
   size_z: 0.5,
-  position: [0.0,0.0,-45.0],
+  position: [0.0,0.0,0.0],
   material: "acrylic_black",
   color: [0.0, 0.0, 0.0, 0.1],
 }
@@ -116,7 +132,7 @@
   invisible: 0, // omitted for visualization
   mother: "block",
   type: "tube",
-  position: [0.0, 0.0, -45.5],
+  position: [0.0, 0.0, -0.5],
   r_max: 5.0,
   size_z: 32.0,
   material: "acrylic_black", // acrylic_black
@@ -131,7 +147,7 @@
   invisible: 0, // omitted for visualization
   mother: "block",
   type: "tube",
-  position: [0.0, 0.0, -76.5],
+  position: [0.0, 0.0, -31.5],
   r_max: 10.0,
   r_min: 5.0,
   size_z: 1.0,
@@ -149,14 +165,15 @@
   valid_begin: [0, 0],
   valid_end: [0, 0],
   invisible: 0, // omitted for visualization
-  mother: "block",
+  mother: "block_top",
   type: "box",
   size: [25.0,25.0,25.0], //mm, half-lenght
 //  position: [-398.0, -367.0, -212.5], //pos relative to inner center
-  position: [0.0, 0.0, 32.5],
-  rotation: [0.0, 45.0, 45.0]
+  position: [0.0, 0.0, 0],
+  rotation: [0.0, 15.0, 0.0]
   material: "tellurium_dioxyde", //tellurium_dioxyde
 //  material: "air", //tellurium_dioxyde
+//  material: "chsrc_uvt_acrylic", //tellurium_dioxyde
   color: [0.8, 0.8, 0.8, 0.1],
 }
 
@@ -285,7 +302,7 @@
   invisible: 0, // omitted for visualization
   mother: "inner",
   type: "tube",
-  position: [-398.0, -367.0, -132.0],
+  position: [-398.0, -367.0, -122.0],
   r_max: 5.0,
   size_z: 25.0,
   material: "acrylic_black",

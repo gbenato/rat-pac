@@ -6,12 +6,12 @@
     //Analysis
     //    "input_file": "../../mac/sphere_betas.root", // Analysis ROOT file
     //    "input_file": "../../mac/hdf5_converted.root", // Analysis ROOT file
-    "input_file": "../../results/TheiaRnD_cosmics_cher_WBLS1MOD.root", // Analysis ROOT file
+    "input_file": "../../results/heprep/TheiaRnD_mcprod_ce_TeO2_cosmics_anisotopy_draw.root", // Analysis ROOT file
 
     //Geometry files: used only if 'draw_geo==1'
-    "geo_file": "/Users/snoplus/Work/Chess/rat-pac/data/TheiaRnD/TheiaRnD_water.geo",
-    "corr_file": "/Users/snoplus/Work/Chess/rat-pac/data/TheiaRnD/SCINTCORR.ratdb",
-    "material": "LABPPO", //LAB, LABPPO, WBLS1pct, WBLS10pct
+    "geo_file": "../../data/TheiaRnD/TheiaRnD_TeO2_cosmics_v1.geo",
+    "corr_file": "../../data/TheiaRnD/SCINTCORR.ratdb",
+    "material": "LAB", //LAB, LABPPO, WBLS1pct, WBLS10pct
 
     //XY plane for ring imaging
     "intersection_zplane": [-600.0,0.0,-302.0], // Photon-plane intersection dimensions and Z position [SIDE_MIN, SIDE_MAX, ZPOS]
@@ -47,6 +47,6 @@
     "event_option": "triggered",       // Drawing options: "pe" -> only events with at least one PE,
                                        //                  "cherenkov" -> only events with a cherenkov process
                                        //                  "triggered" -> only events triggered by the DAQ
-    "debug_level": 0,
+    "debug_level": 2,
 
 }
