@@ -29,7 +29,7 @@
 #include "CHESSTools.h"
 
 #define SMEARING 0.000 //0.214
-#define CORRCH 23 //24 for source data // 0 - for cosmics as empty channel for correction (if negative do not apply correction)
+#define CORRCH 24 //24 for source data // 0 - for cosmics as empty channel for correction (if negative do not apply correction)
 #define REFTUBE 25 //Reference tube for time measurements 
 //hmmm there is an discrepencay with CHESSTOOLS.h naming convention of the pmts
 // there chan 23, 24, 25 are the top muon tag, bottom muon tag and trigger PMT
@@ -103,6 +103,10 @@ std::vector<double> time_delay;
 vector<double> qScintCorr; //Scintillation correction
 vector<double> qScintCorrErr; // Scintillation correction error
 vector<double> spe; //SPE
+vector<double> charge_slopes; // channel based charge correction
+vector<double> charge_offsets; // channel based charge correction
+vector<double> spe_corrections; // channel based spe scale correction
+vector<double> noise_offsets; // channel based noise position correction
 
 
 //// Histograms
@@ -130,6 +134,7 @@ std::vector<TH1F*> h_qratio; //Measured charge
 std::vector<TH1F*> h_charge_ring;
 std::vector<TH1F*> h_time; //Measured time
 std::vector<TH1F*> h_time_ring;
+std::vector<TGraph*> g_charge_correction; // plot charge in chx against charge in Corrch (cutting on NPE)
 TH2F* h_charge_muontrigs; //Muon trigger charges correlation
 TH1F* h_time_muontrigs; //DeltaT muon tags
 
@@ -185,11 +190,17 @@ void GetDBTables(){
 
   RAT::DB* db = RAT::DB::Get();
 
-  db->Load("../data/PMTGAUSCHARGE.ratdb");
+//  db->Load("../data/PMTGAUSCHARGE.ratdb");
+  db->Load("PMTGAUSCHARGE.ratdb");
   RAT::DBLinkPtr dbSPE = db->GetLink("PMTGAUSCHARGE");
   spe = dbSPE->GetDArray("gaus_mean");
-
-  db->Load("../data/PMTGAUSTIME.ratdb");
+  charge_slopes = dbSPE->GetDArray("charge_correction_slopes");
+  charge_offsets = dbSPE->GetDArray("charge_correction_offsets");
+  spe_corrections = dbSPE->GetDArray("gaus_correction");
+  noise_offsets = dbSPE->GetDArray("noise_offset");
+  std::cout << "read charge correction " << charge_slopes[25] << std::endl;
+//  db->Load("../data/PMTGAUSTIME.ratdb");
+  db->Load("PMTGAUSTIME.ratdb");
   RAT::DBLinkPtr dbTime = db->GetLink("PMTGAUSTIME");
   time_delay = dbTime->GetDArray("cable_delay");
 
@@ -342,14 +353,17 @@ void InitHistos(){
     h_mcpmt_time.push_back(new TH1F(Form("h_mcpmt_time_%i",ih),"h_mcpmt_time",200,5,10));
     h_mcpmt_fetime.push_back(new TH1F(Form("h_mcpmt_fetime_%i",ih),"h_mcpmt_fetime",200,5,10));
     //DAQ
-    if (ih == 11){
-      std::cout << "Create ring PMT 0 histogram" << std::endl;
-      h_charge.push_back(new TH1F(Form("h_charge_%i",ih),pmtname[ih], 800, q_xmin[ih], q_xmax_used[ih]));
-    }
-    else
-      h_charge.push_back(new TH1F(Form("h_charge_%i",ih),pmtname[ih], 200, q_xmin[ih], q_xmax_used[ih]));
+ //   if (ih == 11){
+ //     std::cout << "Create ring PMT 0 histogram" << std::endl;
+ //     h_charge.push_back(new TH1F(Form("h_charge_%i",ih),pmtname[ih], 800, q_xmin[ih], q_xmax_used[ih]));
+ //   }
+ //   else
+    h_charge.push_back(new TH1F(Form("h_charge_%i",ih),pmtname[ih], 200, q_xmin[ih], q_xmax_used[ih]));
     h_charge.back()->SetXTitle("NPEs");
     h_charge.back()->SetLineColor(pmtidtocolor[ih]);
+    g_charge_correction.push_back(new TGraph());
+    g_charge_correction.back()->SetName(Form("g_charge_correction_%i",ih));
+    g_charge_correction.back()->SetTitle(pmtname[ih]);
     h_qratio.push_back(new TH1F(Form("h_qratio_%i",ih),pmtname[ih],30,-0.1,qrat_xmax));
     h_qratio.back()->SetXTitle("QRatio");
     h_qratio.back()->SetLineColor(pmtidtocolor[ih]);
@@ -432,15 +446,17 @@ void GetHistos(){
       double corr_charge = 0.;
       double corr_charge2 = 0.;
       RAT::DS::PMT *pmt = ev->GetPMTWithID(CORRCH); //ref ring tube
-      RAT::DS::PMT *pmt2 = ev->GetPMTWithID(CORRCH+1); //ref ring tube
-      if(pmt!=NULL && pmt2!=NULL && !isMC){
+//      RAT::DS::PMT *pmt2 = ev->GetPMTWithID(CORRCH+1); //ref ring tube
+//      if(pmt!=NULL && pmt2!=NULL && !isMC){
+      if(pmt!=NULL && !isMC){
         corr_charge = pmt->GetCharge();
-        corr_charge2 = pmt2->GetCharge();
+//        std::cout << corr_charge << std::endl;
+//        corr_charge2 = pmt2->GetCharge();
       }
       if(ievt){
         std::cout << "WARNING the 2nd level data event loop is being used" << std::endl;
       }
-      g_corr_channel->SetPoint(g_corr_channel->GetN(), corr_charge2, corr_charge);
+      g_corr_channel->SetPoint(g_corr_channel->GetN(), ientry, corr_charge);
       //Reference Ring Tube
       double refring_time = -9999.;
       double refring_timeres = -9999.;
@@ -481,8 +497,8 @@ void GetHistos(){
         bottommuon_time = pmt->GetTime();
         bottommuon_fft = pmt->GetFCN();
       }
-      if (topmuon_charge < 10 or bottommuon_charge < 10)
-          continue;
+//      if (topmuon_charge < 10 or bottommuon_charge < 10)
+//          continue;
       //Veto pannels
       double panel_charge[] = {0., 0., 0., 0.};
       pmt = ev->GetPMTWithID(6);
@@ -542,10 +558,15 @@ void GetHistos(){
         int pmttype = pmtInfo->GetType(pmtid);
         double charge = ev->GetPMT(ipmt)->GetCharge();
         double npes = charge/spe[pmtid];
-
+//        std::cout << corr_charge << std::endl;
         if(pmttype==1){
-          charge -= corr_charge;
-          npes = charge/spe[pmtid];
+//          std::cout << corr_charge << std::endl;
+//          charge -= corr_charge;
+          charge -= ((corr_charge-charge_offsets[pmtid])*charge_slopes[pmtid]);
+//          std::cout << ((corr_charge-charge_offsets[pmtid])*charge_slopes[pmtid]) << std::endl;
+//          npes = charge/spe[pmtid];
+          npes = charge/spe[pmtid]-noise_offsets[pmtid];
+          npes = npes / (spe_corrections[pmtid] - noise_offsets[pmtid]);
           if(npes < -2 || npes > 50) {
            std::cout << "ERROR RING PMT with weird charge " << npes << " for PMT " << pmtid << std::endl;
            std::cout << "for event " << ientry << " " << ievt << std::endl;
@@ -564,18 +585,28 @@ void GetHistos(){
 //      std::cout << "Total NPEs in RING " << qtotal_ringpmts << std::endl;
 
       if(qtotal_ringpmts < 50){
+//      if(true){
        for(int ipmt=0; ipmt<ev->GetPMTCount(); ipmt++){
         int pmtid = ev->GetPMT(ipmt)->GetID();
         int pmttype = pmtInfo->GetType(pmtid);
 
         //Hit selection
         double charge = ev->GetPMT(ipmt)->GetCharge();
+        double charge_0 = charge;
         //Apply charge correction
-        if(pmttype==1) charge -= corr_charge;
+//        if(pmttype==1) charge -= corr_charge;
+        if(pmttype==1) charge -= ((corr_charge-charge_offsets[pmtid])*charge_slopes[pmtid]);
         double qshort = ev->GetPMT(ipmt)->GetQShort();
         if(charge < -9900) continue; //This is a tube with a bad pedestal
         double npes = charge/spe[pmtid];
+        npes = charge/spe[pmtid]-noise_offsets[pmtid];
+        npes = npes / (spe_corrections[pmtid] - noise_offsets[pmtid]);
         h_charge[pmtid]->Fill(npes);
+//        std::cout << corr_charge << std::endl;
+        if((abs(corr_charge) + abs(charge_0)) < 200){
+           if( npes < 1.8)
+           g_charge_correction[pmtid]->SetPoint(g_charge_correction[pmtid]->GetN(), corr_charge, charge);
+        }
         //There are some outliers with crazy qshort and null charge probably
         //due to the baseline drifts. I remove those with the cut below.
         if(qshort/charge<2.0 && qshort/charge>-2.0 ) {
@@ -668,7 +699,7 @@ void DrawHistos(){
   TCanvas* c_corr_channel = new TCanvas("c_corr_channel", "blub");
   std::cout << "Printing the channel to correct on with x entries: " <<std::endl;
   std::cout << g_corr_channel->GetN() << std::endl;
-  g_corr_channel->SetMarkerStyle(4);
+  g_corr_channel->SetMarkerStyle(1);
   g_corr_channel->Draw("AP");
   c_corr_channel->Update();
 
@@ -764,6 +795,10 @@ void DrawHistos(){
   c_charge_ring = new TCanvas("c_charge_ring","Charge Ring Tubes",1200,1200);
   Crucify(c_charge_ring);
 
+  TCanvas *c_charge_corr_ring;
+  c_charge_corr_ring = new TCanvas("c_charge_corr_ring","Charge correction Ring Tubes",1200,1200);
+  Crucify(c_charge_corr_ring);
+
   TCanvas *c_qratio_ring;
   c_qratio_ring = new TCanvas("c_qratio_ring","QRatio Ring Tubes",1200,1200);
   Crucify(c_qratio_ring);
@@ -779,6 +814,15 @@ void DrawHistos(){
     // h_charge[pmtid]->SetFillColor(pmtidtocolor[pmtid]);
     // h_charge[pmtid]->SetFillStyle(3003+pmtidtopos[pmtid]);
     h_charge[pmtid]->Draw();
+
+    c_charge_corr_ring->cd(padCount);
+    g_charge_correction[pmtid]->SetMarkerColor(pmtidtocolor[pmtid]);
+    g_charge_correction[pmtid]->SetMarkerStyle(1);
+    g_charge_correction[pmtid]->Draw("AP");
+    g_charge_correction[pmtid]->GetXaxis()->SetTitle(Form("Charge corr channel %i",CORRCH));
+    g_charge_correction[pmtid]->GetYaxis()->SetTitle(Form("Charge channel %i",pmtid));
+    c_charge_corr_ring->Update();
+
     c_qratio_ring->cd(padCount);
     h_qratio[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
     // h_qratio[pmtid]->SetFillColor(pmtidtocolor[pmtid]);
@@ -937,6 +981,7 @@ void PrintHistos(char *filename){
   fout->cd();
   h_time_muontrigs->Write(); //For event counting and norm
   for(int ipmt=0; ipmt<pmtInfo->GetPMTCount();ipmt++){
+    g_charge_correction[ipmt]->Write();
     h_charge[ipmt]->Write();
     h_time[ipmt]->Write();
   }

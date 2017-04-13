@@ -1,8 +1,8 @@
 '''
 Author: Benjamin Schmidt
-Date: 2016/11/09
+Date: 2017/04/12
 
-Analysis tool for PMT SPE and few PE spectrum fits
+Analysis tool for PMT SPE and few PE spectrum fits for CHESS calibration and pedestal correction
 '''
 
 import ROOT
@@ -271,6 +271,20 @@ def fit_pmt1_bg(h, outdir):
     return fit_res
 
 
+def fit_pol1(g, out_dir):
+  hFit = ROOT.TF1("pol1", "[0]+[1]*x", -60, 60)
+  fit_res = {}
+  c = ROOT.TCanvas()
+  g.Draw("AP")
+  g.Fit(hFit, 'R')
+  out_name = out_dir+"charge_correction_"+g.GetName()+".pdf"
+  c.Print(out_name)
+  raw_input("Hit enter to continue")
+  fit_res["formula"] = "[0]+[1]*x"
+  fit_res["par_array"] = list(np.ndarray(hFit.GetNumberFreeParameters(), buffer = hFit.GetParameters(), dtype=float))
+  fit_res["par_errors"] = list(np.ndarray(hFit.GetNumberFreeParameters(), buffer = hFit.GetParErrors(), dtype=float))
+  return fit_res
+
 def get_avg_number_pes(h, spe_pos, x_min, x_max ):
     '''
     Calculate the avg. number of photoelectron in the given PMT spectrum. In case you analyze cobodaq data and use a
@@ -329,10 +343,31 @@ def read_chess_pmt_histos(chess_file_name):
     return a_dict
 
 
+def read_chess_charge_correction_graphs(chess_file_name):
+    '''
+    Read in the root histos for the 9 chess PMTs of the ring 1-inch cross PMTs
+    plus while we are at it we could in principle also do the light yield pmts
+    :return a dictionary of thistograms
+    '''
+    file = ROOT.TFile(chess_file_name, 'r')
+    file_keys = file.GetListOfKeys()
+    a_dict = {}
+    for key in file_keys:
+      print key.GetName()
+      if 'g_charge' in key.GetName() and 'Ring PMT' in key.GetTitle():
+        a_dict[key.GetName()] = {}
+        a_dict[key.GetName()]['title'] = key.GetTitle()
+        a_dict[key.GetName()]['hist'] = file.Get(key.GetName())
+    print a_dict
+    return a_dict
+
+
 def run_chess_calibration(chess_file, plot_dir = False, outf = 'CHESS_PMT_correction_2017_04_11.json'):
     hists = read_chess_pmt_histos(chess_file)
     write_json({'test':'success'}, outf)
     print hists
+    spe_mean = np.ones(26)
+    noise_offset = np.zeros(26)
     for key, adict in hists.iteritems():
        print adict
        h = adict['hist']
@@ -340,8 +375,32 @@ def run_chess_calibration(chess_file, plot_dir = False, outf = 'CHESS_PMT_correc
        adict['fit_result_dpe'] = fit_pmt2_bg(h, plot_dir)
        adict['fit_result_spe'] = fit_pmt1_bg(h, plot_dir)
        adict['hist'] = 'balabala'
+       spe_mean[int((h.GetName().split('_'))[-1])] = adict['fit_result_dpe']['par_array'][1]
+       noise_offset[int((h.GetName().split('_'))[-1])] = adict['fit_result_dpe']['noise_gaus_par'][1]        
     print hists
+    print 'spe_mean:', list(spe_mean)
+    print 'noise_offset:', list(noise_offset)
     write_json(hists, outf)
+
+
+def run_chess_charge_correction(chess_file, plot_dir = False, outf = 'CHESS_charge_correction_2017_04_12.json'):
+    graphs = read_chess_charge_correction_graphs(chess_file)
+    write_json({'test':'success'}, outf)
+    print graphs
+    slopes = np.ones(26)
+    offsets = np.zeros(26)
+    for key, adict in graphs.iteritems():
+       print adict
+       h = adict['hist']
+       print h
+       adict['fit_result_pol1'] = fit_pol1(h, plot_dir)
+       adict['hist'] = 'balabala'
+       slopes[int((h.GetName().split('_'))[-1])] = adict['fit_result_pol1']['par_array'][1]
+       offsets[int((h.GetName().split('_'))[-1])] = adict['fit_result_pol1']['par_array'][0]
+    print graphs
+    print 'Slopes:', list(slopes)
+    print 'Offsets:', list(offsets)
+    write_json(graphs, outf)
 
 
 def plot_spe_fits(json_dict, cooldown_name ='nov_7_cooldown'):
@@ -375,8 +434,10 @@ def write_json(a_dict, a_file = './output/CHESS_PMT_correction.json'):
 def main():
     chess_dir = '/Users/benschmidt/CUORE/data/CHESS_data/'
     chess_file = chess_dir+'cuore-source-uvt-0_15Mar2017-134503_0_cut_Source_plots.root'
+#    chess_file = chess_dir+'cuore-source-uvt-0_15Mar2017-134503_0_cut_Source_plots_simple_charge_correction.root'
     run_chess_calibration(chess_file, './plots/')
-
+#    run_chess_calibration(chess_file, './plots/simple_charge_corr/', 'Simple_charge_correction.json')
+#    run_chess_charge_correction(chess_file, './plots/')    
 
 
 if __name__ ==  "__main__":
