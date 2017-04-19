@@ -1,0 +1,15 @@
+Apil 19th 2017 - Summary of rat-pac tools for the CUORE - TeO2 measurements, B.Schmidt
+
+Scripts : Purpose
+
+-rw-rw-r--. 1 beschmidt beschmidt   3141 Apr 18 16:08 CHESSStyle.C : ROOT graphics style definition
+-rw-rw-r--. 1 beschmidt beschmidt   1882 Apr 18 16:08 CHESSTools.h : global variable definitions (PMT array names, positions, plot colors)
+-rw-rw-r--. 1 beschmidt beschmidt  40735 Apr 18 16:08 DrawChargeAndTime.cpp : Source for data plotting executable (also some MC)
+-rw-rw-r--. 1 beschmidt beschmidt  19119 Feb 14 10:55 DrawPlotsForTeO2.cpp : Source for MC plotting executable (also some data)
+-rw-r--r--. 1 beschmidt beschmidt    897 Apr 19 09:44 Makefile : 
+-rw-rw-r--. 1 beschmidt beschmidt   4857 Jan 23 20:55 plot_crunchy.py : Extracting of few variables of interest from MC (PMT ratios for cosmics)
+-rw-rw-r--. 1 beschmidt beschmidt   2446 Apr 18 16:08 PMTGAUSCHARGE.ratdb : PMT calibration json database file
+-rw-rw-r--. 1 beschmidt beschmidt   3375 Apr 18 16:08 PMTGAUSTIME.ratdb : PMT calibration json database file
+-rw-rw-r--. 1 beschmidt beschmidt  16093 Apr 18 16:08 pmt_spe_fit.py : SPE and DPE fitting of PMT response
+drwxrwxr-x. 3 beschmidt beschmidt   4096 Apr 19 09:39 run_processing : Folder containing scripts to run multiple MC batches
+-rw-rw-r--. 1 beschmidt beschmidt   9633 Apr 18 16:08 Selection.cpp : Data reduction/root file production scripts
