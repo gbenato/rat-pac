@@ -55,8 +55,8 @@
   position: [-398.0, -367.0, -270.0],
 //  size: [160.0,160.0,77.5], //alternative box as mothervolume around the entire TeO2 (technically avoids pyramids...)
 //  position: [-398.0, -367.0, -235.0], // 45 mm higher center, 90 mm thicker can enclose Teo2 standing on edge 
-//  material: "chsrc_uvt_acrylic",
-  material: "tellurium_dioxyde",
+  material: "chsrc_uvt_acrylic",
+//  material: "tellurium_dioxyde",
 //  material: "air",
   color: [0.1, 0.3, 0.8, 0.1],
 }
@@ -72,7 +72,6 @@
   size: [75.0,25.0,25.0],
   position: [-498.0, -367.0, -212.5],
   material: "air",
-//  material: "chsrc_uvt_acrylic",
   color: [0.1, 0.3, 0.8, 0.1],
 }
 
@@ -87,7 +86,6 @@
   type: "box",
   size: [75.0,25.0,25.0],
   position: [-298.0, -367.0, -212.5],
-//  material: "chsrc_uvt_acrylic",
   material: "air",
   color: [0.1, 0.3, 0.8, 0.1],
 }
@@ -102,7 +100,6 @@
   type: "box",
   size: [100.0,60,25.0],
   position: [-398.0, -452.0, -212.5],
-//  material: "chsrc_uvt_acrylic",
   material: "air",
   color: [0.1, 0.3, 0.8, 0.1],
 }
@@ -117,7 +114,6 @@
   type: "box",
   size: [100.0,60.0,25.0],
   position: [-398.0, -282.0, -212.5],
-//  material: "chsrc_uvt_acrylic",
   material: "air",
   color: [0.1, 0.3, 0.8, 0.1],
 }
@@ -160,14 +156,14 @@
   index: "cover_hollow",
   valid_begin: [0, 0],
   valid_end: [0, 0],
-  invisible: 1, // omitted for visualization
+  invisible: 0, // omitted for visualization
   mother: "cover_window",
   type: "tube",
   r_max: 5.0,
   size_z: 0.5,
   position: [0.0,0.0,0.0],
   material: "acrylic_black",
-  color: [1.0, 0.0, 0.0, 0.1],
+  color: [0.0, 0.0, 0.0, 0.1],
 }
 
 {
@@ -175,14 +171,14 @@
   index: "hollow",
   valid_begin: [0, 0],
   valid_end: [0, 0],
-  invisible: 1, // omitted for visualization
+  invisible: 0, // omitted for visualization
   mother: "block",
   type: "tube",
   position: [0.0, 0.0, -0.5],
   r_max: 5.0,
   size_z: 32.0,
   material: "acrylic_black", // acrylic_black
-  color: [1.0, 0.0, 0.0, 0.1],
+  color: [0.0, 0.0, 0.0, 0.1],
 }
 
 {
@@ -213,11 +209,11 @@
   invisible: 0, // omitted for visualization
   mother: "inner",
   type: "box",
-  size: [25.0,25.0,25.0], //mm, half-lenght
-  position: [-398.0, -367.0, -212.5],
+  size: [31.75,31.75,31.75], //mm, half-lenght
+//  position: [-398.0, -367.0, -212.5],
+  position: [-398.0, -367.0, -205.75],
   rotation: [0.0, 0.0, 0.0]
-//  rotation: [0.0, 45.0, 45.0]
-  material: "chsrc_uvt_acrylic"
+  material: "chsrc_uvt_acrylic",
 //  material: "tellurium_dioxyde", //tellurium_dioxyde
 //  material: "air", //tellurium_dioxyde
   color: [0.8, 0.8, 0.8, 0.1],
@@ -226,149 +222,150 @@
 /////////////////
 //  VESSEL
 /////////////////
-//{
-//  name: "GEO",
-//  index: "vessel",
-//  valid_begin: [0, 0],
-//  valid_end: [0, 0],
-//  invisible: 0, // omitted for visualization
-//  mother: "inner",
-//  type: "CheSSVessel",
-//  r_max: 50.0,
-//  size_z: 15.0,
-//  rotation:  [0.0, 0.0, 135.0],
-//  position: [-398.0, -367.0, -220.91],
-//  material: "chsrc_uvt_acrylic",
-//  color: [0.1, 0.3, 0.8, 0.1],
-//}
+// {
+//   name: "GEO",
+//   index: "vessel",
+//   valid_begin: [0, 0],
+//   valid_end: [0, 0],
+//   invisible: 0, // omitted for visualization
+//   mother: "inner",
+//   type: "CheSSVessel",
+//   r_max: 50.0,
+//   size_z: 15.0,
+//   rotation:  [0.0, 0.0, 135.0],
+//   position: [-398.0, -367.0, -220.91],
+//   material: "chsrc_uvt_acrylic",
+//   color: [0.1, 0.3, 0.8, 0.1],
+// }
 
-//{
-//  name: "GEO",
-//  index: "cavity",
-//  valid_begin: [0, 0],
-//  valid_end: [0, 0],
-//  invisible: 0, // omitted for visualization
-//  mother: "vessel",
-//  type: "tube",
-//  r_max: 20.0,
-//  size_z: 1.905,
-//  position: [0.0, 0.0, 14.685],
-//  material: "air",
-//  color: [0.0, 0.0, 0.0, 0.1],
-//}
+// {
+//   name: "GEO",
+//   index: "cavity",
+//   valid_begin: [0, 0],
+//   valid_end: [0, 0],
+//   invisible: 0, // omitted for visualization
+//   mother: "vessel",
+//   type: "tube",
+//   r_max: 20.0,
+//   size_z: 1.905,
+//   position: [0.0, 0.0, 14.685],
+//   material: "air",
+//   color: [0.0, 0.0, 0.0, 0.1],
+// }
 
-//{
-//  name: "GEO",
-//  index: "content",
-//  valid_begin: [0, 0],
-//  valid_end: [0, 0],
-//  invisible: 0, // omitted for visualization
-//  mother: "vessel",
-//  type: "tube",
-//  r_max: 45.0, //LAB->45mm, WBLS->35mm
-//  size_z: 12.89,
-//  position: [0.0, 0.0, -1.7],
-//  material: "water",
-//  color: [0.5, 0.1, 0.5, 0.5],
-//}
+// {
+//   name: "GEO",
+//   index: "content",
+//   valid_begin: [0, 0],
+//   valid_end: [0, 0],
+//   invisible: 0, // omitted for visualization
+//   mother: "vessel",
+//   type: "tube",
+//   r_max: 45.0, //LAB->45mm, WBLS->35mm
+//   size_z: 12.89,
+//   position: [0.0, 0.0, -1.7],
+//   material: "water",
+//   color: [0.5, 0.1, 0.5, 0.5],
+// }
 
 /////////////////////////////
 // RADIACTIVE SOURCES
 /////////////////////////////
-//{
-//  name: "GEO",
-//  index: "envelope",
-//  valid_begin: [0, 0],
-//  valid_end: [0, 0],
-//  invisible: 0, // omitted for visualization
-//  mother: "inner",
-//  type: "tube",
-//  position: [-398.0, -367.0, -185.9],
-//  rotation:  [0.0, 0.0, 0.0],
-//  r_max: 12.808,
-//  size_z: 1.587, //half height
-//  material: "acrylic_black",
-//  color: [0.1, 1.0, 0.3, 0.8],
-//}
+ {
+    name: "GEO",
+    index: "envelope",
+    valid_begin: [0, 0],
+    valid_end: [0, 0],
+    invisible: 0, // omitted for visualization
+    mother: "inner",
+    type: "tube",
+//    position: [-398.0, -367.0, -180.9],
+    position: [-398.0, -367.0, -172.413],
+    rotation:  [0.0, 0.0, 0.0],
+    r_max: 12.808,
+    size_z: 1.587, //half height
+    material: "acrylic_white",
+   color: [0.1, 1.0, 0.3, 0.8],
+ }
 
-//{
-//  name: "GEO",
-//  index: "source",
-//  valid_begin: [0, 0],
-//  valid_end: [0, 0],
-//  invisible: 0, // omitted for visualization
-//  mother: "envelope",
-//  type: "tube",
-//  position: [0.0, 0.0, -0.254],
-//  r_max: 3.175,
-//  size_z: 1.333, //half height
-//  material: "strontium", //strontium
-//  color: [0.1, 1.0, 1.0, 0.8],
-//}
+ {
+   name: "GEO",
+   index: "source",
+   valid_begin: [0, 0],
+   valid_end: [0, 0],
+   invisible: 0, // omitted for visualization
+   mother: "envelope",
+   type: "tube",
+   position: [0.0, 0.0, -0.254],
+   r_max: 3.175,
+   size_z: 1.333, //half height
+   material: "strontium", //strontium
+   color: [0.1, 1.0, 1.0, 0.8],
+ }
 
-//{
-//  name: "GEO",
-//  index: "envelope",
-//  valid_begin: [0, 0],
-//  valid_end: [0, 0],
-//  invisible: 0, // omitted for visualization
-//  mother: "inner",
-//  type: "tube",
-//  position: [-408.76, -417.98, -222.5],
-//  rotation:  [90.0, -11.914, 0.0],
-//  r_max: 12.808,
-//  size_z: 1.587, //half height
-//  material: "acrylic_black",
-//  color: [0.1, 1.0, 0.3, 0.8],
-//}
+// {
+//   name: "GEO",
+//   index: "envelope",
+//   valid_begin: [0, 0],
+//   valid_end: [0, 0],
+//   invisible: 0, // omitted for visualization
+//   mother: "inner",
+//   type: "tube",
+//   position: [-408.76, -417.98, -222.5],
+//   rotation:  [90.0, -11.914, 0.0],
+//   r_max: 12.808,
+//   size_z: 1.587, //half height
+//   material: "acrylic_black",
+//   color: [0.1, 1.0, 0.3, 0.8],
+// }
 
-//{
-//  name: "GEO",
-//  index: "source",
-//  valid_begin: [0, 0],
-//  valid_end: [0, 0],
-//  invisible: 0, // omitted for visualization
-//  mother: "envelope",
-//  type: "tube",
-//  position: [0.0, 0.0, 0.254],
-//  r_max: 3.175,
-//  size_z: 1.333, //half height
-//  material: "strontium", //strontium
-//  color: [0.1, 1.0, 1.0, 0.8],
-//}
+// {
+//   name: "GEO",
+//   index: "source",
+//   valid_begin: [0, 0],
+//   valid_end: [0, 0],
+//   invisible: 0, // omitted for visualization
+//   mother: "envelope",
+//   type: "tube",
+//   position: [0.0, 0.0, 0.254],
+//   r_max: 3.175,
+//   size_z: 1.333, //half height
+//   material: "strontium", //strontium
+//   color: [0.1, 1.0, 1.0, 0.8],
+// }
 
 ///////////////////////
 // COSMIC TAGS
 ///////////////////////
-{
-  name: "GEO",
-  index: "tag1",
-  valid_begin: [0, 0],
-  valid_end: [0, 0],
-  invisible: 0, // omitted for visualization
-  mother: "inner",
-  type: "tube",
-  position: [-398.0, -367.0, -147.987], //3.5 cm higher than usual 
-  r_max: 5.0,
-  size_z: 25.0,
-  material: "acrylic_black",
-  color: [0.0, 0.0, 0.0, 0.1],
-}
+// {
+//   name: "GEO",
+//   index: "tag1",
+//   valid_begin: [0, 0],
+//   valid_end: [0, 0],
+//   invisible: 0, // omitted for visualization
+//   mother: "inner",
+//   type: "tube",
+//   position: [-398.0, -367.0, -162.0],
+//   r_max: 5.0,
+//   size_z: 25.0,
+//   material: "acrylic_black",
+//   color: [0.0, 0.0, 0.0, 0.1],
+// }
 
-{
-  name: "GEO",
-  index: "tag2",
-  valid_begin: [0, 0],
-  valid_end: [0, 0],
-  invisible: 0, // omitted for visualization
-  mother: "inner",
-  type: "tube",
-  position: [-398.0, -367.0, -327.5],
-  r_max: 5.0,
-  size_z: 25.0,
-  material: "acrylic_black",
-  color: [0.0, 0.0, 0.0, 0.1],
-}
+ {
+   name: "GEO",
+   index: "tag2",
+   valid_begin: [0, 0],
+   valid_end: [0, 0],
+   invisible: 0, // omitted for visualization
+   mother: "inner",
+   type: "tube",
+   position: [-398.0, -367.0, -327.5],
+   r_max: 5.0,
+   size_z: 25.0,
+   material: "acrylic_black",
+   color: [0.0, 0.0, 0.0, 0.1],
+ }
 /////////////////////////////////
 
 
@@ -376,7 +373,6 @@
 // PMTS
 //////////////////
 
-//Why is this container outcommented - check the original geo!
 // Container for pmts
 //{
 //  name: "GEO",
@@ -434,9 +430,11 @@
    pmt_detector_type: "idpmt",
    sensitive_detector: "/mydet/pmt/inner",
    efficiency_correction: 1.0,
-   pos_table: "PMTINFO_TRIGGER",
+   pos_table: "PMTINFO_TRIGGER_UVT",
    orientation: "manual",
-//   orient_point: [-398.0, -367.0, -222.2],
+   //orientation: "point",
+//   orient_point: [-398.0, -367.0, -185.9],
+// orient_point: [-398.0, -367.0, -222.2]
 }
 
 {

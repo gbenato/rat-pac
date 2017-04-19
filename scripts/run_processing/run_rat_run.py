@@ -36,10 +36,10 @@ class RunRAT(object):
 
      if self.out_dir and self.out_file_name and self.master_config:
        if os.path.exists(self.out_dir):
-	  print 'Error - the output directory exists and is probably not empty! Aborting'
-          a_val = raw_input( 'Hit a to abort anything else to continue: ')
-          if 'a' is a_val :
-            sys.exit(0)
+	  print 'Error - the output directory exists and is probably not empty! Continue anyways'
+#          a_val = raw_input( 'Hit a to abort anything else to continue: ')
+#          if 'a' is a_val :
+#            sys.exit(0)
        else:
          os.makedirs(self.out_dir)
          os.makedirs(self.root_dir)
@@ -205,7 +205,7 @@ class RunRAT(object):
       return clean_list
 
   def  submit_process_run(self, mac_file, log_file ):   
-      command = self.rat+' '+ mac_file
+      command = 'nice '+self.rat+' '+ mac_file
 #      command = 'printenv'
 #      command = 'echo $DYLD_LIBRARY_PATH'
       my_env = os.environ.copy()
@@ -224,7 +224,7 @@ def run_with_par(n_events, n_jobs, rough, smooth,  poisson=False):
   simulations.
   '''
   mac_file = os.path.expandvars('${RATROOT}/mac/TheiaRnD_mcprod_TeO2_cosmics_anisotropy.mac')
-  out_file = 'TheiaRnD_mcprod_TeO2_anisotropy_Ch_r'+str(rough)+'_s'+str(smooth)+'_v1.root'
+  out_file = 'TheiaRnD_mcprod_TeO2_anisotropy_Scint_r'+str(rough)+'_s'+str(smooth)+'_v1.root'
 #  out_dir = os.path.expandvars('${RATROOT}/results/TheiaRnD_TeO2_rough_comiscs_1')
   out_dir = '/warehouse/rat_optics_simulation/TheiaRnD_TeO2_anisotropy_Ch_v1'
   a_rat = RunRAT()
@@ -233,6 +233,7 @@ def run_with_par(n_events, n_jobs, rough, smooth,  poisson=False):
   a_rat.n_proc = 16
   a_rat.poisson = poisson
   a_rat.master_config = mac_file
+  a_rat.proc_time_limit=1000 # 200 evts with Livermore physics list typically take 12-13 minutes
   a_rat.out_dir = out_dir
   a_rat.out_file_name= out_file
   a_rat.alter_optics(smooth, rough)
@@ -247,7 +248,7 @@ def main_scan():
   l_rough = np.arange(0.0, 1.01, 0.1)
   print l_smooth, l_rough, len(l_smooth)
   n_evts = 200
-  n_jobs = 50 # 12000 simulated events per 
+  n_jobs = 50 # 10000 simulated events per 
 #  run_with_par(n_evts, n_jobs, 0.0, 0.0 )  
   for smoo in l_smooth:
     for ro in l_rough:
@@ -256,16 +257,19 @@ def main_scan():
 def main():
 #  ana_dir = sys.argv[1]
 #Configure the directories and simulation parameters
-  num_jobs= 560
-  n_evts = 35
-  poisson = True
-  mac_file = os.path.expandvars('${RATROOT}/mac/TheiaRnD_mcprod_TeO2_cosmics_v1.mac')
-  out_file = 'TheiaRnD_mcprod_TeO2_rough_cosmics_scint_v1.root'
+  num_jobs= 100
+#  n_evts = 35
+  n_evts = 100000
+  poisson = False
+#  mac_file = os.path.expandvars('${RATROOT}/mac/TheiaRnD_mcprod_TeO2_cosmics_v1.mac')
+  mac_file = os.path.expandvars('${RATROOT}/mac/TheiaRnD_mcprod_uvtacrylic_90Sr.mac')
+#  out_file = 'TheiaRnD_mcprod_TeO2_rough_cosmics_scint_v1.root'
+  out_file = 'TheiaRnD_mcprod_uvtacrylic_90Sr.root'
 #  out_dir = os.path.expandvars('${RATROOT}/results/TheiaRnD_TeO2_rough_comiscs_1') 
-  out_dir = '/warehouse/rat_optics_simulation/TheiaRnD_TeO2_rough_comiscs_scint_1'
+  out_dir = '/warehouse/rat_optics_simulation/early_simulations/TheiaRnD_uvtacrylic_90Sr'
   a_rat = RunRAT()
   a_rat.num_jobs = num_jobs
-  a_rat.num_events = 35
+  a_rat.num_events = n_evts
   a_rat.n_proc = 16
   a_rat.poisson = poisson
   a_rat.master_config = mac_file
@@ -280,5 +284,5 @@ def main():
 
 
 if __name__ == '__main__':
-#    main()
-    main_scan()
+    main()
+#    main_scan()

@@ -1027,8 +1027,8 @@ SCINTILLATION_value2: [0.0, 1.0, 1.0, 0.0],
 RSLENGTH_value1: [60.0, 200.0, 800.0 ], // these values are bogus - just copied over from water!
 RSLENGTH_value2: [10.0e3, 10.0e3, 10.0e3 ],
 //PROPERTY_LIST: ["RINDEX", "ABSLENGTH", "RSLENGTH", ]
-PROPERTY_LIST: ["RINDEX", "ABSLENGTH", ]
-//PROPERTY_LIST: ["RINDEX", "ABSLENGTH", "SCINTILLATION", "SCINTWAVEFORM"]
+//PROPERTY_LIST: ["RINDEX", "ABSLENGTH", ]
+PROPERTY_LIST: ["RINDEX", "ABSLENGTH", "SCINTILLATION", "SCINTWAVEFORM"]
 //PROPERTY_LIST: ["ABSLENGTH","RSLENGTH","RINDEX", "SCINTILLATION", "SCINTWAVEFORM"]
 }
 
@@ -1042,7 +1042,7 @@ surface: 1,
 finish: "ground",
 model: "glisur",
 type: "dielectric_dielectric",
-polish: 0.0,
+polish: 1.0,
 RINDEX_value1: [60.0, 200.0, 300.0, 500.0, 700.0, 800.0, ], //with neck some vuvs reach the air
 RINDEX_value2: [1.0003236, 1.0003236, 1.0002915, 1.0002792, 1.0002763, 1.0002756, ],
 PROPERTY_LIST: ["RINDEX"]
@@ -1058,7 +1058,7 @@ surface: 1,
 finish: "ground",
 model: "glisur",
 type: "dielectric_dielectric",
-polish: 0.0,
+polish: 1.0,
 RINDEX_value1: [60.0, 200.0, 300.0, 500.0, 700.0, 800.0, ], //with neck some vuvs reach the air
 RINDEX_value2: [1.0003236, 1.0003236, 1.0002915, 1.0002792, 1.0002763, 1.0002756, ],
 PROPERTY_LIST: ["RINDEX"]

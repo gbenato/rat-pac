@@ -87,7 +87,7 @@
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "/warehouse/rat_optics_simulation/results/TheiaRnD_mcprod_ce_TeO2_cosmics_anisotopy_draw.root"
+/rat/procset file "/warehouse/rat_optics_simulation/results/TheiaRnD_mcprod_ce_TeO2_cosmics_anisotropy_draw.root"
 #########################################
 
 ##### GENERATORS #################
@@ -132,7 +132,7 @@
 #######################################
 
 ##### RUN ###########
-/run/beamOn 1
+/run/beamOn 3
 
 
 

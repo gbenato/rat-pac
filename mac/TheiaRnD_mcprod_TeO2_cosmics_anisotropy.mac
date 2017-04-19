@@ -5,7 +5,7 @@
 /rat/db/set DETECTOR geo_file "TheiaRnD/TheiaRnD_TeO2_cosmics_anisotropy.geo"
 
 /run/initialize
-#/process/inactivate Cerenkov
+/process/inactivate Cerenkov
 #/glg4scint/off
 #/glg4scint/reemission off
 /tracking/storeTrajectory 0
