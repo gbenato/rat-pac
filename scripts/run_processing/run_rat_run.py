@@ -25,7 +25,7 @@ class RunRAT(object):
     self.out_file_name=False
     self.config_dir = False 	#/mac subdir in self.out_dir
     self.root_dir = False 	#/root subdir in self.out_dir
-    self.proc_time_limit = 600  # proc time limit in seconds
+    self.proc_time_limit = 6000  # proc time limit in seconds
     self.n_proc = 8		# number of allowed subprocesses
     self.killed_procs = 0
 
@@ -260,6 +260,8 @@ def main():
   num_jobs= 100
 #  n_evts = 35
   n_evts = 100000
+  proc_time_limit = 60000 # in sec
+  num_processors = 16
   poisson = False
 #  mac_file = os.path.expandvars('${RATROOT}/mac/TheiaRnD_mcprod_TeO2_cosmics_v1.mac')
   mac_file = os.path.expandvars('${RATROOT}/mac/TheiaRnD_mcprod_uvtacrylic_90Sr.mac')
@@ -267,10 +269,14 @@ def main():
   out_file = 'TheiaRnD_mcprod_uvtacrylic_90Sr.root'
 #  out_dir = os.path.expandvars('${RATROOT}/results/TheiaRnD_TeO2_rough_comiscs_1') 
   out_dir = '/warehouse/rat_optics_simulation/early_simulations/TheiaRnD_uvtacrylic_90Sr'
+
+# Thise seems like duplication, but it would allow me to use cfg files or input args instead of the stupid hardcoded stuff above.
+# Create a rat, set the parameters and let it run
   a_rat = RunRAT()
   a_rat.num_jobs = num_jobs
+  a_rat.proc_time_limit = proc_time_limit
   a_rat.num_events = n_evts
-  a_rat.n_proc = 16
+  a_rat.n_proc = num_processors
   a_rat.poisson = poisson
   a_rat.master_config = mac_file
   a_rat.out_dir = out_dir
