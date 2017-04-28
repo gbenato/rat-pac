@@ -403,19 +403,57 @@ def run_chess_charge_correction(chess_file, plot_dir = False, outf = 'CHESS_char
     write_json(graphs, outf)
 
 
-def plot_spe_fits(json_dict, cooldown_name ='nov_7_cooldown'):
-    '''
-    Example of how to evaluate the results dictionary
-    Simply plotting the SPE peak position versus time
-    :param json_dict:
-    :param cooldown_name:
-    :return:
-    '''
-    g = ROOT.TGraph()
-    for result in json_dict[cooldown_name]:
-        g.SetPoint(g.GetN(), result['pc_time'], result['spe_pos'])
-    g.Draw()
-    raw_input('Hit enter to continue')
+
+def get_fit_integral(json_file):
+  # Read in the json file, it is sorted already
+  pmt_fits = read_json(json_file)
+  for key,val in pmt_fits.iteritems():
+    print "Extract results for", key
+    dpe = val["fit_result_dpe"]
+    par_s = dpe["par_array"]
+    f_spe = ROOT.TF1("[0]*exp(-((x-[1])^2)/(2*[2]^2))")
+    f_dpe = ROOT.TF1("[0]*exp(-((x-[1]*[3])^2)/(2*2*[2]^2))")
+    f_spe.SetParameter(0, par_s[0])
+    f_spe.SetParameter(1, par_s[1])
+    f_spe.SetParameter(2, par_s[2])
+    f_dpe.SetParameter(0, par_s[3])
+    f_dpe.SetParameter(1, par_s[1])
+    f_dpe.SetParameter(2, par_s[2])
+    f_dpe.SetParameter(3, par_s[3])
+    print 'f_spe integral:', f_spe.Integral(), 'f_dpe integral', f_dpe.Integral()
+    dpe['integral'] = f_spe.Integral() + f_dpe.Integral()
+    print 'Do I need to scale????'
+  return pmt_fits
+
+
+def plot:
+  ROOT.gSystem.Load("libRATEvent")
+  h_ringcandidate_npevspos = ROOT.TH2F("h_ringcandidate_npevspos","h_ringcandidate_npevspos",7,-30.*3.5, 30.*3.5, 7, -30.*3.5, 30.*3.5);
+#  std::cout<<" GetPMTInfo "<<std::endl;
+  dsreader = ROOT.RAT.DSReader(rat_data_file);
+  tree = dsreader.GetT();
+  runT = dsreader.GetRunT();
+  run = ROOT.RAT.DS.Run();
+  runT.SetBranchAddress("run",&run);
+  runT.GetEntry(0);
+  pmtInfo=run.GetPMTInfo();    
+  pmtTypeCount= 0
+  pmt_pos = []
+  ipmt = 0
+  centerpos = ROOT.TVector3(0,0,0)
+  for pmt_idx in range(pmtInfo.GetPMTCount()):
+      pmtpos = pmtInfo.GetPosition(pmt_idx)
+      if(pmtInfo.GetType(pmt_idx) == 1):
+        pmt_pos.append(pmtpos)
+        centerpos = centerpos + pmtpos
+        pmtTypeCount+=1     
+
+  centerpos = centerpos*(1./pmtTypeCount)
+  
+#    TVector3 pmtpos = pmtInfo->GetPosition(ipmt);
+#    h_ringcandidate_timevspos->Fill(pmtpos.X(), pmtpos.Y(), 1010.);
+#    h_ringcandidate_npevspos->Fill(pmtpos.X(), pmtpos.Y(), 1010.);
+#
 
 
 
@@ -442,6 +480,7 @@ def main():
 
 if __name__ ==  "__main__":
     ROOT.gStyle.SetOptFit(1)
+#    get_fit_integral('/Users/benschmidt/CUORE/analysis/chess-teo2/scripts/cuore_tools/CHESS_PMT_correction_2017_04_11.json')
     main()
 #    main2()
 #    main3()

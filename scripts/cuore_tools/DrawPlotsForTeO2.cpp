@@ -25,7 +25,7 @@
 #define NPMTs 30
 #define LOOPTRACKS true
 #define DETECTORPLOT true
-#define ISELECTRON false
+#define ISELECTRON true
 
 char * fInputFile = NULL;
 char * fOutRootFile = NULL;
@@ -63,18 +63,21 @@ int main(int argc, char **argv){
   TH1F* h_ntracks = new TH1F("h_ntracks","h_ntracks",100,0,5000);
   TH1F* h_ncp = new TH1F("h_ncp","h_ncp",500,0,5000);
   TH1F* h_npe = new TH1F("h_npe","h_npe",500,0,500);
-  TH1F* h_e_length = new TH1F("h_e_length","h_e_length",300,0,50); //e- flight path
+  TH1F* h_e_length = new TH1F("h_e_length","h_e_length",300,0,50); //e- flight path 
+  TH1F* h_e_energy = new TH1F("h_e_energy","h_e_energy",300,0,10); //e- track energies 
+  TH1F* h_primary_energy = new TH1F("h_primary_energy","h_primary_energy",300,0,10); //in MeV
+  TH1F* h_primary_length = new TH1F("h_primary_length","h_primary_length",300,0,300); //primary path length mm
   TH2F* h_e_lengthvsnph = new TH2F("h_e_lengthvsnph","h_e_lengthvsnph",200,0,500,300,0,50);
   TH2F* h_e_lengthvsnpe = new TH2F("h_e_lengthvsnpe","h_e_lengthvsnpe",50,0,100,300,0,50);
   TH2F* h_e_lengthvsq = new TH2F("h_e_lengthvsq","h_e_lengthvsq",150,0,100,300,0,50);
-  TH1F* h_ph_length = new TH1F("h_ph_length","h_ph_length",200,0,200);
-  TH1F* h_cp_length = new TH1F("h_cp_length","h_cp_length",200,0,200);
+  TH1F* h_ph_length = new TH1F("h_ph_length","h_ph_length",200,0,400);
+  TH1F* h_cp_length = new TH1F("h_cp_length","h_cp_length",200,0,400);
   TH1F* h_cp_ke = new TH1F("h_cp_ke","h_cp_ke",300,0,3e-5);
   TH1F* h_cp_wl = new TH1F("h_cp_wl","h_cp_wl",300,0,1000);
   TH1F* h_ph_last = new TH1F("h_ph_last","h_ph_last",500,-4000,4000);
   TH2F* h_qvspe = new TH2F("h_qvspe","h_qvspe",100,0,100,150,0,100);
   TH1F* h_cp_dead_teo2_ke = new TH1F("h_cp_teo2_ke","h_cp_teo2_ke", 300, 0, 3e-5); // 0 - 30 keV, .1 keV/bin 
-  TH1F* h_cp_dead_teo2_length = new TH1F("h_cp_teo2_length","h_cp_teo2_length", 200, 0, 200 ); // path length in mm?
+  TH1F* h_cp_dead_teo2_length = new TH1F("h_cp_teo2_length","Track length of CP photons absorbed in TeO2; Distance (mm); Entries/mm", 300, 0, 300 ); // path length in mm?
   TH1F* h_cp_not_teo2_ke = new TH1F("h_cp_not_teo2_ke","h_cp_not_teo2_ke", 300, 0, 3e-5);
   TH1F* h_cp_not_teo2_length = new TH1F("h_cp_not_teo2_length", "h_cp_not_teo2_length", 200, 0, 200);
   TH1F* h_cp_no_atten_ke = new TH1F("h_cp_no_atten_ke","h_cp_no_atten_ke", 300, 0, 3e-5);
@@ -98,7 +101,7 @@ int main(int argc, char **argv){
     if(ientry%(10000) == 0) std::cout<<" Entry "<<ientry<<std::endl;
     RAT::DS::Root *rds = dsreader->GetEvent(ientry);
     int nevents = rds->GetEVCount();
-    if (nevents == 0) continue; // only show data for triggered events 
+ //   if (nevents == 0) continue; // only show data for triggered events 
     evts_triggered++;
     RAT::DS::MC *mc = rds->GetMC();
 
@@ -112,7 +115,9 @@ int main(int argc, char **argv){
     int ncerphotons_teo2 = 0; //number of cerenkov photons
     int ncerphotons_nteo2 = 0; //number of cerenkov photons
     int ncerphotons_no_attenuation = 0; //number of cerenkov photons
-    
+    RAT::DS::MCParticle *prim = mc->GetMCParticle(0);
+    h_primary_energy->Fill(prim->GetKE());
+
     if(LOOPTRACKS){
       //std::cout<<" Looping over tracks "<<std::endl;
       h_ntracks->Fill(ntracks);
@@ -126,7 +131,16 @@ int main(int argc, char **argv){
 	h_procinit->Fill(f_step->GetProcess().c_str(),1.);
 	h_proclast->Fill(l_step->GetProcess().c_str(),1.);
 	
-	if(track->GetPDGCode() == 11) elength+=track->GetLength();
+	if(track->GetPDGCode() == 11){
+	  elength+=track->GetLength(); // What about tracks with multiple es
+	  h_e_energy->Fill(f_step->GetKE());
+        }
+        if(track->GetID() == 1){ 
+          if(track->GetParentID()){
+ 	     std::cout<< "Track parent id is not zero it is " << track->GetParentID() <<  std::endl;
+          }
+         h_primary_length->Fill(track->GetLength());
+        }
 	else if(track->GetPDGCode() == 22 || track->GetPDGCode() == 0){ //gamma or optical photon
 //          std::cout<<" Optical photon or gamma in track"<<itr<<": "<<ntracks<<std::endl;
 	  h_procinit_gm->Fill(f_step->GetProcess().c_str(),1.);
@@ -180,8 +194,8 @@ int main(int argc, char **argv){
       float pmtz = pmtInfo->GetPosition(pmtid).z();
 //      float pmtz = pmtInfo->GetPosition(pmtid).z();
 // Note check whether pmtid is the correct identifier for the position....
-      std::cout << "Working on mcpmt "<< pmtid << ", " << mcpmt->GetMCPhotonCount() << std::endl;
-      std::cout << "with position "<< pmtx << " " << pmty << " " << pmtz << std::endl;
+//      std::cout << "Working on mcpmt "<< pmtid << ", " << mcpmt->GetMCPhotonCount() << std::endl;
+//      std::cout << "with position "<< pmtx << " " << pmty << " " << pmtz << std::endl;
 //      std::cout << "Start loop over MCPMT MCPhotonCount! " << mcpmt->GetMCPhotonCount() << std::endl;
 
       for (int iph=0; iph < mcpmt->GetMCPhotonCount(); iph++){
@@ -285,6 +299,8 @@ int main(int argc, char **argv){
   // c_charge->cd(2);
   // h_dMCPMT_charge->Draw("same");
 
+
+
   //Process
   TCanvas *c_process = new TCanvas("c_process","c_process",1400,800);
   c_process->Divide(2,2);
@@ -297,6 +313,14 @@ int main(int argc, char **argv){
   c_process->cd(4);
   h_proclast_gm->Draw();
   
+  //Primary 
+  TCanvas * c_primary = new TCanvas("c_primary", "c_priamry", 1200, 600);
+  c_primary->Divide(2,1);
+  c_primary->cd(1);
+  h_primary_energy->Draw();
+  c_primary->cd(2);
+  h_primary_length->Draw();
+
 //IsDarkHit & Time
   TCanvas *c_isdh = new TCanvas("c_isdh","c_isdh",1200,600);
   c_isdh->Divide(2,1);
@@ -337,10 +361,11 @@ int main(int argc, char **argv){
     c_e->cd(3);
     h_e_lengthvsnph->Draw("colz");
     c_e->cd(4);
-    h_e_lengthvsnpe->Draw("colz");
+//    h_e_lengthvsnpe->Draw("colz");
+    h_e_energy->Draw();
     c_e->cd(5);
     h_e_lengthvsq->Draw("colz");
-    c_e->cd(5);
+    c_e->cd(6);
     h_qvspe->Draw();
   //  h_cp_ke->Draw();
   }

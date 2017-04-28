@@ -29,12 +29,12 @@
 #include "CHESSTools.h"
 
 #define SMEARING 0.000 //0.214
-#define CORRCH 24 //24 for source data // 0 - for cosmics as empty channel for correction (if negative do not apply correction)
+#define CORRCH -24 //24 for source data // 0 - for cosmics as empty channel for correction (if negative do not apply correction)
 #define REFTUBE 25 //Reference tube for time measurements 
 //hmmm there is an discrepencay with CHESSTOOLS.h naming convention of the pmts
 // there chan 23, 24, 25 are the top muon tag, bottom muon tag and trigger PMT
 // but chan 0 is named control channel 
-#define MCPHOTONLOOP false
+#define MCPHOTONLOOP true // false
 #define NLOGENTRIES 10
 #define FIT_LIMIT_MIN -60. //50.
 #define FIT_LIMIT_MAX 800.
@@ -836,7 +836,7 @@ void DrawHistos(){
     h_time[pmtid]->Draw();
     padCount++;
   }
-
+  std::cout << "Drawing muon tags" << std::endl;
   //Muon tags
   TCanvas *c_tags;
   c_tags = new TCanvas("c_tags","Cosmic tags",600,600);
@@ -858,15 +858,18 @@ void DrawHistos(){
   c_tags->cd(4)->SetLogy();
   h_time_muontrigs->Draw();
 
+  std::cout << "Drawing trigger PMT" << std::endl;
   //Source Trigger PMT
   TCanvas *c_trigger;
   c_trigger = new TCanvas("c_trigger","Trigger PMT", 600,300);
   c_trigger->Divide(2,1);
 
   c_trigger->cd(1);
-  h_charge[25]->Draw();
+//  h_charge[25]->Draw();
   c_trigger->cd(2);
-  h_time[25]->Draw();
+//  h_time[25]->Draw();
+
+  std::cout << "Updating canvases" << std::endl;
 
   c_charge_ring->Update();
   c_charge_light->Update();
@@ -878,6 +881,8 @@ void DrawHistos(){
   c_trigger->Update();
   c_time_vetos->Update();
   c_qratio_ring->Update();
+
+  std::cout << "Drawing radial PMT groups" << std::endl;
 
   TCanvas *c_ring_tubes_rad = new TCanvas("c_charge_ring_rad","Ring Tube Radial Groups",1800,600);
   c_ring_tubes_rad->Divide(3,1);
@@ -918,7 +923,7 @@ void DrawHistos(){
   std::cout<<" time 1 "<<h_time_ring[1]->Integral(0,maxbin)/total<<std::endl;
   std::cout<<" time 2 "<<h_time_ring[2]->Integral(0,maxbin)/total<<std::endl;
   c_ring_tubes_rad->Update();
-
+   
 
   //MCTruth
   bool firstdrawn0=false, firstdrawn1=false, firstdrawn2=false;
