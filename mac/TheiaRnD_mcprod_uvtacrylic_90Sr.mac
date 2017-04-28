@@ -83,7 +83,7 @@
 
 #Output file
 /rat/proclast outroot
-/rat/procset file "./TheiaRnD_uvtacrylic_1.root"
+/rat/procset file "./TheiaRnD_uvtacrylic_90Yt_1.root"
 #########################################
 
 ##### GENERATORS #################
@@ -105,11 +105,14 @@
 # /generator/pos/set photons
 
 ###RADIACTIVE SOURCE DECAYCHAIN
+#Run a simulation with Sr90 and one with Y90 and combine offline for TeO2!
 /generator/add decaychain 90Y:fill:uniform
+#/generator/add decaychain 90Sr:fill:uniform
+#/generator/add decaychain 90Sr_chain:fill:uniform # That puts the Sr and Y into a single event...
 #/generator/pos/set -398.0, -367.0, -186.154
 #/generator/pos/set -398.0 -367.0 -185.9 # 25 mm half-length TeO2 crystal
 #/generator/pos/set -398.0 -367.0 -180.9 # 30 mm half-length UVT acrylic
-/generator/pos/set -398.0 -367.0 -174 # 30 mm half-length UVT acrylic, what I believe it hsould be!
+/generator/pos/set -398.0 -367.0 -174 # 30 mm half-length UVT acrylic, what I believe it should be!
 /generator/pos/set source
 
 ###COSMIC
@@ -132,7 +135,7 @@
 #######################################
 
 ##### RUN ###########
-/run/beamOn 300000
+/run/beamOn 500000
 
 
 

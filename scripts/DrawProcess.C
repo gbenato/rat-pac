@@ -101,7 +101,7 @@ void Particle::dumpList(ostream &out) {
     ***/
     out << fixed << setprecision(5);
     out << '[';
-        if parent{
+        if(parent){
           out << '\"' << parent->name << "\",";
         }
         out << '\"' << name << "\",";
@@ -156,6 +156,14 @@ void extractTree(const char *file, int event_num) {
     RAT::DS::MC *mc = rds->GetMC();
 
     int nTracks = mc->GetMCTrackCount();
+    cout << "Reading event from tree with " << nTracks << " tracks" << endl;
+    while(!nTracks && event_num < (tree->GetEntries()-1)){
+      cout << "Nothing to display for event "<< event_num << endl;
+      event_num +=1;
+      tree->GetEntry(event_num)
+      nTracks = mc->GetMCTrackCount();
+    }
+    cout << "Reading event "<< event_num << " with " << nTracks << " tracks" << endl;
     Particle *trackmap = new Particle[nTracks+1];
     for (int j = 0; j < nTracks; j++) {
         RAT::DS::MCTrack *track = mc->GetMCTrack(j);
@@ -171,6 +179,7 @@ void extractTree(const char *file, int event_num) {
         RAT::DS::MCTrackStep *last = track->GetLastMCTrackStep();
         
         int nSteps = track->GetMCTrackStepCount();
+        cout << "Got " << nSteps << " steps in MCTrack" << endl;
         TVector3 *steps = new TVector3[nSteps];
         for (int k = 0; k < nSteps; k++) {
             steps[k] = track->GetMCTrackStep(k)->GetEndpoint();

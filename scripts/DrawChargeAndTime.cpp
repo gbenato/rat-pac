@@ -26,7 +26,7 @@
 #include <RAT/DS/RunStore.hh>
 
 #define REFTUBE 20
-#define MCPHOTONLOOP false
+#define MCPHOTONLOOP true // false
 #define NLOGENTRIES 10
 #define FIT_LIMIT_MIN 50. //-60.
 #define FIT_LIMIT_MAX 800.
