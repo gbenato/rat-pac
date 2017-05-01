@@ -212,8 +212,8 @@ void GetPMTInfo(char* inputfile){
 
   //Init pmt positions
   dsreader = new RAT::DSReader(inputfile);
-  dsreader->Add("/Users/benschmidt/CUORE/data/CHESS_data/cuore-source-uvt-0_15Mar2017-134503_1_cut_Source.root");
-  dsreader->Add("/Users/benschmidt/CUORE/data/CHESS_data/cuore-source-uvt-0_15Mar2017-134503_2_cut_Source.root");
+//  dsreader->Add("/Users/benschmidt/CUORE/data/CHESS_data/cuore-source-uvt-0_15Mar2017-134503_1_cut_Source.root");
+//  dsreader->Add("/Users/benschmidt/CUORE/data/CHESS_data/cuore-source-uvt-0_15Mar2017-134503_2_cut_Source.root");
 
 
   std::cout<<" GetPMTInfo "<<std::endl;
@@ -416,8 +416,13 @@ void GetHistos(){
         int pmtid = mcpmt->GetID();
         //count PE
         h_mcpmt_npe[pmtid]->Fill(mcpmt->GetMCPhotonCount());
-        h_mcpmt_npevspos->Fill(pmtInfo->GetPosition(pmtid).X(),pmtInfo->GetPosition(pmtid).Y(),mcpmt->GetMCPhotonCount()/(double)nentries);
+        int pmttype = pmtInfo->GetType(pmtid);
+
+        if(pmttype == 1) {
+          h_mcpmt_npevspos->Fill(pmtInfo->GetPosition(pmtid).X(),pmtInfo->GetPosition(pmtid).Y(),mcpmt->GetMCPhotonCount());
+        }
         h_mcpmt_charge[pmtid]->Fill(mcpmt->GetCharge());
+        
 
         if(MCPHOTONLOOP){
           for (int iph=0; iph < mcpmt->GetMCPhotonCount(); iph++){
@@ -686,6 +691,7 @@ void GetHistos(){
 
 //Draw histrograms
 void DrawHistos(){
+  int nentries = tree->GetEntries();
 
   //Ring candidates
   for (int ipmt = 0; ipmt < pmtInfo->GetPMTCount(); ipmt++) {
@@ -926,11 +932,23 @@ void DrawHistos(){
    
 
   //MCTruth
+  TCanvas *c_mc_npevspos = new TCanvas("c_mc_npevspos","c_mc_npevspos",900,1000);
+  std::cout << "nentries for error calc " <<nentries << "\t"<<h_mcpmt_npevspos->GetSize()<<std::endl;
+  for (int a_bin = 1;  a_bin < h_mcpmt_npevspos->GetSize(); a_bin++){   
+      std::cout << h_mcpmt_npevspos->GetBinContent(a_bin) <<std::endl;
+    if (h_mcpmt_npevspos->GetBinContent(a_bin) > 0 ){
+       std::cout << nentries << std::endl;
+       h_mcpmt_npevspos->SetBinError(a_bin, sqrt(h_mcpmt_npevspos->GetBinContent(a_bin))/(double)nentries);
+       h_mcpmt_npevspos->SetBinContent(a_bin, h_mcpmt_npevspos->GetBinContent(a_bin)/(double)nentries);
+    }
+  }
+  h_mcpmt_npevspos->Draw("colz texte");
+
   bool firstdrawn0=false, firstdrawn1=false, firstdrawn2=false;
   TCanvas *c_mc = new TCanvas("c_mc","c_mc",900,1000);
   c_mc->Divide(3,3);
   for(int pmtid = 0; pmtid<pmtInfo->GetPMTCount(); pmtid++){
-    for(int pmtid = 0; pmtid<pmtInfo->GetPMTCount(); pmtid++){
+//    for(int pmtid = 0; pmtid<pmtInfo->GetPMTCount(); pmtid++){
       int pmttype = pmtInfo->GetType(pmtid);
       if(pmttype==1){//Fast tubes
         const char *opt = firstdrawn0 ? "sames" : "";
@@ -962,15 +980,15 @@ void DrawHistos(){
         h_mcpmt_npevspos->Draw("colz text");
         // h_mcpmt_charge[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
         // h_mcpmt_charge[pmtid]->Draw(opt);
-        // c_mc->cd(8);
-        // h_mcpmt_npe[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
-        // h_mcpmt_npe[pmtid]->Draw(opt);
+        c_mc->cd(8);
+        h_mcpmt_npe[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
+        h_mcpmt_npe[pmtid]->Draw(opt);
         c_mc->cd(9);
         h_mcpmt_fetime[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
         h_mcpmt_fetime[pmtid]->Draw(opt);
         firstdrawn2 = true;
       }
-    }
+//    }
   }
   c_mc->Update();
 }
