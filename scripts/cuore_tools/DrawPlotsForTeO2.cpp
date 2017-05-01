@@ -68,6 +68,7 @@ int main(int argc, char **argv){
   TH1F* h_primary_energy = new TH1F("h_primary_energy","h_primary_energy",300,0,10); //in MeV
   TH1F* h_primary_length = new TH1F("h_primary_length","h_primary_length",300,0,300); //primary path length mm
   TH2F* h_e_lengthvsnph = new TH2F("h_e_lengthvsnph","h_e_lengthvsnph",200,0,500,300,0,50);
+  TH2F* h_e_energyvsnph = new TH2F("h_e_lengthvsnph","h_e_lengthvsnph",200,0,500,300,0,50);
   TH2F* h_e_lengthvsnpe = new TH2F("h_e_lengthvsnpe","h_e_lengthvsnpe",50,0,100,300,0,50);
   TH2F* h_e_lengthvsq = new TH2F("h_e_lengthvsq","h_e_lengthvsq",150,0,100,300,0,50);
   TH1F* h_ph_length = new TH1F("h_ph_length","h_ph_length",200,0,400);
@@ -111,6 +112,7 @@ int main(int argc, char **argv){
 
     int ntracks = mc->GetMCTrackCount();// awesome this function is creating a segfault!
     double elength = 0; //generated e- length
+    double eenergy =0; // generated e- energy
     int ncerphotons = 0; //number of cerenkov photons
     int ncerphotons_teo2 = 0; //number of cerenkov photons
     int ncerphotons_nteo2 = 0; //number of cerenkov photons
@@ -133,13 +135,14 @@ int main(int argc, char **argv){
 	
 	if(track->GetPDGCode() == 11){
 	  elength+=track->GetLength(); // What about tracks with multiple es
+          eenergy+=f_step->GetKE();
 	  h_e_energy->Fill(f_step->GetKE());
         }
         if(track->GetID() == 1){ 
           if(track->GetParentID()){
  	     std::cout<< "Track parent id is not zero it is " << track->GetParentID() <<  std::endl;
           }
-         h_primary_length->Fill(track->GetLength());
+          h_primary_length->Fill(track->GetLength());
         }
 	else if(track->GetPDGCode() == 22 || track->GetPDGCode() == 0){ //gamma or optical photon
 //          std::cout<<" Optical photon or gamma in track"<<itr<<": "<<ntracks<<std::endl;
@@ -177,6 +180,7 @@ int main(int argc, char **argv){
       //end track loop
       h_e_length->Fill(elength);
       h_e_lengthvsnph->Fill(ncerphotons,elength);
+      h_e_energyvsnph->Fill(ncerphotons,eenergy);
       h_e_lengthvsnpe->Fill(mc->GetNumPE(),elength);
       h_ncp->Fill(ncerphotons);
     }
@@ -364,7 +368,8 @@ int main(int argc, char **argv){
 //    h_e_lengthvsnpe->Draw("colz");
     h_e_energy->Draw();
     c_e->cd(5);
-    h_e_lengthvsq->Draw("colz");
+    h_e_energyvsnph->Draw("colz");
+//    h_e_lengthvsq->Draw("colz");
     c_e->cd(6);
     h_qvspe->Draw();
   //  h_cp_ke->Draw();

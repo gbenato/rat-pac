@@ -131,6 +131,7 @@ def fit_pmt2_bg(  h,  outdir):
     fit_res["noise_gaus_par"] = list(np.ndarray(f_i.GetNumberFreeParameters(), buffer = f_i.GetParameters(), dtype=float))
     fit_res["noise_gaus_err"] = list(np.ndarray(f_i.GetNumberFreeParameters(), buffer = f_i.GetParErrors(), dtype=float))
     fit_res["noise_chi2"] = f_i.GetChisquare()/f_i.GetNDF()
+    fit_res["tot_events"] = h.Integral()
     print h.GetMean()
     h_xmin = h.GetXaxis().GetXmin()
     h.GetXaxis().SetRangeUser(f_i.GetParameter(1)+4*f_i.GetParameter(2), h.GetXaxis().GetXmax() )
@@ -181,6 +182,7 @@ def fit_pmt2_bg(  h,  outdir):
 #    raw_input("Initial parameters drawn")
 
     h.Fit(hFit, 'R')
+    c.Update()
     raw_input('Hit enter to quit the fit histogram')
     if outdir:
       plotf = outdir + 'dpe_fit_'+h.GetName()+'.pdf'
@@ -210,6 +212,7 @@ def fit_pmt1_bg(h, outdir):
     fit_res["noise_gaus_par"] = list(np.ndarray(f_i.GetNumberFreeParameters(), buffer = f_i.GetParameters(), dtype=float))
     fit_res["noise_gaus_err"] = list(np.ndarray(f_i.GetNumberFreeParameters(), buffer = f_i.GetParErrors(), dtype=float))
     fit_res["noise_chi2"] = f_i.GetChisquare()/f_i.GetNDF()
+    fit_res["tot_events"] = h.Integral()
     print h.GetMean()
     h_xmin = h.GetXaxis().GetXmin()
     h.GetXaxis().SetRangeUser(f_i.GetParameter(1)+4*f_i.GetParameter(2), h.GetXaxis().GetXmax() )
@@ -404,37 +407,41 @@ def run_chess_charge_correction(chess_file, plot_dir = False, outf = 'CHESS_char
 
 
 
-def get_fit_integral(json_file):
+def get_dpefit_integral(json_file):
   # Read in the json file, it is sorted already
   pmt_fits = read_json(json_file)
   for key,val in pmt_fits.iteritems():
     print "Extract results for", key
     dpe = val["fit_result_dpe"]
     par_s = dpe["par_array"]
-    f_spe = ROOT.TF1("[0]*exp(-((x-[1])^2)/(2*[2]^2))")
-    f_dpe = ROOT.TF1("[0]*exp(-((x-[1]*[3])^2)/(2*2*[2]^2))")
+#    print par_s
+    f_spe = ROOT.TF1("f_spe","[0]*exp(-((x-[1])^2)/(2*[2]^2))", 0, 5)
+    f_dpe = ROOT.TF1("f_dpe","[0]*exp(-((x-[1]*[3])^2)/(2*2*[2]^2))", 0, 5)
     f_spe.SetParameter(0, par_s[0])
     f_spe.SetParameter(1, par_s[1])
     f_spe.SetParameter(2, par_s[2])
     f_dpe.SetParameter(0, par_s[3])
     f_dpe.SetParameter(1, par_s[1])
     f_dpe.SetParameter(2, par_s[2])
-    f_dpe.SetParameter(3, par_s[3])
-    print 'f_spe integral:', f_spe.Integral(), 'f_dpe integral', f_dpe.Integral()
-    dpe['integral'] = f_spe.Integral() + f_dpe.Integral()
+    f_dpe.SetParameter(3, par_s[4])
+    print 'f_spe integral:', f_spe.Integral(0,5), 'f_dpe integral', f_dpe.Integral(0,5)
+    dpe['integral'] = (f_spe.Integral(0,5) + 2*f_dpe.Integral(0,5))
+    dpe['avg_pes'] = dpe['integral']/dpe['tot_events']
     print 'Do I need to scale????'
+  write_json(pmt_fits, json_file)
   return pmt_fits
 
 
-def plot:
+def plot_2D_from_fit(json_file, rat_data_file):
   ROOT.gSystem.Load("libRATEvent")
   h_ringcandidate_npevspos = ROOT.TH2F("h_ringcandidate_npevspos","h_ringcandidate_npevspos",7,-30.*3.5, 30.*3.5, 7, -30.*3.5, 30.*3.5);
-#  std::cout<<" GetPMTInfo "<<std::endl;
+
+# Get the pmt positions from the actual rat root file
   dsreader = ROOT.RAT.DSReader(rat_data_file);
   tree = dsreader.GetT();
   runT = dsreader.GetRunT();
   run = ROOT.RAT.DS.Run();
-  runT.SetBranchAddress("run",&run);
+  runT.SetBranchAddress("run",run);
   runT.GetEntry(0);
   pmtInfo=run.GetPMTInfo();    
   pmtTypeCount= 0
@@ -447,14 +454,28 @@ def plot:
         pmt_pos.append(pmtpos)
         centerpos = centerpos + pmtpos
         pmtTypeCount+=1     
-
   centerpos = centerpos*(1./pmtTypeCount)
-  
+
+  #Read the json file and do the actual plotting
+  pmt_fits = read_json(json_file)
+  pmt_index_list =[]
+  for key in pmt_fits.iterkeys():
+    pmt_index_list.append(int(key.split('_')[-1]))
+  min_idx = min( pmt_index_list)
+  for key,val in pmt_fits.iteritems():
+    print "Extract results for", key
+    idx = int(key.split('_')[-1])
+    idx = idx - min_idx
+    print  idx
+    h_ringcandidate_npevspos.Fill(pmt_pos[idx].X()-centerpos.X(), pmt_pos[idx].Y()-centerpos.Y(), val['fit_result_dpe']['avg_pes']) 
+    a_bin =  h_ringcandidate_npevspos.FindBin(pmt_pos[idx].X()-centerpos.X(), pmt_pos[idx].Y()-centerpos.Y())
+    h_ringcandidate_npevspos.SetBinError(a_bin, math.sqrt(val['fit_result_dpe']['integral'])/val['fit_result_dpe']['tot_events'])
+  h_ringcandidate_npevspos.Draw('colz TEXTE')
+  raw_input("Hit enter to continue")
+  return
 #    TVector3 pmtpos = pmtInfo->GetPosition(ipmt);
 #    h_ringcandidate_timevspos->Fill(pmtpos.X(), pmtpos.Y(), 1010.);
 #    h_ringcandidate_npevspos->Fill(pmtpos.X(), pmtpos.Y(), 1010.);
-#
-
 
 
 def read_json(a_file = './output/Nov21Analysis.json'):
@@ -480,7 +501,10 @@ def main():
 
 if __name__ ==  "__main__":
     ROOT.gStyle.SetOptFit(1)
-#    get_fit_integral('/Users/benschmidt/CUORE/analysis/chess-teo2/scripts/cuore_tools/CHESS_PMT_correction_2017_04_11.json')
-    main()
+#    main()
+    json_file = '/Users/benschmidt/CUORE/analysis/chess-teo2/scripts/cuore_tools/CHESS_PMT_correction_2017_04_11.json'
+    rat_file = '/Users/benschmidt/CUORE/data/CHESS_data/cuore-source-uvt-0_15Mar2017-134503_0_cut_Source.root'
+    get_dpefit_integral(json_file)
+    plot_2D_from_fit(json_file, rat_file)
 #    main2()
 #    main3()
