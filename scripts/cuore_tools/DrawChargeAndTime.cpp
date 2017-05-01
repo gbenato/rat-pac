@@ -342,6 +342,7 @@ void InitHistos(){
     h_qratio_ring.push_back(new TH1F(Form("h_qratio_ring_%i",ih),"Ring Tubes Charge Ratio",30,-0.1,qrat_xmax));
     h_qratio_ring.back()->GetXaxis()->SetTitle("QRatio");
     h_time_ring.push_back(new TH1F(Form("h_time_ring_%i",ih), "Ring Tubes Event Time", t_nbins, ih==3? t_min[1]:t_min[0], ih==3? t_max[1]:t_max[0]));
+
     h_time_ring.back()->SetXTitle("Time Residuals (ns)");
   }
 
@@ -948,7 +949,7 @@ void DrawHistos(){
   TCanvas *c_mc = new TCanvas("c_mc","c_mc",900,1000);
   c_mc->Divide(3,3);
   for(int pmtid = 0; pmtid<pmtInfo->GetPMTCount(); pmtid++){
-//    for(int pmtid = 0; pmtid<pmtInfo->GetPMTCount(); pmtid++){
+    for(int pmtid = 0; pmtid<pmtInfo->GetPMTCount(); pmtid++){
       int pmttype = pmtInfo->GetType(pmtid);
       if(pmttype==1){//Fast tubes
         const char *opt = firstdrawn0 ? "sames" : "";
@@ -988,7 +989,7 @@ void DrawHistos(){
         h_mcpmt_fetime[pmtid]->Draw(opt);
         firstdrawn2 = true;
       }
-//    }
+    }
   }
   c_mc->Update();
 }
