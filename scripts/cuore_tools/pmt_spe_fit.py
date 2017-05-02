@@ -490,20 +490,21 @@ def write_json(a_dict, a_file = './output/CHESS_PMT_correction.json'):
     return
 
 
-def main():
+def main(json_file):
     chess_dir = '/Users/benschmidt/CUORE/data/CHESS_data/'
-    chess_file = chess_dir+'cuore-source-uvt-0_15Mar2017-134503_0_cut_Source_plots.root'
+#    chess_file = chess_dir+'cuore-source-uvt-0_15Mar2017-134503_0_cut_Source_plots.root'
+    chess_file = chess_dir+'cuore-source-uvt-0_15Mar2017-134503_cut_Source_plots_calib0.root'
 #    chess_file = chess_dir+'cuore-source-uvt-0_15Mar2017-134503_0_cut_Source_plots_simple_charge_correction.root'
-    run_chess_calibration(chess_file, './plots/')
+    run_chess_calibration(chess_file, './plots/', json_file)
 #    run_chess_calibration(chess_file, './plots/simple_charge_corr/', 'Simple_charge_correction.json')
 #    run_chess_charge_correction(chess_file, './plots/')    
 
 
 if __name__ ==  "__main__":
     ROOT.gStyle.SetOptFit(1)
-#    main()
-    json_file = '/Users/benschmidt/CUORE/analysis/chess-teo2/scripts/cuore_tools/CHESS_PMT_correction_2017_04_11.json'
+    json_file = '/Users/benschmidt/CUORE/analysis/chess-teo2/scripts/cuore_tools/CHESS_PMT_correction_2017_05_01.json'
     rat_file = '/Users/benschmidt/CUORE/data/CHESS_data/cuore-source-uvt-0_15Mar2017-134503_0_cut_Source.root'
+    main(json_file)
     get_dpefit_integral(json_file)
     plot_2D_from_fit(json_file, rat_file)
 #    main2()

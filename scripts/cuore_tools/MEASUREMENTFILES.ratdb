@@ -1,0 +1,10 @@
+{
+  name: "MEASUREMENTFILES",
+  valid_begin: [0,0],
+  valid_end: [0,0],
+  
+  data_dir: "/Users/benschmidt/CUORE/data/CHESS_data/"
+  // Measurement 2.5 inch UVT acrylic cube with 90Sr source on top 10 Bq (~1day)
+  data_files: ["cuore-source-uvt-0_15Mar2017-134503_0_cut_Source.root", "cuore-source-uvt-0_15Mar2017-134503_1_cut_Source.root", "cuore-source-uvt-0_15Mar2017-134503_2_cut_Source.root"]
+
+}

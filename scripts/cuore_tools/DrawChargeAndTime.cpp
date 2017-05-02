@@ -29,17 +29,17 @@
 #include "CHESSTools.h"
 
 #define SMEARING 0.000 //0.214
-#define CORRCH -24 //24 for source data // 0 - for cosmics as empty channel for correction (if negative do not apply correction)
-#define REFTUBE 25 //Reference tube for time measurements 
+#define CORRCH 24 //24 for source data // 0 - for cosmics as empty channel for correction (if negative do not apply correction)
+#define REFTUBE 13 //Reference tube for time measurements 
 //hmmm there is an discrepencay with CHESSTOOLS.h naming convention of the pmts
 // there chan 23, 24, 25 are the top muon tag, bottom muon tag and trigger PMT
 // but chan 0 is named control channel 
-#define MCPHOTONLOOP true // false
+#define MCPHOTONLOOP false // false
 #define NLOGENTRIES 10
 #define FIT_LIMIT_MIN -60. //50.
 #define FIT_LIMIT_MAX 800.
 #define RING_CANDIDATE 5 //99
-#define TOTAL_NPE_CUT 50 // Cut events with secondaries, bundles...
+#define TOTAL_NPE_CUT 50 // -1 to deactivate, Cut events with secondaries, bundles...
 
 //PMT IDs
 #define PMTID_INNER 11
@@ -74,6 +74,7 @@ TRandom3 *trand3 = new TRandom3();
 RAT::DSReader *dsreader;
 TTree *tree;
 TTree *runT;
+string data_dir = "";
 char *gInputFile = NULL;
 char *gOutFile = NULL;
 std::string gTargetMaterial = "WATER";
@@ -86,7 +87,7 @@ double tof_fixed[3] = {0.625727, 0.535623, 0.473399};
 
 //Methods
 void ParseArgs(int argc, char **argv);
-void GetPMTInfo(char*);
+void GetPMTInfo(const char*);
 void GetDBTables();
 void InitHistos();
 void GetHistos();
@@ -107,7 +108,7 @@ vector<double> charge_slopes; // channel based charge correction
 vector<double> charge_offsets; // channel based charge correction
 vector<double> spe_corrections; // channel based spe scale correction
 vector<double> noise_offsets; // channel based noise position correction
-
+vector<string> data_files; // data files as read from MEASUREMENTSFILES
 
 //// Histograms
 //Event level
@@ -169,9 +170,8 @@ int main(int argc, char **argv){
     else if (input[0] == 'n') std::cout<<" OK! Sorry about that. "<<std::endl;
     else exit(0);
   }
-
-  GetPMTInfo(gInputFile);
   GetDBTables();
+  GetPMTInfo(data_files[0].c_str());
   InitHistos();
   GetHistos();
   NormalizeHistos();
@@ -198,22 +198,32 @@ void GetDBTables(){
   charge_offsets = dbSPE->GetDArray("charge_correction_offsets");
   spe_corrections = dbSPE->GetDArray("gaus_correction");
   noise_offsets = dbSPE->GetDArray("noise_offset");
-  std::cout << "read charge correction " << charge_slopes[25] << std::endl;
+  std::cout << "Red charge correction " << charge_slopes[25] << std::endl;
 //  db->Load("../data/PMTGAUSTIME.ratdb");
   db->Load("PMTGAUSTIME.ratdb");
   RAT::DBLinkPtr dbTime = db->GetLink("PMTGAUSTIME");
   time_delay = dbTime->GetDArray("cable_delay");
-
+  cout << "Reading MEASUREMENTFILES.ratdb" << endl;
+  db->Load("MEASUREMENTFILES.ratdb");
+  RAT::DBLinkPtr dbFiles = db->GetLink("MEASUREMENTFILES") ;
+  data_files = dbFiles->GetSArray("data_files");
+  data_dir = dbFiles->GetS("data_dir");
+  
+  cout << "Input files loaded: " <<  endl;
+  for (int i = 0; i < data_files.size(); i++){
+    data_files[i] = data_dir+data_files[i];
+    cout << data_files[i] << endl;
+  }
 }
 
-void GetPMTInfo(char* inputfile){
+void GetPMTInfo(const char* inputfile){
 
   std::cout<<" GetPMTInfo "<<inputfile<<std::endl;
 
   //Init pmt positions
   dsreader = new RAT::DSReader(inputfile);
-//  dsreader->Add("/Users/benschmidt/CUORE/data/CHESS_data/cuore-source-uvt-0_15Mar2017-134503_1_cut_Source.root");
-//  dsreader->Add("/Users/benschmidt/CUORE/data/CHESS_data/cuore-source-uvt-0_15Mar2017-134503_2_cut_Source.root");
+  dsreader->Add("/Users/benschmidt/CUORE/data/CHESS_data/cuore-source-uvt-0_15Mar2017-134503_1_cut_Source.root");
+  dsreader->Add("/Users/benschmidt/CUORE/data/CHESS_data/cuore-source-uvt-0_15Mar2017-134503_2_cut_Source.root");
 
 
   std::cout<<" GetPMTInfo "<<std::endl;
@@ -470,7 +480,7 @@ void GetHistos(){
       if(pmt!=NULL) {
         refring_time = pmt->GetTime();
         double refring_dist = (pmtInfo->GetPosition(REFTUBE) - *target_pos).Mag();
-        double refring_tof = refring_dist/cspeed;
+        double refring_tof = refring_dist/cspeed; // this can't really work if my reftube is the movable trigger cube
         refring_tof = tof_fixed[pmtidtopos[REFTUBE]];
         refring_timeres = refring_time - refring_tof - time_delay[REFTUBE];
         //std::cout<<" ring_timeres "<<ring_timeres<<" "<<ring_time<<" "<<ring_tof<<" "<<time_delay[REFTUBE]<<std::endl;
@@ -564,7 +574,6 @@ void GetHistos(){
         int pmttype = pmtInfo->GetType(pmtid);
         double charge = ev->GetPMT(ipmt)->GetCharge();
         double npes = charge/spe[pmtid];
-//        std::cout << corr_charge << std::endl;
         if(pmttype==1){
 //          std::cout << corr_charge << std::endl;
 //          charge -= corr_charge;
@@ -573,8 +582,8 @@ void GetHistos(){
 //          npes = charge/spe[pmtid];
           npes = charge/spe[pmtid]-noise_offsets[pmtid];
           npes = npes / (spe_corrections[pmtid] - noise_offsets[pmtid]);
-          if(npes < -2 || npes > 50) {
-           std::cout << "ERROR RING PMT with weird charge " << npes << " for PMT " << pmtid << std::endl;
+          if(npes < -3 || npes > 100) {
+           std::cout << "ERROR RING PMT with weird NPEs " << npes << " for PMT " << pmtid << std::endl;
            std::cout << "for event " << ientry << " " << ievt << std::endl;
 //           npes = 999;
           }
@@ -590,9 +599,10 @@ void GetHistos(){
       }
 //      std::cout << "Total NPEs in RING " << qtotal_ringpmts << std::endl;
 
-      if(qtotal_ringpmts < 50){
+      if( TOTAL_NPE_CUT && qtotal_ringpmts > TOTAL_NPE_CUT)
+        continue;
 //      if(true){
-       for(int ipmt=0; ipmt<ev->GetPMTCount(); ipmt++){
+      for(int ipmt=0; ipmt<ev->GetPMTCount(); ipmt++){
         int pmtid = ev->GetPMT(ipmt)->GetID();
         int pmttype = pmtInfo->GetType(pmtid);
 
@@ -657,8 +667,7 @@ void GetHistos(){
           //if(pmtidtopos[pmtid]==1)
           h_ringcandidate_timevspos->Fill(pmtInfo->GetPosition(pmtid).X(),pmtInfo->GetPosition(pmtid).Y(),timeres - event_time - 10.); //TWEAK
           // std::cout<<" time "<<pmtid<<" "<<timeres - event_time<<std::endl;
-        }
-       }
+        }       
       } //end PMT loop
 
       //Fill EV-level histograms
