@@ -117,6 +117,179 @@ def fit_gaus(h):
 #    raw_input('Hit enter to continue')
     return fit
 
+def fit_pmt3_bg(  h,  outdir):
+    '''
+    Single method to fit an exp bg and 3 gauss model to the PMT spectrum
+    :param h:
+    :param spe_mean:
+    :param spe_sigma:
+    :return:
+    '''
+    c = ROOT.TCanvas()
+    fit_res = {}
+    f_i = fit_gaus(h)
+    fit_res["noise_gaus_par"] = list(np.ndarray(f_i.GetNumberFreeParameters(), buffer = f_i.GetParameters(), dtype=float))
+    fit_res["noise_gaus_err"] = list(np.ndarray(f_i.GetNumberFreeParameters(), buffer = f_i.GetParErrors(), dtype=float))
+    fit_res["noise_chi2"] = f_i.GetChisquare()/f_i.GetNDF()
+    fit_res["tot_events"] = h.Integral()
+    print h.GetMean()
+    h_xmin = h.GetXaxis().GetXmin()
+    h.GetXaxis().SetRangeUser(f_i.GetParameter(1)+4*f_i.GetParameter(2), h.GetXaxis().GetXmax() )
+    print f_i.GetParameter(1)+4*f_i.GetParameter(2), h.GetXaxis().GetXmax(), 'Above noise', h.GetMean(), h.GetRMS()
+    spe_mean = h.GetMean()
+    spe_sigma = h.GetRMS()
+    h.GetXaxis().SetRangeUser(h_xmin, h.GetXaxis().GetXmax())
+
+    fwhm_sigma = 2.3548
+    x_max = 3*spe_mean
+    x_min_bin = h.GetMaximumBin()
+    x_min = h.GetXaxis().GetBinCenter(x_min_bin)+.8*f_i.GetParameter(2)
+    par6 = (f_i.GetParameter(2)*fwhm_sigma/2.0)/math.log(2.0)/2.0
+    par5 = h.GetMaximum()*math.exp(x_min/par6)
+    dV = h.GetBinWidth(1)
+    spe_evts = h.GetBinContent(int((spe_mean-h_xmin)/dV))/2.0
+    print 'spe_evts', spe_evts, 'in bin ', int((spe_mean-h_xmin)/dV)
+    fit_formula = "[5]*exp(-x/[6]) + [0]*exp(-((x-[1])^2)/(2*[2]^2)) +  [3]*exp(-((x-[4]*[1])^2)/(2*2*[2]^2)) + [7]*exp(-((x-[1]*3/2*[4])^2)/(3*2*[2]^2))"
+    fit_res["formula"] = fit_formula
+    fit_res["x_min"] = x_min
+    fit_res["x_max"] = x_max 
+    hFit = ROOT.TF1("hFit",fit_formula,x_min,x_max)
+
+    # Define the parameters and set initial values
+    hFit.SetParName(0, "speN");
+    hFit.SetParName(1, "speMean");
+    hFit.SetParName(2, "speSigma");
+    hFit.SetParName(3, "dpeN");
+    hFit.SetParName(4, "dpeScaling");
+    hFit.SetParName(5, "bgAmp");
+    hFit.SetParName(6, "bgWidth");
+    hFit.SetParName(7, "tpeN");
+
+    print 'Initial parameters for the fit'
+    print 'spe_pos', spe_mean, 'spe_width', spe_sigma, 'spe_amp', spe_evts
+    print 'bg_amp', par5, 'bg_decay', par6, 'xmin', x_min, 'xmax', x_max
+
+    hFit.SetParameter(0, spe_evts)
+    hFit.SetParameter(1, 3*spe_mean)
+    hFit.SetParLimits(1, .5, 2.0)
+    hFit.SetParameter(2, spe_sigma);
+    hFit.SetParameter(3, 0.1 * spe_evts);
+    hFit.SetParameter(4, 2);
+#   hFit.FixParameter(4, 2);
+    hFit.SetParLimits(4, 1.5, 2.5); # scaling of the position of the second and third...
+    hFit.SetParameter(5, par5)
+    hFit.SetParameter(6, par6)
+    hFit.SetParameter(7, 0.01 * spe_evts);
+    h.Draw()
+    hFit.Draw("SAME")
+    ROOT.gPad.SetLogy(1)
+#    raw_input("Initial parameters drawn")
+
+    h.Fit(hFit, 'R')
+    c.Update()
+    raw_input('Hit enter to quit the fit histogram')
+    if outdir:
+      plotf = outdir + 'tpe_fit_gaussbg'+h.GetName()+'.pdf'
+      c.Print(plotf)
+    print len(hFit.GetParameters())
+    print 'spinach', hFit.GetNumberFreeParameters(),  hFit.GetParameters()
+    fit_res["par_array"] = list(np.ndarray(hFit.GetNumberFreeParameters(), buffer = hFit.GetParameters(), dtype=float))
+    fit_res["par_errors"] = list(np.ndarray(hFit.GetNumberFreeParameters(), buffer = hFit.GetParErrors(), dtype=float))
+    if hFit.GetNDF():
+      fit_res["chi2"] = hFit.GetChisquare()/hFit.GetNDF()
+    else:
+      fit_res["chi2"] = -99
+    del c
+    return fit_res
+
+def fit_pmt3_gaussbg(  h,  outdir):
+    '''
+    Single method to fit an exp bg and 3 gauss model to the PMT spectrum
+    :param h:
+    :param spe_mean:
+    :param spe_sigma:
+    :return:
+    '''
+    c = ROOT.TCanvas()
+    fit_res = {}
+    f_i = fit_gaus(h)
+    fit_res["noise_gaus_par"] = list(np.ndarray(f_i.GetNumberFreeParameters(), buffer = f_i.GetParameters(), dtype=float))
+    fit_res["noise_gaus_err"] = list(np.ndarray(f_i.GetNumberFreeParameters(), buffer = f_i.GetParErrors(), dtype=float))
+    fit_res["noise_chi2"] = f_i.GetChisquare()/f_i.GetNDF()
+    fit_res["tot_events"] = h.Integral()
+    print h.GetMean()
+    h_xmin = h.GetXaxis().GetXmin()
+    h.GetXaxis().SetRangeUser(f_i.GetParameter(1)-4*f_i.GetParameter(2), h.GetXaxis().GetXmax() )
+    print f_i.GetParameter(1)+4*f_i.GetParameter(2), h.GetXaxis().GetXmax(), 'Above noise', h.GetMean(), h.GetRMS()
+    spe_mean = h.GetMean()
+    spe_sigma = h.GetRMS()
+    h.GetXaxis().SetRangeUser(h_xmin, h.GetXaxis().GetXmax())
+
+    fwhm_sigma = 2.3548
+    x_max = spe_mean+10*spe_sigma
+    x_min_bin = h.GetMaximumBin()
+    x_min = h.GetXaxis().GetBinCenter(x_min_bin)-2*f_i.GetParameter(2)
+    par6 = f_i.GetParameter(2)
+    par5 = f_i.GetParameter(0)
+    par7 = f_i.GetParameter(1)
+    dV = h.GetBinWidth(1)
+    spe_evts = h.GetBinContent(int((spe_mean-h_xmin)/dV))/2.0
+    print 'spe_evts', spe_evts, 'in bin ', int((spe_mean-h_xmin)/dV)
+    fit_formula = "[5]*exp(-(x-[7])^2/(2*[6]^2)) + [0]*exp(-((x-[1])^2)/(2*[2]^2)) +  [3]*exp(-((x-[4]*[1])^2)/(2*2*[2]^2)) + [8]*exp(-((x-[1]*3/2*[4])^2)/(3*2*[2]^2))"
+    fit_res["formula"] = fit_formula
+    fit_res["x_min"] = x_min
+    fit_res["x_max"] = x_max 
+    hFit = ROOT.TF1("hFit",fit_formula,x_min,x_max)
+
+    # Define the parameters and set initial values
+    hFit.SetParName(0, "speN");
+    hFit.SetParName(1, "speMean");
+    hFit.SetParName(2, "speSigma");
+    hFit.SetParName(3, "dpeN");
+    hFit.SetParName(4, "dpeScaling");
+    hFit.SetParName(5, "bgAmp");
+    hFit.SetParName(6, "bgWidth");
+    hFit.SetParName(7, "bgPos");
+    hFit.SetParName(8, "tpeN");
+
+    print 'Initial parameters for the fit'
+    print 'spe_pos', 2*spe_sigma, 'spe_width', spe_sigma, 'spe_amp', spe_evts/10.0
+    print 'bg_amp', par5, 'bg_decay', par6, 'xmin', x_min, 'xmax', x_max
+
+    hFit.SetParameter(0, spe_evts/10.0);
+    hFit.SetParameter(1, 2*spe_sigma);
+    hFit.SetParameter(2, spe_sigma);
+    hFit.SetParameter(3, 0.1 * spe_evts);
+    hFit.SetParameter(4, 2);
+#   hFit.FixParameter(4, 2);
+    hFit.SetParLimits(4, 1.5, 2.5); # scaling of the position of the second and third...
+    hFit.SetParameter(5, par5)
+    hFit.SetParameter(6, par6)
+    hFit.SetParameter(7, par7)
+    hFit.SetParameter(8, 0.01 * spe_evts);
+    h.Draw()
+    hFit.Draw("SAME")
+    ROOT.gPad.SetLogy(1)
+#    raw_input("Initial parameters drawn")
+
+    h.Fit(hFit, 'R')
+    c.Update()
+    raw_input('Hit enter to quit the fit histogram')
+    if outdir:
+      plotf = outdir + 'tpe_fit_'+h.GetName()+'.pdf'
+      c.Print(plotf)
+    print len(hFit.GetParameters())
+    print 'spinach', hFit.GetNumberFreeParameters(),  hFit.GetParameters()
+    fit_res["par_array"] = list(np.ndarray(hFit.GetNumberFreeParameters(), buffer = hFit.GetParameters(), dtype=float))
+    fit_res["par_errors"] = list(np.ndarray(hFit.GetNumberFreeParameters(), buffer = hFit.GetParErrors(), dtype=float))
+    if hFit.GetNDF():
+      fit_res["chi2"] = hFit.GetChisquare()/hFit.GetNDF()
+    else:
+      fit_res["chi2"] = -99
+    del c
+    return fit_res
+
+
 def fit_pmt2_bg(  h,  outdir):
     '''
     Single method to fit an exp bg and 2 gauss model to the PMT spectrum
@@ -375,6 +548,8 @@ def run_chess_calibration(chess_file, plot_dir = False, outf = 'CHESS_PMT_correc
        print adict
        h = adict['hist']
        print h
+       adict['fit_result_tpe_gaussbg'] = fit_pmt3_gaussbg(h, plot_dir)
+       adict['fit_result_tpe'] = fit_pmt3_bg(h, plot_dir)
        adict['fit_result_dpe'] = fit_pmt2_bg(h, plot_dir)
        adict['fit_result_spe'] = fit_pmt1_bg(h, plot_dir)
        adict['hist'] = 'balabala'
@@ -493,8 +668,8 @@ def write_json(a_dict, a_file = './output/CHESS_PMT_correction.json'):
 def main(json_file):
     chess_dir = '/Users/benschmidt/CUORE/data/CHESS_data/'
 #    chess_file = chess_dir+'cuore-source-uvt-0_15Mar2017-134503_0_cut_Source_plots.root'
-    chess_file = chess_dir+'cuore-source-uvt-0_15Mar2017-134503_cut_Source_plots_calib0.root'
-#    chess_file = chess_dir+'cuore-source-uvt-0_15Mar2017-134503_0_cut_Source_plots_simple_charge_correction.root'
+#    chess_file = chess_dir+'cuore-source-uvt-0_15Mar2017-134503_cut_Source_plots_calib0.root'
+    chess_file = chess_dir+'cuore-UVT-source-all-data_plots.root'
     run_chess_calibration(chess_file, './plots/', json_file)
 #    run_chess_calibration(chess_file, './plots/simple_charge_corr/', 'Simple_charge_correction.json')
 #    run_chess_charge_correction(chess_file, './plots/')    
@@ -502,7 +677,7 @@ def main(json_file):
 
 if __name__ ==  "__main__":
     ROOT.gStyle.SetOptFit(1)
-    json_file = '/Users/benschmidt/CUORE/analysis/chess-teo2/scripts/cuore_tools/CHESS_PMT_correction_2017_05_01.json'
+    json_file = '/Users/benschmidt/CUORE/analysis/chess-teo2/scripts/cuore_tools/CHESS_PMT_correction_all_uvt_2017_05_02.json'
     rat_file = '/Users/benschmidt/CUORE/data/CHESS_data/cuore-source-uvt-0_15Mar2017-134503_0_cut_Source.root'
     main(json_file)
     get_dpefit_integral(json_file)

@@ -3,8 +3,12 @@
   valid_begin: [0,0],
   valid_end: [0,0],
   
-  data_dir: "/Users/benschmidt/CUORE/data/CHESS_data/"
-  // Measurement 2.5 inch UVT acrylic cube with 90Sr source on top 10 Bq (~1day)
-  data_files: ["cuore-source-uvt-0_15Mar2017-134503_0_cut_Source.root", "cuore-source-uvt-0_15Mar2017-134503_1_cut_Source.root", "cuore-source-uvt-0_15Mar2017-134503_2_cut_Source.root"]
+  data_dir: "/Users/benschmidt/CUORE/data/CHESS_data/",
+  // Measurement 2.5 inch UVT acrylic cube with 90Sr source on top 10 Bq (~1day) 2017-03-15, ~75000 evts
+  //data_files: ["cuore-source-uvt-0_15Mar2017-134503_0_cut_Source.root", "cuore-source-uvt-0_15Mar2017-134503_1_cut_Source.root", "cuore-source-uvt-0_15Mar2017-134503_2_cut_Source.root"]
+  // Measurement 2.5 inch UVT acrylic cube with 90Sr source on top 10 Bq (~1day) 2017-03-15, ~68000 evts
+  //data_files: ["cuore-source-uvt-1_15Mar2017-145354_0_cut_Source.root", "cuore-source-uvt-1_15Mar2017-145354_1_cut_Source.root", "cuore-source-uvt-1_15Mar2017-145354_2_cut_Source.root", "cuore-source-uvt-1_15Mar2017-145354_3_cut_Source.root", "cuore-source-uvt-1_15Mar2017-145354_4_cut_Source.root", "cuore-source-uvt-1_15Mar2017-145354_5_cut_Source.root", "cuore-source-uvt-1_15Mar2017-145354_6_cut_Source.root", "cuore-source-uvt-1_15Mar2017-145354_7_cut_Source.root", "cuore-source-uvt-1_15Mar2017-145354_8_cut_Source.root", "cuore-source-uvt-1_15Mar2017-145354_9_cut_Source.root"]
+  // All 2.5 inch UVT acrylic cube 90Sr source data combined, 144000 evts 
+  data_files: ["cuore-source-uvt-0_15Mar2017-134503_0_cut_Source.root", "cuore-source-uvt-0_15Mar2017-134503_1_cut_Source.root", "cuore-source-uvt-0_15Mar2017-134503_2_cut_Source.root", "cuore-source-uvt-1_15Mar2017-145354_0_cut_Source.root", "cuore-source-uvt-1_15Mar2017-145354_1_cut_Source.root", "cuore-source-uvt-1_15Mar2017-145354_2_cut_Source.root", "cuore-source-uvt-1_15Mar2017-145354_3_cut_Source.root", "cuore-source-uvt-1_15Mar2017-145354_4_cut_Source.root", "cuore-source-uvt-1_15Mar2017-145354_5_cut_Source.root", "cuore-source-uvt-1_15Mar2017-145354_6_cut_Source.root", "cuore-source-uvt-1_15Mar2017-145354_7_cut_Source.root", "cuore-source-uvt-1_15Mar2017-145354_8_cut_Source.root", "cuore-source-uvt-1_15Mar2017-145354_9_cut_Source.root"]
 
 }

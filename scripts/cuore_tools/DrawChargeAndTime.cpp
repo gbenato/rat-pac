@@ -222,9 +222,9 @@ void GetPMTInfo(const char* inputfile){
 
   //Init pmt positions
   dsreader = new RAT::DSReader(inputfile);
-  dsreader->Add("/Users/benschmidt/CUORE/data/CHESS_data/cuore-source-uvt-0_15Mar2017-134503_1_cut_Source.root");
-  dsreader->Add("/Users/benschmidt/CUORE/data/CHESS_data/cuore-source-uvt-0_15Mar2017-134503_2_cut_Source.root");
-
+  for(int i = 1; i < data_files.size(); i++){ 
+    dsreader->Add(data_files[i].c_str());
+  }
 
   std::cout<<" GetPMTInfo "<<std::endl;
 
