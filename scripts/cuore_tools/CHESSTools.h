@@ -7,6 +7,8 @@
 //Globals
 char* pmtname[26] = {"Control Channel", "Light PMT 1", "Light PMT 2", "Light PMT 3" ,"Light PMT 4", "Light PMT 5", "Light PMT 6", "North Floor Panel", "South Floor Panel", "North Side Panel", "East Side Panel", "Ring PMT 0", "Ring PMT 1", "Ring PMT 2", "Ring PMT 3", "Ring PMT 4", "Ring PMT 5", "Ring PMT 6", "Ring PMT 7", "Ring PMT 8", "Ring PMT 9", "Ring PMT 10", "Ring PMT 11" , "Top Muon Tag", "Bottom Muon Tag", "Trigger PMT" };
 int pmtidtopos[] = {3,  3, 3, 3, 3, 3, 3,   3, 3, 3, 3,   0, 1, 2, 2, 1, 0, 0, 1, 2, 2, 1, 0,   3, 3,   3}; //In space
+int pmtid_reliable[] = {0,  0, 0, 0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1,   0, 0,   0}; //Ignore PMTs with bad calibration.
+int pmtid_reliable_time[] = {0,  0, 0, 0, 0, 0, 0,   0, 0, 0, 0,   1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   0, 0, 1}; //Ignore PMTs with bad calibration.
 Color_t pmtidtocolor[] = {1,  1, 1, 1, 1, 1, 1, kRed, 1, 1, 1,  kOrange, kBlue, kRed, kRed, kBlue, kOrange, kOrange, kBlue, kRed, kRed, kBlue, kOrange, kBlue, kRed, 1}; //By Position (WATER)
 //  Color_t pmtidtocolor[] =   {1, 1, 1, 1, 1, 1, kRed, 1, 1, 1,  kBlue, kOrange, kRed, kRed, kOrange, kBlue, kBlue, kOrange, kRed, kRed, kOrange, kBlue, kBlue, kRed, 1}; //By Position (LAB)
 

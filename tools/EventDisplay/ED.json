@@ -6,10 +6,10 @@
     //Analysis
     //    "input_file": "../../mac/sphere_betas.root", // Analysis ROOT file
     //    "input_file": "../../mac/hdf5_converted.root", // Analysis ROOT file
-    "input_file": "../../results/heprep/TheiaRnD_mcprod_ce_TeO2_cosmics_anisotopy_draw.root", // Analysis ROOT file
+    //"input_file": "../../results/heprep/TheiaRnD_mcprod_ce_TeO2_cosmics_anisotopy_draw.root", // Analysis ROOT file
 
     //Geometry files: used only if 'draw_geo==1'
-    "geo_file": "../../data/TheiaRnD/TheiaRnD_TeO2_cosmics_v1.geo",
+    "geo_file": "../../data/TheiaRnD/TheiaRnD_TeO2_cosmics_v2.geo",
     "corr_file": "../../data/TheiaRnD/SCINTCORR.ratdb",
     "material": "LAB", //LAB, LABPPO, WBLS1pct, WBLS10pct
 
@@ -19,9 +19,9 @@
     //Flags
     "event_number": -1,     // Event number to draw: Negative -> Event by event mode
     "initial_track": 0,     // First track to be drawn
-    "final_track": -1,      // Last track to be drawn: Negative -> Set to max
-    "draw_geo": 1,          // 1 -> Draw Detector geometry
-    "draw_pmts": 1,         // 1 -> Draw PMTs stored in PMTINFO
+    "final_track": 0,      // Last track to be drawn: Negative -> Set to max
+    "draw_geo": 0,          // 1 -> Draw Detector geometry
+    "draw_pmts": 0,         // 1 -> Draw PMTs stored in PMTINFO
 
     //Cuts
     "charge_cut_pmts": [-1],   //PMT IDs to be applied the cuts

@@ -29,8 +29,10 @@
 #include "CHESSTools.h"
 
 #define SMEARING 0.000 //0.214
-#define CORRCH 24 //24 for source data // 0 - for cosmics as empty channel for correction (if negative do not apply correction)
-#define REFTUBE 13 //Reference tube for time measurements 
+#define CORRCH 0 //24 for source data // 0 - for cosmics as empty channel for correction (if negative do not apply correction)
+#define REFCH 18// referecenc channels to study signal crosstalks
+//#define REFTUBE 13 //Reference tube for time measurements 
+#define TIMENPELIMIT 1.2
 //hmmm there is an discrepencay with CHESSTOOLS.h naming convention of the pmts
 // there chan 23, 24, 25 are the top muon tag, bottom muon tag and trigger PMT
 // but chan 0 is named control channel 
@@ -39,7 +41,7 @@
 #define FIT_LIMIT_MIN -60. //50.
 #define FIT_LIMIT_MAX 800.
 #define RING_CANDIDATE 5 //99
-#define TOTAL_NPE_CUT 50 // -1 to deactivate, Cut events with secondaries, bundles...
+#define TOTAL_NPE_CUT 160 // -1 to deactivate, Cut events with secondaries, bundles...
 
 //PMT IDs
 #define PMTID_INNER 11
@@ -49,7 +51,7 @@
 
 //Binning
 int t_nbins = 40;
-double t_min[2] = {-1.0, -1.0}; //ring, light
+double t_min[2] = {-1.0, -1.0}; //ring, light //What unit?
 double t_max[2] = {1.5, 1.5}; //ring, light
 
 //double lab_bins[21] = {-2., -1.75, -1.5, -1.25, -1., -.75, -.5, -.25, .0, .25, .5, .75, 1., 1.5, 2., 3., 5., 8., 12., 16., 20.};
@@ -59,10 +61,10 @@ double lab_bins[26] = {-2., -1.75, -1.5, -1.25, -1., -.75, -.5, -.25, .0, .25, .
 //double q_xmax_water[] = {10,10,10,10,10,10,  1000,1000,1000,1000,  100,100,100,100,100,100,100,100,100,100,100,100,  10000,10000,  100}; //In PEs
 //double q_xmax_water[] = {10,10,10,10,10,10,  1000,1000,1000,1000,  5,5,5,5,5,5,5,5,5,5,5,5,  10000,10000,  100}; //In PEs
 
-double q_xmin[] = {0, -10,-10,-10,-10,-10,-10,  0.1,0.1,0.1,0.1,  -5,-5,-5,-5,-5,-5,-5,-5,-5,-5,-5,-5,  1,1,  100}; //In PEs
+double q_xmin[] = {0, -10,-10,-10,-10,-10,-10,  0.1,0.1,0.1,0.1,  -5,-5,-5,-5,-5,-5,-5,-5,-5,-5,-5,-5,  1,1,  -5}; //In PEs
 double q_xmax_water[] = {0, 10,10,10,10,10,10,  1000,1000,1000,1000,  10,10,10,10,10,10,10,10,10,10,10,10,  10000,10000,  100}; //In PEs
 double q_xmax_lab[] = {0, 20,20,20,20,20,20,  1000,1000,1000,1000,  20,20,20,20,20,20,20,20,20,20,20,20,  10000,10000,  100}; //In PEs
-double q_xmax_labppo[] = {0, 100,100,100,100,100,100,  1000,1000,1000,1000,  100,100,100,100,100,100,100,100,100,100,100,100,  10000,10000,  100}; // In PEs
+double q_xmax_labppo[] = {0, 100,100,100,100,100,100,  1000,1000,1000,1000,  100,100,100,100,100,100,100,100,100,100,100,100,  10000,10000,  200}; // In PEs
 
 //Constants
 double cspeed = 300/1.4; // (mm/ns)/rindex
@@ -75,10 +77,11 @@ RAT::DSReader *dsreader;
 TTree *tree;
 TTree *runT;
 string data_dir = "";
+int total_npe_cut = -1;
 char *gInputFile = NULL;
 char *gOutFile = NULL;
-std::string gTargetMaterial = "WATER";
-//std::string gTargetMaterial = "LABPPO";
+//std::string gTargetMaterial = "WATER";
+std::string gTargetMaterial = "LABPPO";
 RAT::DS::PMTInfo *pmtInfo;
 bool isMC = false;
 bool isCosmicData = false, isSourceData = false;
@@ -119,13 +122,17 @@ TH1F* h_event_time;
 TH1F* h_event_deltat;
 TH1F* h_qtotal_light; //Total charge in the event
 TH1F* h_qtotal_ring; //Total charge in the event
+TH1F* h_charge_r_inout; // Charge ratio from the 3 well calibrated inner PMTs over the 3 well calibrated outer PMTs 
 TH2F* h_pmt_qratiovspos; //PMT charge vs PMT position
 TH2F* h_pmt_chargevspos; //NPE vs PMT position
 TH2F* h_pmt_timevspos; //PMT charge vs PMT position
 TH2F* h_pmt_countvspos; //Hit counter for normalization
 TH2F* h_mcpmt_npevspos; //MC NPE vs PMT position
+TH1F* h_mc_npe; // MC NPE in all cross PMTs
 TH2F* h_ringcandidate_npevspos;
 TH2F* h_ringcandidate_timevspos;
+TH2F* h_timevsnpe;
+TH2F* h_timevsqratio;
 TGraph* g_corr_channel; // corr_channel over time
 
 
@@ -146,6 +153,7 @@ std::vector<TH1F*> h_mcpmt_time; //MC FE time
 std::vector<TH1F*> h_mcpmt_fetime; //MC FE time
 std::vector<TH1F*> h_mctime;
 std::vector<TH1F*> h_mctime_res;
+
 
 int main(int argc, char **argv){
 
@@ -186,6 +194,35 @@ int main(int argc, char **argv){
 
 }
 
+double 	GetEventTime(RAT::DS::EV *ev, double corr_charge, double min_npe = 1.0){
+  //
+  //Calculate the median of all cross PMTs with a significant NPE number.
+  //
+  vector<double> ev_time;
+  for(int ipmt=0; ipmt<ev->GetPMTCount(); ipmt++){
+      int pmtid = ev->GetPMT(ipmt)->GetID();
+      int pmttype = pmtInfo->GetType(pmtid);
+      if(pmttype != 1) continue;
+        double charge = ev->GetPMT(ipmt)->GetCharge();
+        charge -= ((corr_charge-charge_offsets[pmtid])*charge_slopes[pmtid]);
+        double npes = charge/spe[pmtid]-noise_offsets[pmtid];
+        npes = npes / (spe_corrections[pmtid] - noise_offsets[pmtid]);
+        if (npes > min_npe){
+          double refring_time = ev->GetPMT(ipmt)->GetTime();
+//          double refring_dist = (pmtInfo->GetPosition(pmtid) - *target_pos).Mag(); // Make sure whether this is pmtid or ipmt
+//         double refring_tof = refring_dist/cspeed; // this can't really work if my reftube is the movable trigger cube
+          double refring_tof = tof_fixed[pmtidtopos[pmtid]];
+          double refring_timeres = refring_time - refring_tof - time_delay[pmtid];
+	  ev_time.push_back(refring_timeres);
+       }
+  }
+  if (ev_time.size()){
+//    return TMath::Median(ev_time.begin(), ev_time.end());
+    return TMath::Median(ev_time.size(), &ev_time[0]);
+  }
+  return -9999.9;
+}
+
 void GetDBTables(){
 
   RAT::DB* db = RAT::DB::Get();
@@ -208,7 +245,8 @@ void GetDBTables(){
   RAT::DBLinkPtr dbFiles = db->GetLink("MEASUREMENTFILES") ;
   data_files = dbFiles->GetSArray("data_files");
   data_dir = dbFiles->GetS("data_dir");
-  
+  total_npe_cut = dbFiles->GetI("total_npe_cut");
+
   cout << "Input files loaded: " <<  endl;
   for (int i = 0; i < data_files.size(); i++){
     data_files[i] = data_dir+data_files[i];
@@ -255,47 +293,48 @@ void InitHistos(){
   std::cout<<" Init Histograms "<<std::endl;
 
   //Set Q limit and Time limits
-  double q_xmax_used[25];
+  int n_pmts = 25; 
+  double q_xmax_used[n_pmts];
   double qtotal_xmax;
   double qrat_xmax = 0.;
   if(isCosmicData){
     if(gTargetMaterial=="WATER"){
       qtotal_xmax = 50.;
       qrat_xmax = 1.0;
-      memcpy(q_xmax_used, q_xmax_water, 25*sizeof(double));
+      memcpy(q_xmax_used, q_xmax_water, (n_pmts+1)*sizeof(double));
       t_min[0] = -1.5;
       t_max[0] = 1.5;
     } else if(gTargetMaterial=="LAB"){
       qtotal_xmax = 100.;
       qrat_xmax = 0.5;
-      memcpy(q_xmax_used, q_xmax_lab, 25*sizeof(double));
-      t_nbins = 50;
+      memcpy(q_xmax_used, q_xmax_lab, (n_pmts+1)*sizeof(double));
+      t_nbins = 500;
       t_min[0] = -2.0;
       t_max[0] = 10.0;
     }else if(gTargetMaterial=="LABPPO"){
       qtotal_xmax = 1500.;
       qrat_xmax = 0.1;
-      memcpy(q_xmax_used, q_xmax_labppo, 25*sizeof(double));
+      memcpy(q_xmax_used, q_xmax_labppo, (n_pmts+1)*sizeof(double));
       t_min[0] = -2.0;
       t_max[0] = 5.0;
     }else if(gTargetMaterial=="WBLS1PCT"){
       qtotal_xmax = 100.;
       qrat_xmax = 0.5;
-      memcpy(q_xmax_used, q_xmax_labppo, 25*sizeof(double));
+      memcpy(q_xmax_used, q_xmax_labppo, (n_pmts+1)*sizeof(double));
       t_nbins = 50;
       t_min[0] = -2.0;
       t_max[0] = 10.0;
     }else if(gTargetMaterial=="WBLS5PCT"){
       qtotal_xmax = 100.;
       qrat_xmax = 0.3;
-      memcpy(q_xmax_used, q_xmax_labppo, 25*sizeof(double));
+      memcpy(q_xmax_used, q_xmax_labppo, (n_pmts+1)*sizeof(double));
       t_nbins = 50;
       t_min[0] = -2.0;
       t_max[0] = 10.0;
     }else if(gTargetMaterial=="WBLS10PCT"){
       qtotal_xmax = 200.;
       qrat_xmax = 0.3;
-      memcpy(q_xmax_used, q_xmax_labppo, 25*sizeof(double));
+      memcpy(q_xmax_used, q_xmax_labppo, (n_pmts+1)*sizeof(double));
       t_nbins = 50;
       t_min[0] = -2.0;
       t_max[0] = 10.0;
@@ -304,8 +343,8 @@ void InitHistos(){
   } else if(isSourceData){
     qtotal_xmax = 50.;
     qrat_xmax = 1.0;
-    memcpy(q_xmax_used, q_xmax_water, 25*sizeof(double));
-    t_nbins = 200;
+    memcpy(q_xmax_used, q_xmax_water, (n_pmts+1)*sizeof(double));
+    t_nbins = 2000;
     t_min[0] = -100.;
     t_max[0] = 100.;
     t_min[1] = 0.;
@@ -317,6 +356,9 @@ void InitHistos(){
   g_corr_channel = new TGraph();
   g_corr_channel->SetName("g_corr_channel");
   h_mcpmt_npevspos = new TH2F("h_mcpmt_npevspos","h_mcpmt_npevspos",7, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 7, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
+  h_timevsnpe = new TH2F("h_timevsnpe", "h_timevsnpe", 400, -100, 100, 100, -5, 10);
+  h_timevsqratio = new TH2F("h_timevsqratio", "h_timevsqratio", 400, -100, 100, 100, -1, 1.5);
+  h_mc_npe = new TH1F("h_mc_npe","h_mc_npe",2500,0,500 );
   h_pmt_countvspos = new TH2F("h_pmt_countvspos","h_pmt_countvspos",7, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 7, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
   h_pmt_qratiovspos = new TH2F("h_pmt_qratiovspos","h_pmt_qratiovspos",7, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 7, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
   h_pmt_chargevspos = new TH2F("h_pmt_chargevspos","h_pmt_chargevspos",7, centerpos.X()-30.*3.5, centerpos.X()+30.*3.5, 7, centerpos.Y()-30.*3.5, centerpos.Y()+30.*3.5);
@@ -327,8 +369,8 @@ void InitHistos(){
   h_nhits_ring = new TH1F("h_nhits_ring","NHits Ring Tubes",40,0,20);
   h_nhits_light = new TH1F("h_nhits_light","NHits Light Tubes",40,0,20);
   h_event_deltat = new TH1F("h_event_deltat","Event DeltaT",300,1e8,1e12);
-  h_qtotal_light = new TH1F("h_qtotal_light","Total Charge Light Tubes",200,q_xmin[3]*4,q_xmax_used[3]*3);
-  h_qtotal_ring = new TH1F("h_qtotal_ring","Total Charge Ring Tubes",200,q_xmin[15]*4,q_xmax_used[15]*2);
+  h_qtotal_light = new TH1F("h_qtotal_light","Total Charge Light Tubes",200,q_xmin[3],q_xmax_used[3]*3);
+  h_qtotal_ring = new TH1F("h_qtotal_ring","Total Charge Ring Tubes",200,q_xmin[15],q_xmax_used[15]*12);
   BinLogX(h_event_deltat);
 
   for (int ibin = 1; ibin < h_ringcandidate_npevspos->GetXaxis()->GetNbins()+1; ibin++) {
@@ -393,7 +435,6 @@ void InitHistos(){
   BinLogX(h_charge_muontrigs);
   BinLogY(h_charge_muontrigs);
   h_time_muontrigs = new TH1F("h_time_muontrigs","Bottom Tag Time - Top Tag Time",100,-5.,5.);
-
   h_pmt_qratiovspos->SetMaximum(qrat_xmax);
 
 }
@@ -407,7 +448,7 @@ void GetHistos(){
   int clip_type = 0;
   int nentries = tree->GetEntries();
   // nentries = 2;
-  std::cout<<" Number of entries: "<<nentries<<std::endl;
+  std::cout<<" Number of entries: "<< nentries <<std::endl;
   for(int ientry=0; ientry<nentries;++ientry){
 
     if(nentries>NLOGENTRIES && ientry%(nentries/NLOGENTRIES) == 0) std::cout<<" Entry "<<ientry<<std::endl;
@@ -421,6 +462,16 @@ void GetHistos(){
 
       //MC**************
       //MCPMT loop
+      double mc_charge_cut = 0;
+      for (int imcpmt=0; imcpmt < mc->GetMCPMTCount(); imcpmt++) {
+        RAT::DS::MCPMT *mcpmt = mc->GetMCPMT(imcpmt);
+        int pmtid = mcpmt->GetID();
+        int pmttype = pmtInfo->GetType(pmtid);
+        if(pmttype == 1) {
+           mc_charge_cut += mcpmt->GetMCPhotonCount();           
+        }
+      }
+      h_mc_npe->Fill(mc_charge_cut);
       for (int imcpmt=0; imcpmt < mc->GetMCPMTCount(); imcpmt++) {
         RAT::DS::MCPMT *mcpmt = mc->GetMCPMT(imcpmt);
         //Make grid display only for the small PMTs
@@ -429,7 +480,7 @@ void GetHistos(){
         h_mcpmt_npe[pmtid]->Fill(mcpmt->GetMCPhotonCount());
         int pmttype = pmtInfo->GetType(pmtid);
 
-        if(pmttype == 1) {
+        if(pmttype == 1 && (mc_charge_cut < total_npe_cut || total_npe_cut < 0)) {
           h_mcpmt_npevspos->Fill(pmtInfo->GetPosition(pmtid).X(),pmtInfo->GetPosition(pmtid).Y(),mcpmt->GetMCPhotonCount());
         }
         h_mcpmt_charge[pmtid]->Fill(mcpmt->GetCharge());
@@ -460,15 +511,19 @@ void GetHistos(){
       // Get muon tags, source trigger and muon panels charge and time
       //Empty channel for Q correction
       double corr_charge = 0.;
-      double corr_charge2 = 0.;
+      double ref_charge = 0.;
       RAT::DS::PMT *pmt = ev->GetPMTWithID(CORRCH); //ref ring tube
 //      RAT::DS::PMT *pmt2 = ev->GetPMTWithID(CORRCH+1); //ref ring tube
 //      if(pmt!=NULL && pmt2!=NULL && !isMC){
       if(pmt!=NULL && !isMC){
         corr_charge = pmt->GetCharge();
 //        std::cout << corr_charge << std::endl;
-//        corr_charge2 = pmt2->GetCharge();
+//        corr_charge2 = pKmt2->GetCharge();
       }
+      pmt  = ev->GetPMTWithID(REFCH); //ref ring tube
+      if (pmt)
+        ref_charge = pmt->GetCharge();
+      
       if(ievt){
         std::cout << "WARNING the 2nd level data event loop is being used" << std::endl;
       }
@@ -476,15 +531,20 @@ void GetHistos(){
       //Reference Ring Tube
       double refring_time = -9999.;
       double refring_timeres = -9999.;
+/*
       pmt = ev->GetPMTWithID(REFTUBE); //ref ring tube
       if(pmt!=NULL) {
-        refring_time = pmt->GetTime();
+//        refring_time = pmt->GetTime();
+        refring_time = 	GetEventTime();
         double refring_dist = (pmtInfo->GetPosition(REFTUBE) - *target_pos).Mag();
         double refring_tof = refring_dist/cspeed; // this can't really work if my reftube is the movable trigger cube
         refring_tof = tof_fixed[pmtidtopos[REFTUBE]];
         refring_timeres = refring_time - refring_tof - time_delay[REFTUBE];
-        //std::cout<<" ring_timeres "<<ring_timeres<<" "<<ring_time<<" "<<ring_tof<<" "<<time_delay[REFTUBE]<<std::endl;
+        refring_time = refring_timeres;
+        std::cout<<" ring_timeres "<<refring_timeres<<" "<<refring_time<<" "<<refring_tof<<" "<<time_delay[REFTUBE]<<std::endl;
       }
+*/
+      refring_time = GetEventTime(ev, corr_charge, TIMENPELIMIT );
       //Trigger PMT
       double trigger_q = 0.;
       double trigger_time = -9999.;
@@ -551,7 +611,7 @@ void GetHistos(){
       double event_time = -9999.;
       if(isCosmicData){
         event_time = -99.9;
-        //event_time = ev->GetEventTime();
+        //event_time = ev->GetEventTime(); // non existent in our version!
         //if(event_time < -9900.) continue; //Cosmics: Less than 3 ring hits, Source: no defined trigger time
         //event_time = bottommuon_time - 18.3; //DT
         //event_time = bottommuon_time - 18.6; //MC
@@ -566,6 +626,8 @@ void GetHistos(){
 
       //Retrieve PMT information and fill histograms
       std::vector<double> charge_ring(4,0.), qshort_ring(4,0.);
+      ref_charge -= ((corr_charge-charge_offsets[REFCH])*charge_slopes[REFCH]);
+
       double qtotal_lightpmts = 0.;
       double qtotal_ringpmts = 0.;
       int nhits_ring = 0, nhits_light = 0;
@@ -582,13 +644,14 @@ void GetHistos(){
 //          npes = charge/spe[pmtid];
           npes = charge/spe[pmtid]-noise_offsets[pmtid];
           npes = npes / (spe_corrections[pmtid] - noise_offsets[pmtid]);
-          if(npes < -3 || npes > 100) {
-           std::cout << "ERROR RING PMT with weird NPEs " << npes << " for PMT " << pmtid << std::endl;
+          if(npes < -3 || npes > total_npe_cut) {
+           std::cout << "Warning RING PMT with weird NPEs " << npes << " for PMT " << pmtid << std::endl;
            std::cout << "for event " << ientry << " " << ievt << std::endl;
 //           npes = 999;
           }
           nhits_ring++;
-          qtotal_ringpmts += npes;
+          if ( pmtid_reliable[pmtid])
+          	qtotal_ringpmts += npes;
         } else if(pmttype==2){
           nhits_light++;
           qtotal_lightpmts += npes;
@@ -599,8 +662,10 @@ void GetHistos(){
       }
 //      std::cout << "Total NPEs in RING " << qtotal_ringpmts << std::endl;
 
-      if( TOTAL_NPE_CUT && qtotal_ringpmts > TOTAL_NPE_CUT)
+      if( total_npe_cut > 0 && qtotal_ringpmts > total_npe_cut){
+        std::cout << "Total NPE cut met - skipping event in RING " << qtotal_ringpmts << std::endl;
         continue;
+      }
 //      if(true){
       for(int ipmt=0; ipmt<ev->GetPMTCount(); ipmt++){
         int pmtid = ev->GetPMT(ipmt)->GetID();
@@ -615,14 +680,17 @@ void GetHistos(){
         double qshort = ev->GetPMT(ipmt)->GetQShort();
         if(charge < -9900) continue; //This is a tube with a bad pedestal
         double npes = charge/spe[pmtid];
-        npes = charge/spe[pmtid]-noise_offsets[pmtid];
-        npes = npes / (spe_corrections[pmtid] - noise_offsets[pmtid]);
+        if(pmttype==1){
+          npes = charge/spe[pmtid]-noise_offsets[pmtid];
+          npes = npes / (spe_corrections[pmtid] - noise_offsets[pmtid]);
+        }
         h_charge[pmtid]->Fill(npes);
 //        std::cout << corr_charge << std::endl;
-        if((abs(corr_charge) + abs(charge_0)) < 200){
-           if( npes < 1.8)
-           g_charge_correction[pmtid]->SetPoint(g_charge_correction[pmtid]->GetN(), corr_charge, charge);
-        }
+//        if((abs(corr_charge) + abs(charge_0)) < 200){
+//           if( npes < 1.8)
+//           g_charge_correction[pmtid]->SetPoint(g_charge_correction[pmtid]->GetN(), corr_charge, charge);
+           g_charge_correction[pmtid]->SetPoint(g_charge_correction[pmtid]->GetN(), ref_charge, charge);
+//        }
         //There are some outliers with crazy qshort and null charge probably
         //due to the baseline drifts. I remove those with the cut below.
         if(qshort/charge<2.0 && qshort/charge>-2.0 ) {
@@ -643,9 +711,10 @@ void GetHistos(){
         //Count hits
 
         //Calculate charges by radius
-        charge_ring[pmtidtopos[pmtid]] += npes;
-        qshort_ring[pmtidtopos[pmtid]] += qshort/spe[pmtid];
-
+        if (pmtid_reliable[pmtid]){
+          charge_ring[pmtidtopos[pmtid]] += npes;
+          qshort_ring[pmtidtopos[pmtid]] += qshort/spe[pmtid];
+        }
         //Compute time residuals
         double dist = (pmtInfo->GetPosition(pmtid) - *target_pos).Mag();
         double tof = dist/cspeed;
@@ -658,8 +727,16 @@ void GetHistos(){
         //if(pmtid != 13 && pmtid != 22 && pmtid != 19 && pmtid != 16) continue;
         //Event level averaged
         h_time[pmtid]->Fill(timeres);
+//        h_time[pmtid]->Fill(pmttime-time_delay[pmtid]);
         if(pmttype==1){
           h_pmt_timevspos->Fill(pmtInfo->GetPosition(pmtid).X(), pmtInfo->GetPosition(pmtid).Y(), timeres);
+          if (pmtid_reliable_time[pmtid]){
+            h_timevsnpe->Fill(npes, timeres);
+            h_timevsqratio->Fill(qshort/charge, timeres);
+            if (npes > 1.2){
+              h_time_ring[pmtidtopos[pmtid]]->Fill(timeres);
+            }
+          }
         }
 
         if(ientry==RING_CANDIDATE){
@@ -681,8 +758,12 @@ void GetHistos(){
       h_time_muontrigs->Fill(bottommuon_time - topmuon_time);
       for(int irad=0; irad<4; irad++){
         if(charge_ring[irad] !=0 ) {
+//          std::cout <<"Filling event in h_charge_ring"<< endl;
           h_charge_ring[irad]->Fill(charge_ring[irad]);
           h_qratio_ring[irad]->Fill(qshort_ring[irad]/charge_ring[irad]);
+        }
+        else {
+//          std::cout << "charge_ring value is 0" << endl;
         }
       }
 
@@ -690,10 +771,10 @@ void GetHistos(){
 
   } //end ds entry loop
 
-  //Create Stacks for Ring Tubes
-  for(int ipmt=0; ipmt<pmtInfo->GetPMTCount();ipmt++){
-    h_time_ring[pmtidtopos[ipmt]]->Add(h_time[ipmt]);
-  }
+  //Create Stacks for Ring Tubes - do fill in event loop to be able to apply
+//  for(int ipmt=0; ipmt<pmtInfo->GetPMTCount();ipmt++){
+//      h_time_ring[pmtidtopos[ipmt]]->Add(h_time[ipmt]);
+//  }
 
 
 } //end GetHistos
@@ -881,9 +962,9 @@ void DrawHistos(){
   c_trigger->Divide(2,1);
 
   c_trigger->cd(1);
-//  h_charge[25]->Draw();
+  h_charge.back()->Draw();
   c_trigger->cd(2);
-//  h_time[25]->Draw();
+  h_time.back()->Draw();
 
   std::cout << "Updating canvases" << std::endl;
 
@@ -935,17 +1016,26 @@ void DrawHistos(){
   h_time_ring[2]->Draw("sames");
   int maxbin = h_time_ring[0]->GetXaxis()->FindBin(0.0);
   double total = h_time_ring[0]->Integral(0,maxbin) + h_time_ring[1]->Integral(0,maxbin) + h_time_ring[2]->Integral(0,maxbin);
-  std::cout<<" time 0 "<<h_time_ring[0]->Integral(0,maxbin)/total<<std::endl;
-  std::cout<<" time 1 "<<h_time_ring[1]->Integral(0,maxbin)/total<<std::endl;
-  std::cout<<" time 2 "<<h_time_ring[2]->Integral(0,maxbin)/total<<std::endl;
+  std::cout<<" time 0 " << h_time_ring[0]->Integral(0,maxbin)/total<<std::endl;
+  std::cout<<" time 1 " << h_time_ring[1]->Integral(0,maxbin)/total<<std::endl;
+  std::cout<<" time 2 " << h_time_ring[2]->Integral(0,maxbin)/total<<std::endl;
   c_ring_tubes_rad->Update();
-   
+
+
+  TCanvas *c_event_times = new TCanvas("c_event_times", "c_event_times", 900, 1000);
+  c_event_times->Divide(1,2);
+  c_event_times->cd(1);
+  h_timevsnpe->Draw("colz");
+  cout << "h_timevsnpe -> GetEntries() " << h_timevsnpe->GetEntries();
+  c_event_times->cd(2);
+  h_timevsqratio->Draw("colz");
+  c_event_times->Update();
 
   //MCTruth
   TCanvas *c_mc_npevspos = new TCanvas("c_mc_npevspos","c_mc_npevspos",900,1000);
-  std::cout << "nentries for error calc " <<nentries << "\t"<<h_mcpmt_npevspos->GetSize()<<std::endl;
+//  std::cout << "nentries for error calc " << nentries << "\t" << h_mcpmt_npevspos->GetSize()<<std::endl;
   for (int a_bin = 1;  a_bin < h_mcpmt_npevspos->GetSize(); a_bin++){   
-      std::cout << h_mcpmt_npevspos->GetBinContent(a_bin) <<std::endl;
+//    std::cout << h_mcpmt_npevspos->GetBinContent(a_bin) << std::endl;
     if (h_mcpmt_npevspos->GetBinContent(a_bin) > 0 ){
        std::cout << nentries << std::endl;
        h_mcpmt_npevspos->SetBinError(a_bin, sqrt(h_mcpmt_npevspos->GetBinContent(a_bin))/(double)nentries);
@@ -981,8 +1071,9 @@ void DrawHistos(){
         h_mcpmt_npe[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
         h_mcpmt_npe[pmtid]->Draw(opt);
         c_mc->cd(6);
-        h_mcpmt_fetime[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
-        h_mcpmt_fetime[pmtid]->Draw(opt);
+        h_mc_npe->Draw();
+//        h_mcpmt_fetime[pmtid]->SetLineColor(pmtidtocolor[pmtid]);
+//        h_mcpmt_fetime[pmtid]->Draw(opt);
         firstdrawn1 = true;
       } else if(pmttype==0){ //Trigger tube
         const char *opt = firstdrawn2 ? "sames" : "";
@@ -1035,8 +1126,10 @@ void PrintHistos(char *filename){
 
 void NormalizeHistos(){
 
-  double norm = h_event_time->GetEntries();
+//  double norm = h_event_time->GetEntries();
+  double norm = h_qtotal_ring->GetEntries();
   h_pmt_qratiovspos->Scale(1./norm);
+  h_pmt_chargevspos->Sumw2();
   h_pmt_chargevspos->Scale(1./norm);
   h_pmt_timevspos->Scale(1./norm);
 

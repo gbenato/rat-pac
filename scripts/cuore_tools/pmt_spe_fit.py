@@ -1080,14 +1080,14 @@ if __name__ ==  "__main__":
 #    chess_dir = '/Users/benschmidt/CUORE/data/CHESS_data/'
 
 # config for water data 
-#    json_file = 'CHESS_PMT_correction_water_2017_05_04.json'
-#    json_file = 'CHESS_PMT_correction_water_2017_05_016.json'
-#    rat_file = '/warehouse/rat_optics_simulation/meas_data/cuore-source-watertarget_02May2017-094645_11_cut_Source.root'
-#    main_fit_key = 'fit_result_qpe_gaussbg'
-#    list_npe_fits = [3,4]
-#    main_npe_fit = 4 
-#    chess_plot_file = chess_dir+'plots/cuore-source-watertarget_02May2017_cut_Source_no_correction.root'
-#    chess_cal_plots = chess_dir + 'plots/plots/'
+ #   json_file = 'CHESS_PMT_correction_water_2017_05_04.json'
+    json_file = 'CHESS_PMT_correction_water_2017_05_016.json'
+    rat_file = '/warehouse/rat_optics_simulation/meas_data/cuore-source-watertarget_02May2017-094645_11_cut_Source.root'
+    main_fit_key = 'fit_result_qpe_gaussbg'
+    list_npe_fits = [3,4]
+    main_npe_fit = 4 
+    chess_plot_file = chess_dir+'plots/cuore-source-watertarget_02May2017_cut_Source_no_correction.root'
+    chess_cal_plots = chess_dir + 'plots/plots/'
 
 #config for uvt data 
 #    json_file = 'CHESS_PMT_correction_uvt_after_water_correction_2017_05_016.json'
@@ -1099,13 +1099,13 @@ if __name__ ==  "__main__":
 #    chess_cal_plots = chess_dir + 'plots/plots/uvt_with_water_correction/'
 
 #config for uva data 
-    json_file = 'CHESS_PMT_correction_uva_after_water_correction_2017_05_016.json'
-    rat_file = '/warehouse/rat_optics_simulation/meas_data/cuore-source-uva-0_19Apr2017-171022_0_cut_Source.root'
-    main_fit_key = 'fit_result_dpe_gaussbg'
-    main_npe_fit = 2
-    list_npe_fits = [1,2]
-    chess_plot_file = chess_dir+'plots/cuore-source-uva-0_19Apr2017_after_water_correction.root'
-    chess_cal_plots = chess_dir + 'plots/plots/uva_with_water_correction/'
+#    json_file = 'CHESS_PMT_correction_uva_after_water_correction_2017_05_016.json'
+#    rat_file = '/warehouse/rat_optics_simulation/meas_data/cuore-source-uva-0_19Apr2017-171022_0_cut_Source.root'
+#    main_fit_key = 'fit_result_dpe_gaussbg'
+#    main_npe_fit = 2
+#    list_npe_fits = [1,2]
+#    chess_plot_file = chess_dir+'plots/cuore-source-uva-0_19Apr2017_after_water_correction.root'
+#    chess_cal_plots = chess_dir + 'plots/plots/uva_with_water_correction/'
 
 
 

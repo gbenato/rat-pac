@@ -485,7 +485,8 @@ void GetHistos(){
         charge_ring[pmtidtopos[pmtid]] += charge;
         npes_ring[pmtidtopos[pmtid]] += npes;
         double timeres = pmttime - tof - time_delay[pmtid];
-        h_time[pmtid]->Fill(timeres - event_time);
+//        h_time[pmtid]->Fill(timeres - event_time);
+        h_time[pmtid]->Fill(pmttime - time_delay[pmtid]);
         // std::cout<<" ToF "<<pmtid<<": "<<tof<<" "<<dist<<std::endl;
         //if(pmtid != 13 && pmtid != 22 && pmtid != 19 && pmtid != 16) continue;
         //Event level averaged
