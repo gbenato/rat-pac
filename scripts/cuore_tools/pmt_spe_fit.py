@@ -382,7 +382,7 @@ def fit_pmt4_gaussbg(  h,  outdir):
     fit_res["x_min"] = x_min
     fit_res["x_max"] = new_xmax 
     c.Update()
-    raw_input('Hit enter to quit the fit histogram')
+    #raw_input('Hit enter to quit the fit histogram')
     if outdir:
       plotf = outdir + 'qpe_fit_'+h.GetName()+'.pdf'
       c.Print(plotf)
@@ -479,7 +479,7 @@ def fit_pmt4_gaussbg_const_width(  h,  outdir):
     fit_res["x_min"] = x_min
     fit_res["x_max"] = new_xmax 
     c.Update()
-    raw_input('Hit enter to quit the fit histogram')
+    #raw_input('Hit enter to quit the fit histogram')
     if outdir:
       plotf = outdir + 'qpe_fit_const_width'+h.GetName()+'.pdf'
       c.Print(plotf)
@@ -493,6 +493,8 @@ def fit_pmt4_gaussbg_const_width(  h,  outdir):
       fit_res["chi2"] = -99
     del c
     return fit_res
+
+
 
 
 def fit_pmt2_bg(  h,  outdir):
@@ -565,6 +567,113 @@ def fit_pmt2_bg(  h,  outdir):
     raw_input('Hit enter to quit the fit histogram')
     if outdir:
       plotf = outdir + 'dpe_fit_'+h.GetName()+'.pdf'
+      c.Print(plotf)
+    print len(hFit.GetParameters())
+    print 'spinach', hFit.GetNumberFreeParameters(),  hFit.GetParameters()
+    fit_res["par_array"] = list(np.ndarray(hFit.GetNumberFreeParameters(), buffer = hFit.GetParameters(), dtype=float))
+    fit_res["par_errors"] = list(np.ndarray(hFit.GetNumberFreeParameters(), buffer = hFit.GetParErrors(), dtype=float))
+    if hFit.GetNDF():
+      fit_res["chi2"] = hFit.GetChisquare()/hFit.GetNDF()
+    else:
+      fit_res["chi2"] = -99
+    del c
+    return fit_res
+
+
+def fit_pmt5_gaussbg(  h,  outdir):
+    '''
+    Single method to fit a gauss bg and 5 gauss model to the PMT spectrum
+    :param h:
+    :param spe_mean:
+    :param spe_sigma:
+    :return:
+    '''
+    c = ROOT.TCanvas()
+    fit_res = {}
+    f_i = fit_gaus(h)
+    fit_res["noise_gaus_par"] = list(np.ndarray(f_i.GetNumberFreeParameters(), buffer = f_i.GetParameters(), dtype=float))
+    fit_res["noise_gaus_err"] = list(np.ndarray(f_i.GetNumberFreeParameters(), buffer = f_i.GetParErrors(), dtype=float))
+    fit_res["noise_chi2"] = f_i.GetChisquare()/f_i.GetNDF()
+    fit_res["tot_events"] = h.Integral()
+    fit_res["bin_width"] = h.GetXaxis().GetBinWidth(1)
+    print h.GetMean()
+    h_xmin = h.GetXaxis().GetXmin()
+    h.GetXaxis().SetRangeUser(f_i.GetParameter(1)-4*f_i.GetParameter(2), h.GetXaxis().GetXmax() )
+    print f_i.GetParameter(1)+4*f_i.GetParameter(2), h.GetXaxis().GetXmax(), 'Above noise', h.GetMean(), h.GetRMS()
+#    spe_mean = h.GetMean()
+    spe_mean = 1.0
+    spe_sigma = f_i.GetParameter(2)*1.5 # I guess assuming that spe_mean is already at more or less the correct place I could do sth. more elaborate here
+    h.GetXaxis().SetRangeUser(h_xmin, h.GetXaxis().GetXmax())
+
+    fwhm_sigma = 2.3548
+#    x_max = spe_mean+10*spe_sigma
+#    x_min_bin = h.GetMaximumBin()
+#    x_min = h.GetXaxis().GetBinCenter(x_min_bin)-2*f_i.GetParameter(2)
+    x_min= -.7
+    x_max =10
+    par6 = f_i.GetParameter(2)
+    par5 = f_i.GetParameter(0)
+    par7 = f_i.GetParameter(1)
+    dV = h.GetBinWidth(1)
+    spe_evts = h.GetBinContent(int((spe_mean-h_xmin)/dV))
+    print 'spe_evts', spe_evts/dV, 'in bin ', int((spe_mean-h_xmin)/dV)
+    fit_formula = "[5]*exp(-(x-[7])^2/(2*[6]^2)) + [0]*exp(-((x-[1])^2)/2/([2]^2+[6]^2)) +" \
+                  "[3]*exp(-((x-[4]*[1])^2)/(2*(2*[2]^2+[6]^2))) + [8]*exp(-((x-[1]*3/2*[4])^2)/(2*(3*[2]^2+[6]^2))) +" \
+		  "[9]*exp(-((x-[1]*4/2*[4])^2)/(2*(4*[2]^2+[6]^2))) +[10]*exp(-((x-[1]*5)/2*[4])^2/(2*(5*[2]^2+[6]^2)))"
+    # My nose model doesn't have to be a good estimate,
+    # the noise peak can contain an electron number dependent component from thermionic emission. 
+    # My model assumes however that this is just digitizer/electronics noise.
+    hFit = ROOT.TF1("hFit",fit_formula,x_min,x_max)
+
+    # Define the parameters and set initial values
+    hFit.SetParName(0, "speN");
+    hFit.SetParName(1, "speMean");
+    hFit.SetParName(2, "speSigma");
+    hFit.SetParName(3, "dpeN");
+    hFit.SetParName(4, "dpeScaling");
+    hFit.SetParName(5, "bgAmp");
+    hFit.SetParName(6, "bgWidth");
+    hFit.SetParName(7, "bgPos");
+    hFit.SetParName(8, "tpeN");
+    hFit.SetParName(9, "qpeN");
+    hFit.SetParName(10, "cpeN");
+
+    print 'Initial parameters for the fit'
+    print 'spe_pos', 2*spe_sigma, 'spe_width', spe_sigma, 'spe_amp', spe_evts/10.0
+    print 'bg_amp', par5, 'bg_decay', par6, 'xmin', x_min, 'xmax', x_max
+
+    hFit.SetParameter(0, spe_evts);
+    hFit.SetParameter(1, spe_mean);
+    hFit.SetParLimits(1, .5, 3)
+    hFit.SetParameter(2, spe_sigma);
+    hFit.SetParameter(3, 0.1 * spe_evts);
+    hFit.SetParameter(4, 2);
+#   hFit.FixParameter(4, 2);
+    hFit.SetParLimits(4, 1.5, 2.5); # scaling of the position of the second and third...
+    hFit.SetParameter(5, par5)
+    hFit.SetParameter(6, par6)
+    hFit.SetParameter(7, par7)
+    hFit.SetParameter(8, 0.01 * spe_evts);
+    hFit.SetParameter(9, 0.001 * spe_evts);
+    hFit.SetParameter(10, 0.0005 * spe_evts);
+    h.Draw()
+    hFit.Draw("SAME")
+    ROOT.gPad.SetLogy(1)
+    #raw_input("Initial parameters drawn")
+
+    h.Fit(hFit, 'R')
+    #raw_input("Full range fit")
+    new_xmax = hFit.GetParameter(1)*hFit.GetParameter(4)*6.0/2.0
+    new_xmax = min(10,new_xmax )
+    hFit.SetRange(x_min, new_xmax)
+    h.Fit(hFit, 'R')
+    fit_res["formula"] = fit_formula
+    fit_res["x_min"] = x_min
+    fit_res["x_max"] = new_xmax 
+    c.Update()
+    #raw_input('Hit enter to quit the fit histogram')
+    if outdir:
+      plotf = outdir + 'cpe_fit_'+h.GetName()+'.pdf'
       c.Print(plotf)
     print len(hFit.GetParameters())
     print 'spinach', hFit.GetNumberFreeParameters(),  hFit.GetParameters()
@@ -833,15 +942,19 @@ def read_chess_charge_correction_graphs(chess_file_name):
     return a_dict
 
 
-def run_chess_calibration(chess_file, plot_dir = False, outf = 'CHESS_PMT_correction_2017_04_11.json', fit_key = 'fit_result_dpe', l_npe_fits = [1,2,3,4]):
+def run_chess_calibration(chess_file, plot_dir = False, outf = 'CHESS_PMT_correction_2017_07_19.json', fit_key = 'fit_result_dpe', l_npe_fits = [1,2,3,4]):
     hists = read_chess_pmt_histos(chess_file)
     write_json({'test':'success'}, outf)
     print hists
     spe_mean = np.ones(26)
     noise_offset = np.zeros(26)
+    noise_3_sigma = np.zeros(26)
     for key, adict in hists.iteritems():
        print adict
        h = adict['hist']
+       if 5 in l_npe_fits:
+         print 'Fitting 5PE model with const+varying width component',h
+         adict['fit_result_5pe_gaussbg'] = fit_pmt5_gaussbg(h, plot_dir)
        if 4 in l_npe_fits:
          print 'Fitting 4PE model with const+varying width component',h
          adict['fit_result_qpe_gaussbg'] = fit_pmt4_gaussbg(h, plot_dir)
@@ -858,9 +971,11 @@ def run_chess_calibration(chess_file, plot_dir = False, outf = 'CHESS_PMT_correc
        adict['hist'] = 'balabala'
        spe_mean[int((h.GetName().split('_'))[-1])] = adict[fit_key]['par_array'][1]
        noise_offset[int((h.GetName().split('_'))[-1])] = adict[fit_key]['noise_gaus_par'][1]        
+       noise_3_sigma[int((h.GetName().split('_'))[-1])] = adict[fit_key]['noise_gaus_par'][2]*3.0        
     print hists
     print 'spe_mean:', list(spe_mean)
     print 'noise_offset:', list(noise_offset)
+    print 'noise_3_sigma:', list(noise_3_sigma)
     write_json(hists, outf)
 
 def display_calib_correction(json_file, fit_key):
@@ -1081,12 +1196,13 @@ if __name__ ==  "__main__":
 
 # config for water data 
  #   json_file = 'CHESS_PMT_correction_water_2017_05_04.json'
-    json_file = 'CHESS_PMT_correction_water_2017_05_016.json'
+    json_file = 'CHESS_PMT_correction_water_2017_07_19.json' # Extract the noise peaks and try a 5 PE fit on top of Javiers recent calibration
     rat_file = '/warehouse/rat_optics_simulation/meas_data/cuore-source-watertarget_02May2017-094645_11_cut_Source.root'
     main_fit_key = 'fit_result_qpe_gaussbg'
-    list_npe_fits = [3,4]
+    list_npe_fits = [3,4,5]
+    list_npe_fits = [4]
     main_npe_fit = 4 
-    chess_plot_file = chess_dir+'plots/cuore-source-watertarget_02May2017_cut_Source_no_correction.root'
+    chess_plot_file = chess_dir+'plots/cuore-source-watertarget_02May2017_cut_Source_Javier_calib.root'
     chess_cal_plots = chess_dir + 'plots/plots/'
 
 #config for uvt data 
