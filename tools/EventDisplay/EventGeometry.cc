@@ -12,15 +12,17 @@
 
 EventGeometry::EventGeometry(std::string dbGeoFile, std::string analysisFile){
 
-  //  std::cout<<" EventGeometry::EventGeometry "<<std::endl;
+   std::cout<<" EventGeometry::EventGeometry "<<std::endl;
 
   bool drawPMTs = false;
-  if(analysisFile!="")
-    drawPMTs = true;
+//  if(analysisFile!="")
+//    drawPMTs = true;
 
   world = new EDGeoBox("world");
   RAT::DB* db = RAT::DB::Get();
   db->Load(dbGeoFile);
+  std::cout<<" EventGeometry::EventGeometry DB loaded"<<std::endl;
+  std::cout<<" EventGeometry::EventGeometry "<< analysisFile.c_str() <<std::endl;
 
   RAT::DSReader *dsreader = new RAT::DSReader(analysisFile.c_str());
   TTree *runT = dsreader->GetRunT();
@@ -30,11 +32,12 @@ EventGeometry::EventGeometry(std::string dbGeoFile, std::string analysisFile){
   RAT::DS::PMTInfo *pmtInfo = run->GetPMTInfo();
 
   RAT::DBLinkGroup mydblink = db->GetLinkGroup("GEO");
+  std::cout<<" EventGeometry::EventGeometry for loop volumes"<<std::endl;
 
   for(RAT::DBLinkGroup::iterator it=mydblink.begin(); it!=mydblink.end();it++){
 
     std::string volName = it->first;
-    //   std::cout<<" EventGeometry::EventGeometry "<<volName<<std::endl;
+    std::cout<<" EventGeometry::EventGeometry "<<volName<<std::endl;
     RAT::DBLinkPtr dbGeo = db->GetLink("GEO",volName.c_str());
     std::string mother = dbGeo->GetS("mother");
     std::vector<double> pos = std::vector<double>(3,0);
@@ -89,6 +92,7 @@ EventGeometry::EventGeometry(std::string dbGeoFile, std::string analysisFile){
       if(volNameUsed.str()!="") geoHierarchy[volNameUsed.str()] = "world";
     }
   }
+  std::cout<<" EventGeometry::EventGeometry call BuildGeometry()"<<std::endl;
 
   BuildGeometry();
   if(drawPMTs) BuildPMTMap();
@@ -100,7 +104,6 @@ EventGeometry::EventGeometry(std::string dbGeoFile, std::string analysisFile){
 
 void EventGeometry::BuildGeometry(){
 
-  //  std::cout<<" EventGeometry::BuildGeometry "<<std::endl;
 
   //Order hierarchy
   geoOrder.push_back("world");
@@ -111,10 +114,11 @@ void EventGeometry::BuildGeometry(){
     }
     counter++;
   }
-
+   std::cout<<" EventGeometry::BuildGeometry "<<std::endl;
   //Print geo order
-  // for(int ivol=0; ivol<geoOrder.size();ivol++)
-  //   std::cout<<" Volume "<<ivol<<": "<<geoOrder[ivol]<<std::endl;
+  for(int ivol=0; ivol<geoOrder.size();ivol++)
+     std::cout<<" Volume "<<ivol<<": "<<geoOrder[ivol]<<std::endl;
+
 
   //Geometry
   tgeoman = new TGeoManager("box", "poza1");
@@ -166,7 +170,7 @@ void EventGeometry::BuildGeometry(){
 
   tgeoman->CloseGeometry();
 
-  //  std::cout<<" EventGeometry::BuildGeometry - DONE "<<std::endl;
+   std::cout<<" EventGeometry::BuildGeometry - DONE "<<std::endl;
 
 }
 

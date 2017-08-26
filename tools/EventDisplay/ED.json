@@ -4,12 +4,14 @@
     "valid_end": [0, 0],
 
     //Analysis
-    //    "input_file": "../../mac/sphere_betas.root", // Analysis ROOT file
-    //    "input_file": "../../mac/hdf5_converted.root", // Analysis ROOT file
+    //"input_file": "/warehouse/rat_optics_simulation/meas_data/cuore-source-watertarget_02May2017-094645_1_cut_Source.root", // Analysis ROOT file
+    "input_file": "/warehouse/rat_optics_simulation/TheiaRnD_TeO2_anisotropy_Ch_v1/root/TheiaRnD_mcprod_TeO2_anisotropy_Scint_r1.0_s1.0_v1_12043.root", // Analysis ROOT file
     //"input_file": "../../results/heprep/TheiaRnD_mcprod_ce_TeO2_cosmics_anisotopy_draw.root", // Analysis ROOT file
+    
 
     //Geometry files: used only if 'draw_geo==1'
-    "geo_file": "../../data/TheiaRnD/TheiaRnD_TeO2_cosmics_v2.geo",
+    //"geo_file": "../../data/TheiaRnD/TheiaRnD_TeO2_cosmics_v2.geo",
+    "geo_file": "../../data/TheiaRnD/TheiaRnD_TeO2_cosmics_anisotropy.geo",
     "corr_file": "../../data/TheiaRnD/SCINTCORR.ratdb",
     "material": "LAB", //LAB, LABPPO, WBLS1pct, WBLS10pct
 
@@ -47,6 +49,6 @@
     "event_option": "triggered",       // Drawing options: "pe" -> only events with at least one PE,
                                        //                  "cherenkov" -> only events with a cherenkov process
                                        //                  "triggered" -> only events triggered by the DAQ
-    "debug_level": 2,
+    "debug_level": 4,
 
 }

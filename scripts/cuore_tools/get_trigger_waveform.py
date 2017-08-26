@@ -6,6 +6,7 @@ data_dir = "/warehouse/rat_optics_simulation/meas_data/"
 data_file = data_dir + "cuore-source-watertarget_02May2017-094645_11_cut_Source.root"
 data_file = data_dir + "cuore-source-uvt-1_15Mar2017-145354_1_cut_Source.root"
 data_file = data_dir + "cuore-source-teo2-polish-face3top-teflonhut-0_12Apr2017-052757_87_cut_Source.root"
+data_file = data_dir + "cuore-source-watertarget_17Aug2017-140714_merge_cut_Source.root"
 pmt_ids = range(25)
 
 

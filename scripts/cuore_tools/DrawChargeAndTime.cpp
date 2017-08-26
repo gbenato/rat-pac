@@ -29,9 +29,9 @@
 #include "CHESSTools.h"
 
 #define SMEARING 0.000 //0.214
-#define CORRCH 0 //24 for source data // 0 - for cosmics as empty channel for correction (if negative do not apply correction)
-#define REFCH 18// referecenc channels to study signal crosstalks
-//#define REFTUBE 13 //Reference tube for time measurements 
+#define CORRCH 24 //24 for source data // 0 - for cosmics as empty channel for correction (if negative do not apply correction)
+#define REFCH 18// A single example channels ( to study/visualize the charge correction signal crosstalks)
+#define REFTUBE 19 //Reference tube PMT8 (inner ring more statistics,2nd best noise resolution) for time measurements 
 #define TIMENPELIMIT 1.2
 //hmmm there is an discrepencay with CHESSTOOLS.h naming convention of the pmts
 // there chan 23, 24, 25 are the top muon tag, bottom muon tag and trigger PMT
@@ -112,6 +112,7 @@ vector<double> charge_offsets; // channel based charge correction
 vector<double> spe_corrections; // channel based spe scale correction
 vector<double> noise_offsets; // channel based noise position correction
 vector<string> data_files; // data files as read from MEASUREMENTSFILES
+vector<double> noise_cutoffs; // channel based 3-sigma threshold for (signal selection)
 
 //// Histograms
 //Event level
@@ -165,6 +166,7 @@ int main(int argc, char **argv){
   //
 
   //Style
+//  gROOT->SetMacroPath("/home/beschmidt/rat-pac/scripts/cuore_tools/");
   SetCHESSStyle();
 
   if(SMEARING != 0) {
@@ -228,13 +230,14 @@ void GetDBTables(){
   RAT::DB* db = RAT::DB::Get();
 
 //  db->Load("../data/PMTGAUSCHARGE.ratdb");
-  db->Load("PMTGAUSCHARGE.ratdb");
+  db->Load("PMTGAUSCHARGE.ratdb"); // Do not change name
   RAT::DBLinkPtr dbSPE = db->GetLink("PMTGAUSCHARGE");
   spe = dbSPE->GetDArray("gaus_mean");
   charge_slopes = dbSPE->GetDArray("charge_correction_slopes");
   charge_offsets = dbSPE->GetDArray("charge_correction_offsets");
   spe_corrections = dbSPE->GetDArray("gaus_correction");
   noise_offsets = dbSPE->GetDArray("noise_offset");
+  noise_cutoffs = dbSPE->GetDArray("noise_3_sigma");
   std::cout << "Red charge correction " << charge_slopes[25] << std::endl;
 //  db->Load("../data/PMTGAUSTIME.ratdb");
   db->Load("PMTGAUSTIME.ratdb");
@@ -531,20 +534,20 @@ void GetHistos(){
       //Reference Ring Tube
       double refring_time = -9999.;
       double refring_timeres = -9999.;
-/*
+
       pmt = ev->GetPMTWithID(REFTUBE); //ref ring tube
       if(pmt!=NULL) {
-//        refring_time = pmt->GetTime();
-        refring_time = 	GetEventTime();
+        refring_time = pmt->GetTime();
+//        refring_time = 	GetEventTime();
         double refring_dist = (pmtInfo->GetPosition(REFTUBE) - *target_pos).Mag();
         double refring_tof = refring_dist/cspeed; // this can't really work if my reftube is the movable trigger cube
         refring_tof = tof_fixed[pmtidtopos[REFTUBE]];
         refring_timeres = refring_time - refring_tof - time_delay[REFTUBE];
         refring_time = refring_timeres;
-        std::cout<<" ring_timeres "<<refring_timeres<<" "<<refring_time<<" "<<refring_tof<<" "<<time_delay[REFTUBE]<<std::endl;
+//        std::cout<<" ring_timeres "<<refring_timeres<<" "<<refring_time<<" "<<refring_tof<<" "<<time_delay[REFTUBE]<<std::endl;
       }
-*/
-      refring_time = GetEventTime(ev, corr_charge, TIMENPELIMIT );
+
+//      refring_time = GetEventTime(ev, corr_charge, TIMENPELIMIT );
       //Trigger PMT
       double trigger_q = 0.;
       double trigger_time = -9999.;
@@ -627,9 +630,11 @@ void GetHistos(){
       //Retrieve PMT information and fill histograms
       std::vector<double> charge_ring(4,0.), qshort_ring(4,0.);
       ref_charge -= ((corr_charge-charge_offsets[REFCH])*charge_slopes[REFCH]);
-
+      
       double qtotal_lightpmts = 0.;
       double qtotal_ringpmts = 0.;
+      double npe_ref_light_tube = 0.;
+      double qratio_ref_light_tube = 0.;
       int nhits_ring = 0, nhits_light = 0;
       for(int ipmt=0; ipmt<ev->GetPMTCount(); ipmt++){
         int pmtid = ev->GetPMT(ipmt)->GetID();
@@ -644,13 +649,16 @@ void GetHistos(){
 //          npes = charge/spe[pmtid];
           npes = charge/spe[pmtid]-noise_offsets[pmtid];
           npes = npes / (spe_corrections[pmtid] - noise_offsets[pmtid]);
-          if(npes < -3 || npes > total_npe_cut) {
+          if (pmtid == REFTUBE) 
+             qratio_ref_light_tube = ev->GetPMT(ipmt)->GetQShort()/charge;
+     	     npe_ref_light_tube = npes;
+          if((npes < -3.0 || npes > total_npe_cut) && total_npe_cut > 10) {
            std::cout << "Warning RING PMT with weird NPEs " << npes << " for PMT " << pmtid << std::endl;
            std::cout << "for event " << ientry << " " << ievt << std::endl;
 //           npes = 999;
           }
           nhits_ring++;
-          if ( pmtid_reliable[pmtid])
+          if ( pmtid_reliable[pmtid] && pmtid != REFTUBE)
           	qtotal_ringpmts += npes;
         } else if(pmttype==2){
           nhits_light++;
@@ -726,17 +734,23 @@ void GetHistos(){
         //std::cout<<" ToF "<<pmtid<<": "<<tof<<" "<<dist<<std::endl;
         //if(pmtid != 13 && pmtid != 22 && pmtid != 19 && pmtid != 16) continue;
         //Event level averaged
-        h_time[pmtid]->Fill(timeres);
+        if( npe_ref_light_tube > noise_cutoffs[REFTUBE]){
+          if (npes > noise_cutoffs[pmtid]){
+            if (qshort/charge > 0.2 && qratio_ref_light_tube > 0.2)
+              h_time[pmtid]->Fill(timeres);
+        
 //        h_time[pmtid]->Fill(pmttime-time_delay[pmtid]);
-        if(pmttype==1){
-          h_pmt_timevspos->Fill(pmtInfo->GetPosition(pmtid).X(), pmtInfo->GetPosition(pmtid).Y(), timeres);
-          if (pmtid_reliable_time[pmtid]){
-            h_timevsnpe->Fill(npes, timeres);
-            h_timevsqratio->Fill(qshort/charge, timeres);
-            if (npes > 1.2){
-              h_time_ring[pmtidtopos[pmtid]]->Fill(timeres);
+           if(pmttype==1 && pmtid != REFTUBE){
+            h_pmt_timevspos->Fill(pmtInfo->GetPosition(pmtid).X(), pmtInfo->GetPosition(pmtid).Y(), timeres);
+            if (pmtid_reliable_time[pmtid]){
+              if (qshort/charge > 0.2 && qratio_ref_light_tube > 0.2){
+                h_timevsnpe->Fill(timeres, npes);
+                h_time_ring[pmtidtopos[pmtid]]->Fill(timeres);
+              }
+              h_timevsqratio->Fill(timeres, qshort/charge);
             }
           }
+         }
         }
 
         if(ientry==RING_CANDIDATE){

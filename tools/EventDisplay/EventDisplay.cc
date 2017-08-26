@@ -42,9 +42,11 @@ bool fexists(const char *filename)
 EventDisplay::EventDisplay(std::string _inputFileName){
 
   //Init
-  std::cout << "Event Display constructo called" << endl;
+  std::cout << "Event Display constructor called" << endl;
   event_cut = false;
   inputFileName = _inputFileName;
+  std::cout << "Event Display constructo called with inputfile" << inputFileName << endl;
+
   SetParameters();
   OpenFile(inputFileName);
   int appargc = 0;
@@ -653,10 +655,10 @@ void EventDisplay::SetParameters(){
 void EventDisplay::SetGeometry(){
 
 
-  if(debugLevel > 0) std::cout<<" EventDisplay::SetGeometry "<<std::endl;
+  if(debugLevel > 0) std::cout<<" EventDisplay::SetGeometry "<< inputFileName  << std::endl;
 
   if(drawPMTs) EDGeo = new EventGeometry(geoFileName, inputFileName);
-  else EDGeo = new EventGeometry(geoFileName);
+  else EDGeo = new EventGeometry(geoFileName, inputFileName);
 
   if(debugLevel > 0) std::cout<<" EventDisplay::SetGeometry - DONE "<<std::endl;
 
