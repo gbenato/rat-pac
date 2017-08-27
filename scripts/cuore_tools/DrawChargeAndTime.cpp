@@ -31,7 +31,7 @@
 #define SMEARING 0.000 //0.214
 #define CORRCH 24 //24 for source data // 0 - for cosmics as empty channel for correction (if negative do not apply correction)
 #define REFCH 18// A single example channels ( to study/visualize the charge correction signal crosstalks)
-#define REFTUBE 19 //Reference tube PMT8 (inner ring more statistics,2nd best noise resolution) for time measurements 
+#define REFTUBE 23 //Reference tube 19 - PMT8 (inner ring more statistics,2nd best noise resolution) for time measurements 
 #define TIMENPELIMIT 1.2
 //hmmm there is an discrepencay with CHESSTOOLS.h naming convention of the pmts
 // there chan 23, 24, 25 are the top muon tag, bottom muon tag and trigger PMT
