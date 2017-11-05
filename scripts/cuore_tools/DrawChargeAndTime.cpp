@@ -225,6 +225,33 @@ double 	GetEventTime(RAT::DS::EV *ev, double corr_charge, double min_npe = 1.0){
   return -9999.9;
 }
 
+double GetTriggerTime(RAT::DS::EV *ev){
+  //
+  //Calculate the median of all cross PMTs with a significant NPE number.
+  //
+  vector<double> ev_time;
+  std::vector<double> trace = ev->GetPMT(REFTUBE)->GetWaveform();
+  int trace_length = trace.size();
+  int n_avg = 50;
+  double* begin = &trace[0];
+  double* end = &trace[trace_length-n_avg-1];  
+  double begin_val = TMath::Mean(n_avg, begin);
+  double end_val = TMath::Mean(n_avg, end);
+  double fifty_val = begin_val + (end_val-begin_val)/2.0;
+  double temp_trace[trace_length];
+  for (int i = 0 ; i < trace_length; i++){
+     temp_trace[i] = abs(trace[i] - fifty_val)
+  }
+  long min_index = TMath::LocMin(temp_trace);
+  if (min_index-1)>0 && min_index+1 < trace_length(){
+    double dy = (trace[min_index+1]-trace[min_index-1])/2.0;
+    double dt = 
+  }
+ 
+  }
+  return -9999.9;
+}
+
 void GetDBTables(){
 
   RAT::DB* db = RAT::DB::Get();
