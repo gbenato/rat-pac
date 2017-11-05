@@ -311,7 +311,7 @@
   mother: "TeO2",
   type: "box",
   size: [24.8,0.1,24.8], //mm, half-lenght
-  position: [0.0, 24.9, 0.0],
+  position: [0.0, -24.9, 0.0],
   rotation: [0.0, 0.0, 0.0]
 //  material: "chsrc_uvt_acrylic"
 //  material: "tellurium_dioxyde", //tellurium_dioxyde
