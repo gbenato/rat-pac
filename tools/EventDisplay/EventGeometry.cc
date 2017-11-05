@@ -12,8 +12,7 @@
 
 EventGeometry::EventGeometry(std::string dbGeoFile, std::string analysisFile){
 
-   std::cout<<" EventGeometry::EventGeometry "<<std::endl;
-
+  std::cout<<" EventGeometry::EventGeometry "<<std::endl;
   bool drawPMTs = false;
 //  if(analysisFile!="")
 //    drawPMTs = true;
@@ -23,7 +22,6 @@ EventGeometry::EventGeometry(std::string dbGeoFile, std::string analysisFile){
   db->Load(dbGeoFile);
   std::cout<<" EventGeometry::EventGeometry DB loaded"<<std::endl;
   std::cout<<" EventGeometry::EventGeometry "<< analysisFile.c_str() <<std::endl;
-
   RAT::DSReader *dsreader = new RAT::DSReader(analysisFile.c_str());
   TTree *runT = dsreader->GetRunT();
   RAT::DS::Run *run = 0;
@@ -32,7 +30,7 @@ EventGeometry::EventGeometry(std::string dbGeoFile, std::string analysisFile){
   RAT::DS::PMTInfo *pmtInfo = run->GetPMTInfo();
 
   RAT::DBLinkGroup mydblink = db->GetLinkGroup("GEO");
-  std::cout<<" EventGeometry::EventGeometry for loop volumes"<<std::endl;
+  std::cout<<" EventGeometry::start looping GEO volumes "<<std::endl;
 
   for(RAT::DBLinkGroup::iterator it=mydblink.begin(); it!=mydblink.end();it++){
 
